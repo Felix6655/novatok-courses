@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,68 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String
+  icon         String
+  displayOrder Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  courses Course[]
+
+  @@index([active, displayOrder])
+}
+
+model Course {
+  id                   String       @id @default(uuid())
+  title                String
+  slug                 String       @unique
+  shortDescription     String
+  fullDescription      String
+  categoryId           String
+  instructorName       String
+  instructorBio        String
+  thumbnailUrl         String
+  promoVideoUrl        String?
+  price                Decimal      @db.Decimal(10, 2)
+  originalPrice        Decimal?     @db.Decimal(10, 2)
+  currency             String       @default("USD")
+  level                CourseLevel
+  language             String       @default("en")
+  durationMinutes      Int
+  lessonCount          Int
+  certificateAvailable Boolean      @default(false)
+  prerequisites        String[]     @default([])
+  learningOutcomes     String[]     @default([])
+  enrollmentUrl        String
+  status               CourseStatus @default(DRAFT)
+  featured             Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([status, categoryId])
+  @@index([status, featured])
+  @@index([status, level])
+  @@index([status, price])
+  @@index([categoryId])
 }
