@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { CategoryNavigation } from "@/components/courses/CategoryNavigation";
 import { CourseFilters } from "@/components/courses/CourseFilters";
 import { CourseGrid } from "@/components/courses/CourseGrid";
+import { CoursesLoadingSkeleton } from "@/components/courses/CoursesLoadingSkeleton";
 import { Pagination } from "@/components/courses/Pagination";
 import {
   courseListQuerySchema,
@@ -20,12 +22,27 @@ interface CoursesPageProps {
   searchParams: Promise<PageSearchParams>;
 }
 
+/**
+ * The route intentionally has no loading.tsx: a segment-level loading.tsx
+ * wraps this page AND every nested route (/courses/[slug],
+ * /courses/[slug]/tutor) in one Suspense boundary, which forces Next.js to
+ * stream a 200 response before those nested routes' notFound() calls can
+ * set a real 404 status. This component-local Suspense gives the same
+ * loading UX for this page only, without affecting sibling routes.
+ */
 export default async function CoursesPage({ searchParams }: CoursesPageProps) {
   const rawParams = normalizePageSearchParams(await searchParams);
+
+  return (
+    <Suspense fallback={<CoursesLoadingSkeleton />}>
+      <CoursesContent rawParams={rawParams} />
+    </Suspense>
+  );
+}
+
+async function CoursesContent({ rawParams }: { rawParams: Record<string, string> }) {
   const parsed = courseListQuerySchema.safeParse(rawParams);
-  const filters = parsed.success
-    ? parsed.data
-    : courseListQuerySchema.parse({});
+  const filters = parsed.success ? parsed.data : courseListQuerySchema.parse({});
 
   const isDefaultView = !filters.search && !filters.category && !filters.level;
 

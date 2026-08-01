@@ -99,8 +99,16 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
         />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <CourseActions title={course.title} enrollmentUrl={course.enrollmentUrl} />
+        {hasTutorContent && (
+          <Link
+            href={`/learn/${course.slug}`}
+            className="rounded-md border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-300"
+          >
+            Start learning
+          </Link>
+        )}
       </div>
 
       {hasTutorContent && (

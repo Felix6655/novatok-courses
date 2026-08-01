@@ -16,12 +16,19 @@ vendor-specific database SDK (no Supabase, no Firebase, no Google Cloud).
 Any standard PostgreSQL host works: local Postgres, Neon, Render, Railway,
 etc.
 
-The AI Course Advisor (Sprint 2) and AI Tutor (Sprint 3) both talk to AI
-providers through the same provider-agnostic interface
-(`src/ai/provider.ts`). Only a local Ollama adapter is implemented — no
-paid cloud AI API is called, and none is required to run the app. See
-[docs/ai-course-advisor.md](./docs/ai-course-advisor.md) and
-[docs/ai-tutor.md](./docs/ai-tutor.md).
+The AI Course Advisor (Sprint 2), AI Tutor (Sprint 3–4), and AI Learning
+Coach (Sprint 5) all talk to AI providers through the same
+provider-agnostic interface (`src/ai/provider.ts`). Only a local Ollama
+adapter is implemented — no paid cloud AI API is called, and none is
+required to run the app. See
+[docs/ai-course-advisor.md](./docs/ai-course-advisor.md),
+[docs/ai-tutor.md](./docs/ai-tutor.md), and
+[docs/learning-progress.md](./docs/learning-progress.md).
+
+Student identity (enrollment, progress) uses a development-only cookie —
+**not production authentication**. See
+[docs/student-identity.md](./docs/student-identity.md) before assuming
+otherwise.
 
 ## Prerequisites
 
@@ -71,10 +78,10 @@ paid cloud AI API is called, and none is required to run the app. See
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/novatok_courses?schema=public"
    ```
 
-4. **Run the Prisma migration**
+4. **Run the Prisma migrations**
 
    Creates the database schema (`Category`, `Course`, `CourseModule`,
-   `Lesson` tables and enums):
+   `Lesson`, `StudentEnrollment`, `LessonProgress` tables and enums):
 
    ```bash
    npm run db:migrate
@@ -129,9 +136,12 @@ paid cloud AI API is called, and none is required to run the app. See
    Open [http://localhost:3000/courses](http://localhost:3000/courses) to
    see the catalog,
    [http://localhost:3000/courses/advisor](http://localhost:3000/courses/advisor)
-   for the AI Course Advisor, or
+   for the AI Course Advisor,
    [http://localhost:3000/courses/javascript-fundamentals/tutor](http://localhost:3000/courses/javascript-fundamentals/tutor)
-   for the AI Tutor on a course that has seeded lesson content.
+   for the AI Tutor, or
+   [http://localhost:3000/learn](http://localhost:3000/learn) for the
+   student learning dashboard (enroll in a course from its detail page
+   first — see [docs/learning-progress.md](./docs/learning-progress.md)).
 
 ## Scripts
 
@@ -149,13 +159,17 @@ npm run db:seed       # seed categories, courses, modules, and lessons (idempote
 npm run db:smoke      # verify the real service layer against a live database
 npm run smoke:advisor # live E2E: Course Advisor against real Postgres + Ollama
 npm run smoke:tutor   # live E2E: AI Tutor against real Postgres + Ollama
+npm run smoke:coach   # live E2E: enroll -> complete -> resume -> Learning Coach
+npm run smoke:http    # live HTTP status checks (build/start the app first)
 ```
 
-The three `smoke:*`/`db:smoke` scripts require a reachable, seeded
-`DATABASE_URL`; the two `smoke:*` scripts additionally require a running
-Ollama with `OLLAMA_MODEL` set to a model you've already pulled. None of
-them are part of `npm test` — the automated suite never requires a live
-database or AI provider.
+The `smoke:*`/`db:smoke` scripts require a reachable, seeded
+`DATABASE_URL`; `smoke:advisor`, `smoke:tutor`, and `smoke:coach`
+additionally require a running Ollama with `OLLAMA_MODEL` set to a model
+you've already pulled; `smoke:http` requires the app itself running
+(`npm run build && npm run start`, or `npm run dev`). None of them are
+part of `npm test` — the automated suite never requires a live database,
+AI provider, or running server.
 
 ## Validation before committing
 
@@ -195,11 +209,30 @@ Sprint 3–4 — AI Tutor:
 - `/api/ai/tutor` — `POST` `{ courseSlug, question, lessonSlug?, responseMode?, history? }`,
   get back a grounded, structured answer
 
+Sprint 5 — student learning, progress, and the AI Learning Coach:
+
+- `/learn` — dashboard of the student's enrolled courses and progress
+- `/learn/[courseSlug]` — the learning experience: syllabus, current
+  lesson, progress bar, mark-complete, Tutor entry point, Learning Coach
+  (optionally `?lessonSlug=...` to jump to a specific lesson)
+- `/api/learning/enroll` — `POST { courseSlug }`, free/dev enrollment
+- `/api/learning/progress` — `POST { courseSlug, lessonSlug }`, mark a
+  lesson complete
+- `/api/ai/learning-coach` — `POST { courseSlug, recentTutorHistory? }`,
+  a grounded "what should I learn next?" explanation (also protected by
+  the same request guard as the other two AI endpoints)
+
+All three learning routes use a development-only student identity cookie,
+**not real authentication** — see
+[docs/student-identity.md](./docs/student-identity.md).
+
 Both `/api/ai/*` routes are protected against accidental rapid/oversized
 requests — see [docs/ai-tutor.md](./docs/ai-tutor.md#request-protection).
 
 See [docs/novatok-integration.md](./docs/novatok-integration.md) for the
 Sprint 1 catalog API shapes,
 [docs/ai-course-advisor.md](./docs/ai-course-advisor.md) for the advisor's
-architecture, and [docs/ai-tutor.md](./docs/ai-tutor.md) for the Tutor's
-content model, grounding rules, and API contract.
+architecture, [docs/ai-tutor.md](./docs/ai-tutor.md) for the Tutor's
+content model, grounding rules, and API contract, and
+[docs/learning-progress.md](./docs/learning-progress.md) for enrollment,
+progress, resume, and the Learning Coach.

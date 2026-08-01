@@ -365,24 +365,39 @@ against a live database without touching any AI provider.
   matched. This is an accepted tradeoff at the current content scale.
 - Practice questions aren't persisted, graded, or deduplicated across
   requests.
-- No student accounts, so there's no per-student history or personalized
-  "what's next" beyond the course's own structure.
 - Small local models sometimes produce Tutor JSON that fails validation
   (observed during live smoke testing); the fallback path handles this
   correctly, but the AI-authored answer quality depends on which local
   model is configured.
-- **Known bug found during Sprint 4 browser/HTTP smoke testing (not
-  introduced by Sprint 4):** `notFound()` on `/courses/[slug]` and
-  `/courses/[slug]/tutor` renders the correct not-found content but
-  returns HTTP 200 instead of 404, while the structurally identical
-  `/categories/[slug]` correctly returns 404. The only structural
-  difference is that `/courses` has sibling `loading.tsx`/`error.tsx`
-  files at the parent segment and `/categories` doesn't — a known category
-  of Next.js App Router issue where a parent error/loading boundary can
-  interfere with `notFound()` status propagation. Content is correct;
-  only the HTTP status code is wrong. Not fixed in Sprint 4 to avoid a
-  risky routing change late in an already large sprint — see Sprint 5
-  recommendations.
+- As of Sprint 5, real student progress exists (`docs/learning-progress.md`)
+  but the Tutor itself still has no awareness of it — it answers from
+  course/lesson content only, not "you're behind on module 2." Wiring
+  progress context into the Tutor's own prompt is a reasonable Sprint 6
+  candidate if it proves useful.
+
+### Fixed in Sprint 5: notFound() returning HTTP 200
+
+Sprint 4 found that `notFound()` on `/courses/[slug]` and
+`/courses/[slug]/tutor` rendered correct not-found content but returned
+HTTP 200 instead of 404, while `/categories/[slug]` correctly returned
+404. Root cause: `/courses/loading.tsx` created a route-segment Suspense
+boundary that Next.js also wraps around *nested* routes
+(`/courses/[slug]`, `/courses/[slug]/tutor`) — the initial 200 response
+starts streaming before those nested routes' `notFound()` call can set a
+real status code. `/categories` had no `loading.tsx`, so it was never
+affected.
+
+Fix: removed `src/app/courses/loading.tsx` and replaced it with a
+component-local `<Suspense>` boundary inside `/courses/page.tsx` itself
+(`CoursesContent`, wrapped by `<Suspense fallback={<CoursesLoadingSkeleton />}>`).
+A `<Suspense>` used inside one page's own JSX only affects that page's
+rendering — it isn't part of the route-segment tree the way `loading.tsx`
+is, so it no longer cascades into sibling dynamic routes. The catalog page
+keeps its loading skeleton; `/courses/[slug]` and `/courses/[slug]/tutor`
+now correctly return 404. Regression coverage:
+`npm run smoke:http` (live, HTTP-level — page routing status codes aren't
+observable by calling a Server Component directly, so this can't be a
+plain Vitest test).
 
 ## Future RAG/vector-search considerations
 

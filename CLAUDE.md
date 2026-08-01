@@ -19,19 +19,30 @@ and deploy lifecycle.
 
 ## Repository Rules
 
-- Do not add authentication, payments, affiliate payouts, file uploads, or
-  reviews until explicitly requested. These are out of scope for early
-  sprints — ask before implementing any of them.
-- The AI Course Advisor (Sprint 2, `src/ai/`, `src/server/advisor/`) and
-  AI Tutor (Sprint 3–4, `src/server/tutor/`, `CourseModule`/`Lesson`
-  models) were explicitly requested and are in scope. Keep the AI layer
+- Do not add production authentication, payments, affiliate payouts, file
+  uploads, or reviews until explicitly requested. These are out of scope
+  for early sprints — ask before implementing any of them.
+- The AI Course Advisor (Sprint 2, `src/ai/`, `src/server/advisor/`), AI
+  Tutor (Sprint 3–4, `src/server/tutor/`, `CourseModule`/`Lesson` models),
+  and AI Learning Coach (Sprint 5, `src/server/learning/learning-coach.ts`)
+  were explicitly requested and are in scope. Keep the AI layer
   provider-agnostic (`src/ai/provider.ts`); business logic must depend
-  only on that interface, never directly on an Ollama/cloud SDK — both
-  features share the same provider/adapter code, do not fork a second AI
-  architecture. No paid cloud AI API is called. Recommendations and Tutor
-  answers must stay grounded in real PostgreSQL rows — never display a
-  course/lesson slug the retrieval query didn't actually return. See
-  docs/ai-course-advisor.md and docs/ai-tutor.md.
+  only on that interface, never directly on an Ollama/cloud SDK — all
+  three features share the same provider/adapter code, do not fork a
+  second AI architecture. No paid cloud AI API is called. Recommendations,
+  Tutor answers, and Learning Coach explanations must stay grounded in
+  real PostgreSQL rows — never display a course/lesson slug the retrieval
+  query didn't actually return; for the Learning Coach specifically, the
+  next lesson is decided entirely by `resolveResumeLesson()` before the AI
+  is ever called, and the model's response schema has no lesson/course
+  identifier field at all. See docs/ai-course-advisor.md, docs/ai-tutor.md,
+  and docs/learning-progress.md.
+- Student identity (`src/server/identity/dev-identity.ts`,
+  `src/middleware.ts`) is a development-only cookie, explicitly NOT
+  production authentication — see docs/student-identity.md before
+  changing it or building on top of it. Learning services
+  (`src/server/learning/*`) take `studentId` as a plain function
+  parameter and never read it from a request body/query param.
 - Local dev Postgres runs in Docker as a shared server across NovaTok
   modules (container `novatok-postgres`, database `novatok` holds other
   modules' tables). This project uses its own isolated database

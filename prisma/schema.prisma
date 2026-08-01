@@ -65,9 +65,11 @@ model Course {
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
-  category Category      @relation(fields: [categoryId], references: [id])
-  modules  CourseModule[]
-  lessons  Lesson[]
+  category    Category            @relation(fields: [categoryId], references: [id])
+  modules     CourseModule[]
+  lessons     Lesson[]
+  enrollments StudentEnrollment[]
+  progress    LessonProgress[]
 
   @@index([status, categoryId])
   @@index([status, featured])
@@ -112,8 +114,60 @@ model Lesson {
   module CourseModule @relation(fields: [moduleId], references: [id])
   course Course       @relation(fields: [courseId], references: [id])
 
+  progress              LessonProgress[]
+  currentForEnrollments StudentEnrollment[]
+
   @@unique([courseId, slug])
   @@unique([moduleId, displayOrder])
   @@index([moduleId])
   @@index([courseId])
+}
+
+/**
+ * A student's enrollment in a course. `studentId` is an opaque identifier
+ * from the identity boundary (src/server/identity/) — Sprint 5 uses a
+ * development-only identity, not real authentication. See
+ * docs/student-identity.md for how this connects to real NovaTok Social
+ * user IDs later without changing this model.
+ */
+model StudentEnrollment {
+  id              String   @id @default(uuid())
+  studentId       String
+  courseId        String
+  currentLessonId String?
+  enrolledAt      DateTime @default(now())
+  lastAccessedAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  course        Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  currentLesson Lesson? @relation(fields: [currentLessonId], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+/**
+ * One row per (student, lesson): whether and when it was started and
+ * completed. `courseId` is denormalized from the lesson (same pattern as
+ * Lesson.courseId) so "all of this student's progress in this course" is
+ * a direct query, not a join through Lesson.
+ */
+model LessonProgress {
+  id          String    @id @default(uuid())
+  studentId   String
+  courseId    String
+  lessonId    String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, lessonId])
+  @@index([studentId, courseId])
+  @@index([lessonId])
 }
