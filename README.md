@@ -16,6 +16,12 @@ vendor-specific database SDK (no Supabase, no Firebase, no Google Cloud).
 Any standard PostgreSQL host works: local Postgres, Neon, Render, Railway,
 etc.
 
+The AI Course Advisor (Sprint 2) talks to AI providers through a
+provider-agnostic interface (`src/ai/provider.ts`). Only a local Ollama
+adapter is implemented — no paid cloud AI API is called, and none is
+required to run the app. See
+[docs/ai-course-advisor.md](./docs/ai-course-advisor.md).
+
 ## Prerequisites
 
 - Node.js 20+ and npm
@@ -59,14 +65,34 @@ etc.
    npm run db:seed
    ```
 
-5. **Run the development server**
+5. **(Optional) Configure the AI Course Advisor**
+
+   The catalog, search, and filters work without this. To use
+   `/courses/advisor`, install [Ollama](https://ollama.com/download), pull
+   a model, and set the AI variables in `.env` — see
+   [docs/ai-course-advisor.md](./docs/ai-course-advisor.md) for the full
+   walkthrough:
+
+   ```bash
+   ollama pull llama3.2
+   ```
+
+   ```env
+   AI_PROVIDER="ollama"
+   OLLAMA_BASE_URL="http://localhost:11434"
+   OLLAMA_MODEL="llama3.2"
+   ```
+
+6. **Run the development server**
 
    ```bash
    npm run dev
    ```
 
    Open [http://localhost:3000/courses](http://localhost:3000/courses) to
-   see the catalog.
+   see the catalog, or
+   [http://localhost:3000/courses/advisor](http://localhost:3000/courses/advisor)
+   for the AI Course Advisor.
 
 ## Scripts
 
@@ -94,7 +120,9 @@ npm run test
 npm run build
 ```
 
-## Sprint 1 routes
+## Routes
+
+Sprint 1 — course catalog:
 
 - `/courses` — public course catalog: search, category/level/price
   filters, pagination
@@ -104,5 +132,13 @@ npm run build
 - `/api/courses` — paginated, filterable, searchable published courses
 - `/api/courses/[slug]` — a single published course with related courses
 
-See [docs/novatok-integration.md](./docs/novatok-integration.md) for full
-request/response shapes.
+Sprint 2 — AI Course Advisor:
+
+- `/courses/advisor` — natural-language course recommendation form
+- `/api/ai/course-advisor` — `POST` a `{ "message": string }` learning
+  goal, get back grounded, structured recommendations
+
+See [docs/novatok-integration.md](./docs/novatok-integration.md) for the
+Sprint 1 catalog API shapes and
+[docs/ai-course-advisor.md](./docs/ai-course-advisor.md) for the advisor's
+architecture, configuration, and API contract.

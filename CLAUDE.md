@@ -19,9 +19,16 @@ and deploy lifecycle.
 
 ## Repository Rules
 
-- Do not add authentication, payments, AI recommendations, affiliate
-  payouts, file uploads, or reviews until explicitly requested. These are
-  out of scope for early sprints — ask before implementing any of them.
+- Do not add authentication, payments, affiliate payouts, file uploads, or
+  reviews until explicitly requested. These are out of scope for early
+  sprints — ask before implementing any of them.
+- The AI Course Advisor (Sprint 2, `src/ai/`, `src/server/advisor/`) was
+  explicitly requested and is in scope. Keep the AI layer
+  provider-agnostic (`src/ai/provider.ts`); business logic must depend
+  only on that interface, never directly on an Ollama/cloud SDK. No paid
+  cloud AI API is called. Course recommendations must stay grounded in
+  real PostgreSQL `Course` rows — never display a course/slug the catalog
+  query didn't actually return. See docs/ai-course-advisor.md.
 - Do not add CI configuration until explicitly requested.
 - Keep the Prisma schema minimal and only add models when a feature that
   needs them is actually being implemented — no speculative schema.
