@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { badRequest, notFound } from "@/lib/api-response";
+import { guardLearningMutation } from "@/lib/learning-mutation-guard";
 import { completeLessonRequestSchema } from "@/lib/validation/learning";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
 import {
@@ -10,14 +11,10 @@ import {
 import { markLessonComplete } from "@/server/learning/progress";
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Request body must be valid JSON" }, { status: 400 });
-  }
+  const guard = await guardLearningMutation(request, "progress");
+  if (!guard.ok) return guard.response;
 
-  const parsed = completeLessonRequestSchema.safeParse(body);
+  const parsed = completeLessonRequestSchema.safeParse(guard.body);
   if (!parsed.success) {
     return badRequest(parsed.error, "Invalid request body");
   }

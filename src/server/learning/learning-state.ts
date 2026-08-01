@@ -2,7 +2,7 @@ import { getCourseModulesWithLessons, getLessonByCourseAndSlug } from "@/server/
 import { getCourseBySlug } from "@/server/courses";
 import { findEnrollment, touchEnrollmentAccess } from "@/server/learning/enrollment";
 import { EnrollmentCourseNotFoundError, LearningLessonNotFoundError } from "@/server/learning/errors";
-import { calculateCourseProgress, type CourseProgress } from "@/server/learning/progress";
+import { calculateCourseProgress, ensureLessonStarted, type CourseProgress } from "@/server/learning/progress";
 import { resolveResumeLesson } from "@/server/learning/resume";
 import type { SerializedCourseWithCategory, SerializedLesson, SerializedModuleWithLessons } from "@/types/course";
 
@@ -65,6 +65,7 @@ export async function getLearningState(
   }
 
   await touchEnrollmentAccess(studentId, course.id, currentLesson.id);
+  await ensureLessonStarted(studentId, course.id, currentLesson.id);
   const progress = await calculateCourseProgress(studentId, course.id);
 
   return { status: "ready", course, syllabus, currentLesson, progress };

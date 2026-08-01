@@ -9,6 +9,7 @@ const getCourseBySlug = vi.fn();
 const getLessonByCourseAndSlug = vi.fn();
 const findEnrollment = vi.fn();
 const touchEnrollmentAccess = vi.fn();
+const recordLearningActivity = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -31,8 +32,13 @@ vi.mock("@/server/learning/enrollment", () => ({
   findEnrollment: (...args: unknown[]) => findEnrollment(...args),
   touchEnrollmentAccess: (...args: unknown[]) => touchEnrollmentAccess(...args),
 }));
+vi.mock("@/server/learning/activity", () => ({
+  recordLearningActivity: (...args: unknown[]) => recordLearningActivity(...args),
+}));
 
-const { calculateCourseProgress, markLessonComplete } = await import("@/server/learning/progress");
+const { calculateCourseProgress, ensureLessonStarted, markLessonComplete } = await import(
+  "@/server/learning/progress"
+);
 const { EnrollmentCourseNotFoundError, LearningLessonNotFoundError, NotEnrolledError } = await import(
   "@/server/learning/errors"
 );
@@ -50,6 +56,7 @@ beforeEach(() => {
   getLessonByCourseAndSlug.mockReset();
   findEnrollment.mockReset();
   touchEnrollmentAccess.mockReset();
+  recordLearningActivity.mockReset();
 });
 
 describe("calculateCourseProgress", () => {
@@ -137,6 +144,12 @@ describe("markLessonComplete", () => {
     });
     expect(touchEnrollmentAccess).toHaveBeenCalledWith("student-1", "course-1", "lesson-1");
     expect(result.courseProgress.isComplete).toBe(true);
+    expect(recordLearningActivity).toHaveBeenCalledWith({
+      studentId: "student-1",
+      courseId: "course-1",
+      lessonId: "lesson-1",
+      type: "LESSON_COMPLETED",
+    });
   });
 
   it("is idempotent: completing an already-completed lesson doesn't change completedAt", async () => {
@@ -157,6 +170,7 @@ describe("markLessonComplete", () => {
     expect(lessonProgressCreate).not.toHaveBeenCalled();
     expect(lessonProgressUpdate).not.toHaveBeenCalled();
     expect(result.progress.completedAt).toBe(originalCompletedAt.toISOString());
+    expect(recordLearningActivity).not.toHaveBeenCalled();
   });
 
   it("marks a started-but-not-completed row complete", async () => {
@@ -174,5 +188,39 @@ describe("markLessonComplete", () => {
       where: { id: "prog-1" },
       data: { completedAt: expect.any(Date) },
     });
+    expect(recordLearningActivity).toHaveBeenCalledWith({
+      studentId: "student-1",
+      courseId: "course-1",
+      lessonId: "lesson-1",
+      type: "LESSON_COMPLETED",
+    });
+  });
+});
+
+describe("ensureLessonStarted", () => {
+  it("creates an unstarted progress row and logs LESSON_STARTED the first time a lesson is viewed", async () => {
+    lessonProgressFindUnique.mockResolvedValue(null);
+    lessonProgressCreate.mockResolvedValue({ id: "prog-1" });
+
+    await ensureLessonStarted("student-1", "course-1", "lesson-1");
+
+    expect(lessonProgressCreate).toHaveBeenCalledWith({
+      data: { studentId: "student-1", courseId: "course-1", lessonId: "lesson-1" },
+    });
+    expect(recordLearningActivity).toHaveBeenCalledWith({
+      studentId: "student-1",
+      courseId: "course-1",
+      lessonId: "lesson-1",
+      type: "LESSON_STARTED",
+    });
+  });
+
+  it("is a no-op when a progress row already exists (started or completed)", async () => {
+    lessonProgressFindUnique.mockResolvedValue({ id: "prog-1", completedAt: null });
+
+    await ensureLessonStarted("student-1", "course-1", "lesson-1");
+
+    expect(lessonProgressCreate).not.toHaveBeenCalled();
+    expect(recordLearningActivity).not.toHaveBeenCalled();
   });
 });

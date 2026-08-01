@@ -177,8 +177,16 @@ topical connection to the course's lessons never reaches the model.
 `responseMode: "PRACTICE"` asks the model to produce one practice question
 grounded in the retrieved lesson content instead of a plain explanation.
 The output (`{ question, choices?, answer, explanation }`) is Zod-validated
-before being returned; nothing is persisted — there's no quiz bank or
-grading system in Sprint 3, this is generated fresh per request.
+before being returned; nothing is persisted here — this Tutor-mode
+question is generated fresh per request and never graded server-side.
+
+**Sprint 6 added a separate, dedicated practice workflow** —
+`POST /api/learning/practice` + `POST /api/learning/practice/evaluate` —
+with a real answer key stored server-side and deterministic MULTIPLE_CHOICE
+grading. See [docs/learning-progress.md](./learning-progress.md#practice-questions)
+for the full design; this Tutor-mode practice question is unrelated and
+unaffected by it, kept for quick "give me a practice question" follow-ups
+inline in a Tutor conversation.
 
 ## Tutor API
 
@@ -256,6 +264,29 @@ In the UI, this happens two ways: clicking a lesson title directly from
 the course page's syllabus list (`/courses/[slug]/tutor?lessonSlug=...`),
 or picking a lesson from the "Ask about" dropdown on the Tutor page
 itself.
+
+## Bounded learning-state context and activity (Sprint 6)
+
+`getTutorAnswer` now accepts an optional `studentId`, supplied by
+`POST /api/ai/tutor` from `getStudentIdentity()` — never from the request
+body. This is fully backward compatible: a request with no resolvable
+identity (shouldn't happen in practice, since middleware always assigns
+the dev cookie) behaves exactly like Sprint 3-5.
+
+- **Activity**: every question logs one `TUTOR_QUESTION`
+  `LearningActivity` row (`metadata: { responseMode }` only — never the
+  question text), regardless of whether the student is enrolled in the
+  course.
+- **Context**: only if the student is enrolled, a small bounded summary
+  (completed/total lesson counts, recent practice accuracy, up to 2
+  review-candidate lesson titles — from
+  `src/server/learning/learning-signals.ts`) is appended to the prompt.
+  The system prompt frames it explicitly as guidance the model may use to
+  answer things like "am I ready for the next lesson?", never as
+  something the model's own answer can override — the platform's own
+  progress tracking remains authoritative. See
+  [docs/learning-progress.md](./learning-progress.md#ai-tutor-bounded-learning-state-context-sprint-6)
+  for the full design.
 
 ## Follow-up context
 

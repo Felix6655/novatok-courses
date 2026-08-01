@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { __resetLearningMutationGuardStateForTests } from "@/lib/learning-mutation-guard";
 
 const getStudentIdentity = vi.fn();
 const markLessonComplete = vi.fn();
@@ -27,6 +28,7 @@ beforeEach(() => {
   getStudentIdentity.mockReset();
   markLessonComplete.mockReset();
   getStudentIdentity.mockResolvedValue({ studentId: "dev-student-1" });
+  __resetLearningMutationGuardStateForTests();
 });
 
 describe("POST /api/learning/progress", () => {
@@ -80,5 +82,20 @@ describe("POST /api/learning/progress", () => {
       request({ courseSlug: "javascript-fundamentals", lessonSlug: "variables-and-data-types" }),
     );
     expect(response.status).toBe(403);
+  });
+
+  it("returns 429 after exceeding the mutation rate limit for a client", async () => {
+    markLessonComplete.mockResolvedValue({
+      progress: { id: "prog-1" },
+      courseProgress: { totalLessons: 4, completedLessons: 1, percentage: 25, isComplete: false, completedLessonSlugs: ["a"] },
+    });
+    let lastStatus = 0;
+    for (let i = 0; i < 31; i++) {
+      const response = await POST(
+        request({ courseSlug: "javascript-fundamentals", lessonSlug: "variables-and-data-types" }),
+      );
+      lastStatus = response.status;
+    }
+    expect(lastStatus).toBe(429);
   });
 });

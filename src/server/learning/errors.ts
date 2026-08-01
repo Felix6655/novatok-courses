@@ -21,3 +21,15 @@ export class LearningLessonNotFoundError extends Error {
     this.name = "LearningLessonNotFoundError";
   }
 }
+
+/**
+ * The practiceId is unknown, already consumed, expired, or belongs to a
+ * different student — deliberately one message for all four so a client
+ * can't distinguish "not yours" from "doesn't exist". Maps to 404.
+ */
+export class PracticeNotFoundError extends Error {
+  constructor() {
+    super("This practice question is no longer available. Request a new one.");
+    this.name = "PracticeNotFoundError";
+  }
+}

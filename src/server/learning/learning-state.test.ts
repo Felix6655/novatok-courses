@@ -6,6 +6,7 @@ const getLessonByCourseAndSlug = vi.fn();
 const findEnrollment = vi.fn();
 const touchEnrollmentAccess = vi.fn();
 const calculateCourseProgress = vi.fn();
+const ensureLessonStarted = vi.fn();
 const resolveResumeLesson = vi.fn();
 
 vi.mock("@/server/courses", () => ({
@@ -21,6 +22,7 @@ vi.mock("@/server/learning/enrollment", () => ({
 }));
 vi.mock("@/server/learning/progress", () => ({
   calculateCourseProgress: (...args: unknown[]) => calculateCourseProgress(...args),
+  ensureLessonStarted: (...args: unknown[]) => ensureLessonStarted(...args),
 }));
 vi.mock("@/server/learning/resume", () => ({
   resolveResumeLesson: (...args: unknown[]) => resolveResumeLesson(...args),
@@ -41,6 +43,7 @@ beforeEach(() => {
   findEnrollment.mockReset();
   touchEnrollmentAccess.mockReset();
   calculateCourseProgress.mockReset();
+  ensureLessonStarted.mockReset();
   resolveResumeLesson.mockReset();
 });
 
@@ -84,6 +87,7 @@ describe("getLearningState", () => {
     }
     expect(getLessonByCourseAndSlug).not.toHaveBeenCalled();
     expect(touchEnrollmentAccess).toHaveBeenCalledWith("student-1", "course-1", "l1");
+    expect(ensureLessonStarted).toHaveBeenCalledWith("student-1", "course-1", "l1");
   });
 
   it("uses the explicitly requested lessonSlug when valid for this course", async () => {

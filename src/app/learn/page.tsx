@@ -2,16 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
-import { getStudentDashboard } from "@/server/learning/dashboard";
+import { getRecentActivity, getStudentDashboard } from "@/server/learning/dashboard";
 
 export const metadata: Metadata = {
   title: "My Learning | NovaTok Courses",
   description: "Your enrolled courses and progress.",
 };
 
+const ACTIVITY_LABELS: Record<string, string> = {
+  LESSON_STARTED: "Started",
+  LESSON_COMPLETED: "Completed",
+  TUTOR_QUESTION: "Asked the Tutor about",
+  PRACTICE_ATTEMPT: "Practiced",
+  COACH_REQUEST: "Asked the Learning Coach about",
+};
+
 export default async function LearnDashboardPage() {
   const identity = await getStudentIdentity();
-  const enrollments = await getStudentDashboard(identity.studentId);
+  const [enrollments, recentActivity] = await Promise.all([
+    getStudentDashboard(identity.studentId),
+    getRecentActivity(identity.studentId),
+  ]);
 
   const inProgress = enrollments.filter((e) => !e.progress.isComplete);
   const completed = enrollments.filter((e) => e.progress.isComplete);
@@ -76,6 +87,47 @@ export default async function LearnDashboardPage() {
                         percentage={enrollment.progress.percentage}
                       />
                     </div>
+                    {enrollment.reviewCandidateCount > 0 && (
+                      <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">
+                        {enrollment.reviewCandidateCount === 1
+                          ? "1 lesson may be worth reviewing"
+                          : `${enrollment.reviewCandidateCount} lessons may be worth reviewing`}
+                        {" — ask the AI Learning Coach why."}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {recentActivity.length > 0 && (
+            <section className="mt-10">
+              <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                Recent activity
+              </h2>
+              <ul className="mt-4 space-y-2">
+                {recentActivity.map((activity) => (
+                  <li
+                    key={activity.id}
+                    className="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-2.5 text-sm dark:border-neutral-800"
+                  >
+                    <span className="text-neutral-700 dark:text-neutral-300">
+                      {ACTIVITY_LABELS[activity.type] ?? activity.type}{" "}
+                      {activity.lessonTitle ? `"${activity.lessonTitle}"` : activity.courseTitle}
+                      {activity.lessonTitle && (
+                        <span className="text-neutral-500 dark:text-neutral-400">
+                          {" "}
+                          in {activity.courseTitle}
+                        </span>
+                      )}
+                    </span>
+                    <Link
+                      href={`/learn/${activity.courseSlug}`}
+                      className="shrink-0 text-neutral-500 hover:underline dark:text-neutral-400"
+                    >
+                      View
+                    </Link>
                   </li>
                 ))}
               </ul>

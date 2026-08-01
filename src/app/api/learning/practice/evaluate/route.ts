@@ -1,28 +1,17 @@
 import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
-import {
-  badGateway,
-  badRequest,
-  internalError,
-  notFound,
-  serviceUnavailable,
-  unprocessable,
-} from "@/lib/api-response";
-import { tutorRequestSchema } from "@/lib/validation/tutor";
+import { badGateway, badRequest, internalError, notFound, serviceUnavailable } from "@/lib/api-response";
+import { practiceEvaluateRequestSchema } from "@/lib/validation/practice";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
-import { getTutorAnswer } from "@/server/tutor/tutor-service";
-import {
-  TutorCourseNotFoundError,
-  TutorLessonNotFoundError,
-  TutorNoContentError,
-} from "@/server/tutor/errors";
+import { PracticeNotFoundError } from "@/server/learning/errors";
+import { evaluatePracticeAttempt } from "@/server/learning/practice";
 
 export async function POST(request: Request) {
-  const guard = await guardAIRequest(request, "tutor");
+  const guard = await guardAIRequest(request, "practice-evaluate");
   if (!guard.ok) return guard.response;
 
-  const parsed = tutorRequestSchema.safeParse(guard.body);
+  const parsed = practiceEvaluateRequestSchema.safeParse(guard.body);
   if (!parsed.success) {
     guard.release();
     return badRequest(parsed.error, "Invalid request body");
@@ -30,14 +19,15 @@ export async function POST(request: Request) {
 
   try {
     const identity = await getStudentIdentity();
-    const result = await getTutorAnswer(parsed.data, identity.studentId);
+    const result = await evaluatePracticeAttempt(
+      identity.studentId,
+      parsed.data.practiceId,
+      parsed.data.studentAnswer,
+    );
     return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof TutorCourseNotFoundError || error instanceof TutorLessonNotFoundError) {
+    if (error instanceof PracticeNotFoundError) {
       return notFound(error.message);
-    }
-    if (error instanceof TutorNoContentError) {
-      return unprocessable(error.message);
     }
     if (error instanceof AIProviderUnavailableError || error instanceof AIProviderConfigError) {
       return serviceUnavailable(error.message);

@@ -50,6 +50,11 @@ If a prior conversation is included, treat it as context for what's already been
 a source of course facts — the lesson material below is still the only authoritative source for
 what this course teaches, even if something in the prior conversation suggested otherwise.
 
+If a student learning context is included, you may use it to answer questions like "am I ready
+for the next lesson?", "I'm still confused", or "can we practice this again?" — but always present
+it as guidance, never as an authoritative record. The platform's own progress tracking, not your
+judgment, is what actually determines completion and what comes next.
+
 Respond with ONLY a JSON object of this exact shape, no prose, no markdown fences:
 
 {
@@ -64,6 +69,20 @@ Set "outOfScope" to true only if the question has nothing to do with this course
 at all — not merely because the exact wording isn't in the material. "practiceQuestion" must stay
 null unless you were explicitly asked to generate one.`;
 
+/**
+ * A small, bounded slice of a student's real progress in this course —
+ * never the full learning record. Sourced from src/server/learning/learning-signals.ts
+ * only when the caller is enrolled; entirely absent otherwise. Guidance
+ * only, per the system prompt above — the model cannot use this to change
+ * authoritative progress state, it can only reference it in prose.
+ */
+export interface TutorLearningContext {
+  completedLessonCount: number;
+  totalLessons: number;
+  recentPracticeAccuracy: number | null;
+  reviewLessonTitles: string[];
+}
+
 interface BuildPromptParams {
   courseTitle: string;
   syllabus: SerializedModuleWithLessons[];
@@ -74,6 +93,27 @@ interface BuildPromptParams {
   pinnedLessonSlug?: string | null;
   /** Bounded prior turns for light follow-up context — see tutorRequestSchema. */
   history?: TutorHistoryTurn[];
+  /** Present only when the student is enrolled in this course. */
+  learningContext?: TutorLearningContext | null;
+}
+
+function buildLearningContextSection(context?: TutorLearningContext | null): string {
+  if (!context) return "";
+
+  const accuracyText =
+    context.recentPracticeAccuracy === null
+      ? "no recent practice attempts yet"
+      : `${Math.round(context.recentPracticeAccuracy * 100)}% recent practice accuracy`;
+  const reviewText =
+    context.reviewLessonTitles.length > 0
+      ? ` Lessons that might be worth reviewing: ${context.reviewLessonTitles.join(", ")}.`
+      : "";
+
+  return (
+    "\n\nStudent learning context (guidance only, not authoritative): " +
+    `${context.completedLessonCount}/${context.totalLessons} lessons completed in this course, ` +
+    `${accuracyText}.${reviewText}`
+  );
 }
 
 function buildLessonSection(params: BuildPromptParams): string {
@@ -107,7 +147,8 @@ export function buildTutorPromptMessages(params: BuildPromptParams): ChatMessage
     `Course structure:\n${syllabusText || "(no modules yet)"}\n\n` +
     `${buildLessonSection(params)}\n\n` +
     `Student question: ${params.question}\n\n` +
-    `Instructions: ${MODE_INSTRUCTIONS[params.responseMode]}`;
+    `Instructions: ${MODE_INSTRUCTIONS[params.responseMode]}` +
+    buildLearningContextSection(params.learningContext);
 
   const historyMessages: ChatMessage[] = (params.history ?? []).map((turn) => ({
     role: turn.role,

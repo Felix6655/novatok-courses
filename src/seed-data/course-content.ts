@@ -20,10 +20,11 @@ export interface CourseContentSeed {
 
 /**
  * Real learning content for a representative subset of published courses
- * (12 of ~50, spanning 11 categories and BEGINNER/INTERMEDIATE/ADVANCED
- * levels) so the AI Tutor has something substantive to ground answers in.
- * Not every catalog course has content yet — this is a useful working
- * set, not a full content library.
+ * (20 of ~50, spanning 11 categories and BEGINNER/INTERMEDIATE/ADVANCED
+ * levels — most categories now have at least two levels covered) so the
+ * AI Tutor, practice generation, and Learning Coach have something
+ * substantive to ground answers in. Not every catalog course has content
+ * yet — this is a useful working set, not a full content library.
  */
 export const courseContentSeeds: CourseContentSeed[] = [
   {
@@ -1068,6 +1069,777 @@ export const courseContentSeeds: CourseContentSeed[] = [
               "Choosing the right consistency model isn't about picking the \"best\" one in the " +
               "abstract — it's about matching the guarantee to what a specific piece of data " +
               "actually requires.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "full-stack-web-development-with-nextjs",
+    modules: [
+      {
+        title: "Server and Client Together",
+        description: "How Next.js blends server and client rendering in one app.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "server-components-vs-client-components",
+            title: "Server Components vs. Client Components",
+            summary: "What runs on the server, what runs in the browser, and why it matters.",
+            content:
+              "In the Next.js App Router, every component is a Server Component by default: it " +
+              "renders on the server, can read directly from a database or file system, and sends " +
+              "no JavaScript for itself to the browser. Adding `\"use client\"` at the top of a file " +
+              "opts that component (and everything it imports) into rendering in the browser " +
+              "instead, which is required for anything interactive — state, effects, event " +
+              "handlers.\n\n" +
+              "The practical rule of thumb: keep data fetching and static structure in Server " +
+              "Components, and push interactivity down into small, focused Client Components at the " +
+              "leaves of the tree. A page doesn't need to be a Client Component just because one " +
+              "button on it needs an `onClick`.\n\n" +
+              "This split is also a performance decision — Server Components ship zero JavaScript to " +
+              "the client for the parts of the UI that don't need to be interactive, which directly " +
+              "reduces the amount of code the browser has to download and run.",
+            displayOrder: 1,
+          },
+          {
+            slug: "data-fetching-with-route-handlers",
+            title: "Data Fetching with Route Handlers",
+            summary: "Building a small API inside a Next.js app with Route Handlers.",
+            content:
+              "A Route Handler is a file named `route.ts` inside `app/`, exporting functions named " +
+              "after HTTP methods (`GET`, `POST`, etc.). It behaves like a small API endpoint that " +
+              "lives inside the same project as your pages, rather than a separate backend " +
+              "service.\n\n" +
+              "Server Components can fetch data directly (e.g. from a database), but Route Handlers " +
+              "are still necessary whenever the browser itself needs to call your backend — for " +
+              "example, a client-side form submission via `fetch(\"/api/...\")`, since a Client " +
+              "Component can't query a database directly.\n\n" +
+              "A common pattern is: the initial page load uses a Server Component to fetch data " +
+              "directly for fast first render, while any follow-up interaction (submitting a form, " +
+              "refreshing a list) goes through a Route Handler called from the client.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Building Real Features",
+        description: "Putting the pieces together into a working full-stack feature.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "forms-and-mutations",
+            title: "Forms and Mutations",
+            summary: "Submitting data from the browser and updating what the user sees afterward.",
+            content:
+              "A typical mutation flow is: a Client Component form collects input, calls `fetch()` " +
+              "against a Route Handler on submit, and then updates the UI once the request " +
+              "succeeds — either by refreshing the current route's data or updating local state " +
+              "directly.\n\n" +
+              "`router.refresh()` (from `next/navigation`) re-runs the Server Components on the " +
+              "current page against fresh data without a full page reload and without losing client " +
+              "state like scroll position or open modals — a common pattern after a successful " +
+              "mutation.\n\n" +
+              "Always validate submitted data on the server, inside the Route Handler, even if the " +
+              "form already validates it in the browser — client-side validation is a UX " +
+              "convenience, not a security boundary, since a request can always be sent directly to " +
+              "the endpoint without going through your form.",
+            displayOrder: 1,
+          },
+          {
+            slug: "loading-and-error-states",
+            title: "Loading and Error States",
+            summary: "Giving users useful feedback while data loads or something goes wrong.",
+            content:
+              "A `loading.tsx` file in a route segment automatically wraps that segment in a React " +
+              "Suspense boundary, showing its contents while the segment's data-fetching Server " +
+              "Components resolve. This is convenient, but it applies to every nested route under " +
+              "that segment too — a `loading.tsx` at a parent route can unexpectedly change the " +
+              "streaming behavior of child routes beneath it, which is worth checking carefully.\n\n" +
+              "An `error.tsx` file catches errors thrown while rendering that segment and its " +
+              "children, showing a fallback UI instead of crashing the whole page. It must be a " +
+              "Client Component, since error boundaries rely on React features only available in " +
+              "the browser.\n\n" +
+              "`notFound()` (from `next/navigation`), called from a Server Component, tells Next.js " +
+              "to render the nearest `not-found.tsx` and return a real HTTP 404 — the correct way to " +
+              "signal \"this specific thing doesn't exist\" rather than just showing empty content.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "prompt-engineering-for-business-teams",
+    modules: [
+      {
+        title: "Writing Prompts That Work",
+        description: "The core techniques that make an AI response more useful and consistent.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "specificity-and-context",
+            title: "Specificity and Context",
+            summary: "Why vague prompts get vague answers, and how to fix that.",
+            content:
+              "A vague prompt like \"write a marketing email\" forces the model to guess at " +
+              "audience, tone, length, and goal — and it will guess, confidently, producing " +
+              "something generic. Giving the model the context a human writer would actually need " +
+              "(who's the audience, what's the goal, what's the tone, how long) produces " +
+              "dramatically more usable output on the first try.\n\n" +
+              "A useful habit: before writing a prompt, ask \"what would I need to tell a new " +
+              "freelancer to get a good result from them?\" — the same context that helps a person " +
+              "helps the model, because it narrows down which of many plausible outputs is actually " +
+              "wanted.\n\n" +
+              "Providing an example of the desired output (\"few-shot\" prompting) is often more " +
+              "effective than describing the desired output in the abstract, especially for tasks " +
+              "with a specific format or tone that's easier to show than to explain.",
+            displayOrder: 1,
+          },
+          {
+            slug: "structuring-multi-step-requests",
+            title: "Structuring Multi-Step Requests",
+            summary: "Breaking a complex task into steps the model can follow reliably.",
+            content:
+              "For a task with several distinct steps (research a topic, then outline it, then " +
+              "draft it), asking for all of it in one prompt often produces a shallower result than " +
+              "asking for one step, reviewing it, then asking for the next. Breaking work into " +
+              "stages gives you a chance to correct course before an error compounds through the " +
+              "rest of the output.\n\n" +
+              "Numbered instructions (\"1. Do X. 2. Then do Y. 3. Finally do Z.\") tend to produce " +
+              "more reliable multi-part output than the same instructions written as one flowing " +
+              "paragraph, because the structure itself signals that each part needs to be addressed " +
+              "separately.\n\n" +
+              "For genuinely long or complex outputs, treating the model as a collaborator across " +
+              "several turns — draft, feedback, revise — generally beats trying to perfect a single " +
+              "giant prompt.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Using AI Responsibly at Work",
+        description: "Getting reliable, checkable output for real business tasks.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "verifying-factual-output",
+            title: "Verifying Factual Output",
+            summary: "Why AI-generated facts and numbers need a human check before they're used.",
+            content:
+              "Language models generate plausible-sounding text, not verified facts — they can " +
+              "state incorrect numbers, misattribute quotes, or invent sources with complete " +
+              "fluency and confidence. Anything a model states as fact (a statistic, a citation, a " +
+              "specific claim about a competitor or regulation) needs independent verification " +
+              "before it's used in real business communication.\n\n" +
+              "A practical rule: use AI freely for drafting structure, tone, and phrasing, but treat " +
+              "any specific factual claim in the output as a placeholder to verify, not a finished " +
+              "fact. This is especially important for anything customer-facing, legal, or " +
+              "financial.\n\n" +
+              "Asking the model to cite where a claim came from doesn't solve this — a model can " +
+              "generate a plausible-looking but fabricated citation just as easily as a plausible " +
+              "but fabricated fact.",
+            displayOrder: 1,
+          },
+          {
+            slug: "handling-sensitive-business-data",
+            title: "Handling Sensitive Business Data",
+            summary: "What to think about before pasting company information into an AI tool.",
+            content:
+              "Before pasting customer data, financial figures, or unreleased business plans into " +
+              "an AI tool, check what that tool's data-handling policy actually says — some " +
+              "providers use submitted input to further train their models by default, which can " +
+              "mean sensitive information leaves your control in a way that's hard to undo.\n\n" +
+              "A safe default for teams without a clear policy yet: treat any AI tool the same way " +
+              "you'd treat an external contractor with no NDA — don't share anything you wouldn't " +
+              "be comfortable having outside the company, unless the tool's terms and your " +
+              "organization's policy explicitly say otherwise.\n\n" +
+              "Redacting or replacing real names, account numbers, and specific figures with " +
+              "placeholders before prompting is a simple, effective habit that preserves the " +
+              "usefulness of most drafting and analysis tasks without exposing real data.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "network-security-essentials",
+    modules: [
+      {
+        title: "How Networks Actually Work",
+        description: "The plumbing that every network attack and defense operates on.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "the-tcp-ip-model",
+            title: "The TCP/IP Model",
+            summary: "The layered model that describes how data actually moves across a network.",
+            content:
+              "The TCP/IP model describes networking in layers: the link layer (physical " +
+              "transmission, e.g. Ethernet/Wi-Fi), the internet layer (IP addressing and routing " +
+              "between networks), the transport layer (TCP or UDP, delivering data between specific " +
+              "programs), and the application layer (HTTP, DNS, and other protocols applications " +
+              "actually speak).\n\n" +
+              "TCP establishes a connection (the \"three-way handshake\") and guarantees delivery and " +
+              "ordering, which is why it's used for things like web traffic where losing or " +
+              "reordering data would break the page. UDP sends data without that overhead or those " +
+              "guarantees, trading reliability for speed — used for things like video calls where a " +
+              "dropped packet is less costly than the delay of retransmitting it.\n\n" +
+              "Understanding which layer a given attack or defense operates at is foundational: a " +
+              "firewall rule filtering by port number is operating at the transport layer, while a " +
+              "web application firewall inspecting HTTP requests is operating at the application " +
+              "layer — very different tools for very different problems.",
+            displayOrder: 1,
+          },
+          {
+            slug: "firewalls-and-network-segmentation",
+            title: "Firewalls and Network Segmentation",
+            summary: "Controlling what traffic is allowed to reach what, and why that limits damage.",
+            content:
+              "A firewall enforces rules about what network traffic is allowed through, typically " +
+              "based on source/destination address, port, and protocol. The safest default posture " +
+              "is \"default deny\": block everything, then explicitly allow only the specific traffic " +
+              "a system actually needs — rather than allowing everything and trying to block known " +
+              "bad traffic.\n\n" +
+              "Network segmentation divides a network into smaller zones (e.g. separating employee " +
+              "workstations from production servers) so that a compromise in one zone doesn't " +
+              "automatically grant access to every other zone. This directly limits the practical " +
+              "impact of a single compromised machine.\n\n" +
+              "The two ideas work together: firewalls enforce the boundaries that segmentation " +
+              "creates. A flat network with no segmentation makes a single successful phishing " +
+              "attack against one low-privilege machine a much bigger problem than it needs to " +
+              "be.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Common Network Attacks",
+        description: "Recognizing the network-level attacks that security operations deal with daily.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "man-in-the-middle-attacks",
+            title: "Man-in-the-Middle Attacks",
+            summary: "How an attacker intercepts traffic between two parties who think they're talking directly.",
+            content:
+              "A man-in-the-middle (MITM) attack happens when an attacker positions themselves " +
+              "between two communicating parties — intercepting, and potentially altering, traffic " +
+              "that both sides believe is going directly to each other. On an unsecured public " +
+              "Wi-Fi network, this can be as simple as the attacker being on the same network and " +
+              "using tools to intercept unencrypted traffic.\n\n" +
+              "HTTPS (TLS) is the primary defense: it encrypts traffic between browser and server " +
+              "and cryptographically verifies the server's identity via certificates, making a " +
+              "successful MITM attack require either a compromised certificate authority or " +
+              "tricking the user into ignoring a certificate warning — both far harder than passive " +
+              "interception on an unencrypted connection.\n\n" +
+              "This is why browsers now visibly warn on plain HTTP sites and why certificate " +
+              "warnings should never be routinely dismissed — that warning exists specifically to " +
+              "surface exactly this kind of interception attempt.",
+            displayOrder: 1,
+          },
+          {
+            slug: "denial-of-service-basics",
+            title: "Denial-of-Service Basics",
+            summary: "How attackers overwhelm a system's capacity rather than breaking into it.",
+            content:
+              "A denial-of-service (DoS) attack doesn't try to breach a system — it tries to " +
+              "overwhelm its capacity to respond to legitimate requests, whether that's network " +
+              "bandwidth, server CPU, or application-level resources like database connections. A " +
+              "distributed denial-of-service (DDoS) attack does this from many sources at once, " +
+              "making it much harder to block by simply denying one IP address.\n\n" +
+              "Common defenses include rate limiting (capping how many requests a single client can " +
+              "make in a time window), traffic scrubbing services that filter malicious traffic " +
+              "before it reaches your infrastructure, and simply over-provisioning capacity to " +
+              "absorb smaller spikes.\n\n" +
+              "It's worth noting that DoS-style techniques are only appropriate in explicitly " +
+              "authorized security testing — using them against systems you don't own or lack " +
+              "written permission to test is illegal in most jurisdictions, distinct from most other " +
+              "security research which can be done more safely in isolated lab environments.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "sql-for-data-analysis",
+    modules: [
+      {
+        title: "Getting Data Out",
+        description: "The core SQL you need to answer a question with data.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "select-where-and-order-by",
+            title: "SELECT, WHERE, and ORDER BY",
+            summary: "The three clauses that answer most simple data questions.",
+            content:
+              "`SELECT column1, column2 FROM table` retrieves specific columns from a table; " +
+              "`SELECT *` retrieves all columns, which is convenient for exploring but wasteful in " +
+              "real queries against wide tables. `WHERE` filters which rows are returned, based on " +
+              "a condition — `WHERE status = 'active'` returns only active rows.\n\n" +
+              "`ORDER BY column DESC` sorts the result set, descending by default is `ASC` " +
+              "(ascending) — useful for questions like \"who are the 10 most recent signups?\" " +
+              "combined with `LIMIT 10`.\n\n" +
+              "Conditions in `WHERE` can be combined with `AND`/`OR`, and parentheses matter: " +
+              "`WHERE status = 'active' AND (plan = 'pro' OR plan = 'business')` means something " +
+              "different from the same clause without parentheses, because `AND` binds tighter than " +
+              "`OR` by default.",
+            displayOrder: 1,
+          },
+          {
+            slug: "joining-tables",
+            title: "Joining Tables",
+            summary: "Combining rows from two related tables into one result.",
+            content:
+              "Real data is usually spread across multiple related tables (e.g. `orders` and " +
+              "`customers`), and a `JOIN` combines rows from both based on a matching column: " +
+              "`SELECT * FROM orders JOIN customers ON orders.customer_id = customers.id`.\n\n" +
+              "An `INNER JOIN` (the default for `JOIN`) only returns rows that have a match in both " +
+              "tables. A `LEFT JOIN` returns every row from the left table regardless of whether it " +
+              "has a match, filling in `NULL` for the right table's columns when there isn't one — " +
+              "essential for questions like \"which customers have never placed an order?\"\n\n" +
+              "A common mistake is joining on the wrong column and silently getting a technically " +
+              "valid but meaningless result (e.g. duplicated rows from a one-to-many relationship) " +
+              "— always sanity-check row counts before and after a join against what you'd expect.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Summarizing Data",
+        description: "Turning rows into the aggregated answers stakeholders actually ask for.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "group-by-and-aggregate-functions",
+            title: "GROUP BY and Aggregate Functions",
+            summary: "Turning many rows into one summary row per group.",
+            content:
+              "Aggregate functions like `COUNT()`, `SUM()`, `AVG()`, `MIN()`, and `MAX()` collapse " +
+              "many rows into a single value. `GROUP BY` changes that from \"one value for the whole " +
+              "table\" to \"one value per group\" — `SELECT category, COUNT(*) FROM products GROUP BY " +
+              "category` returns a count for each category.\n\n" +
+              "Every column in the `SELECT` list of a grouped query must either be in the `GROUP BY` " +
+              "clause or wrapped in an aggregate function — this is the most common error beginners " +
+              "hit, and the error message is usually explicit about which column is the problem.\n\n" +
+              "`HAVING` filters groups after aggregation (e.g. `HAVING COUNT(*) > 10`), while " +
+              "`WHERE` filters rows before aggregation — using `WHERE` when you meant `HAVING` is a " +
+              "common source of confusing, silently wrong results.",
+            displayOrder: 1,
+          },
+          {
+            slug: "writing-queries-stakeholders-can-trust",
+            title: "Writing Queries Stakeholders Can Trust",
+            summary: "Habits that catch quiet errors before a wrong number reaches a decision-maker.",
+            content:
+              "A query can run without error and still return a wrong answer — a bad join " +
+              "multiplying rows, a `WHERE` clause silently excluding rows with `NULL`, or a date " +
+              "range that's off by one are all common, quiet mistakes. Before sharing a result, " +
+              "sanity-check it: does the row count roughly match expectations, does a manual spot " +
+              "check of a few rows look right?\n\n" +
+              "`NULL` behaves differently than most people expect: `WHERE column != 'value'` will " +
+              "silently exclude rows where `column` is `NULL`, because `NULL != 'value'` evaluates " +
+              "to unknown, not true. Checking for `NULL` explicitly requires `IS NULL` or `IS NOT " +
+              "NULL`, not `=` or `!=`.\n\n" +
+              "Writing a query that's easy for someone else to read — clear aliases, consistent " +
+              "formatting, a comment explaining a non-obvious filter — pays for itself the first " +
+              "time someone questions a number and you need to explain exactly how it was " +
+              "calculated.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "seo-that-actually-works",
+    modules: [
+      {
+        title: "How Search Engines Decide Rankings",
+        description: "The fundamentals behind why some pages rank and others don't.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "search-intent-and-keyword-research",
+            title: "Search Intent and Keyword Research",
+            summary: "Matching content to what a searcher actually wants, not just the words they typed.",
+            content:
+              "Search intent is the underlying goal behind a query, and it's usually one of four " +
+              "types: informational (\"how does X work\"), navigational (looking for a specific " +
+              "site), commercial investigation (comparing options before buying), or transactional " +
+              "(ready to buy now). Ranking well requires content that matches the dominant intent " +
+              "for a given query — a product page rarely outranks a how-to guide for an " +
+              "informational query, no matter how well-optimized the product page is.\n\n" +
+              "Keyword research isn't just finding high-volume terms — it's understanding what real " +
+              "searchers actually type, including long-tail variations (\"best running shoes for " +
+              "flat feet\" vs. just \"running shoes\") that have lower volume individually but are " +
+              "often easier to rank for and convert better because the intent is more specific.\n\n" +
+              "Looking at what's currently ranking for a target query is one of the most reliable " +
+              "signals of intent: if the top results are all comparison listicles, Google's own " +
+              "ranking system is telling you that's the format searchers for that query want.",
+            displayOrder: 1,
+          },
+          {
+            slug: "on-page-optimization-fundamentals",
+            title: "On-Page Optimization Fundamentals",
+            summary: "The concrete, page-level elements that help search engines understand content.",
+            content:
+              "The title tag and meta description don't directly boost rankings much on their own, " +
+              "but they heavily influence click-through rate from the results page — a compelling, " +
+              "accurate title matters even at the same ranking position. Header tags (`<h1>`, " +
+              "`<h2>`...) should reflect the actual structure of the content, both for search " +
+              "engines and for readers scanning the page.\n\n" +
+              "Internal linking — linking from one page on your site to another relevant page — " +
+              "helps search engines discover and understand the relationship between pages, and " +
+              "helps distribute ranking authority from well-linked pages to newer ones.\n\n" +
+              "Content depth matters more than keyword repetition: modern search engines are good " +
+              "at recognizing when a page thoroughly answers a query versus when it's superficially " +
+              "stuffed with a keyword — the latter is both a poor user experience and, at this " +
+              "point, an outdated and often penalized tactic.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Earning Authority and Measuring Results",
+        description: "What happens off your own page, and how to know if any of it is working.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "backlinks-and-domain-authority",
+            title: "Backlinks and Domain Authority",
+            summary: "Why links from other sites still matter, and which ones actually help.",
+            content:
+              "A backlink is a link from another website to yours, and search engines treat it as a " +
+              "signal of trust — roughly, other sites vouching for your content. Not all backlinks " +
+              "are equal: a link from a well-established, relevant site carries far more weight than " +
+              "a link from a low-quality or unrelated site, and links from clearly spammy sources " +
+              "can actively hurt rather than help.\n\n" +
+              "Earning backlinks organically usually comes from creating genuinely useful, " +
+              "citable content (original research, comprehensive guides, useful tools) that other " +
+              "sites want to reference — rather than from directly asking for links, which scales " +
+              "poorly and often produces low-quality links.\n\n" +
+              "Buying links or participating in obvious link-exchange schemes violates most search " +
+              "engines' guidelines and risks a manual penalty that can be far more damaging than the " +
+              "ranking benefit those links would have provided.",
+            displayOrder: 1,
+          },
+          {
+            slug: "measuring-seo-performance",
+            title: "Measuring SEO Performance",
+            summary: "The metrics that actually indicate whether SEO work is paying off.",
+            content:
+              "Ranking position for a single keyword is a weak standalone metric — rankings " +
+              "fluctuate constantly and a page can rank #1 for a low-value query while ranking #8 " +
+              "for a query that drives far more actual business. Organic traffic and, more " +
+              "importantly, organic conversions are the metrics that connect SEO work to real " +
+              "outcomes.\n\n" +
+              "Search Console-style tools show which queries actually bring traffic to a page, " +
+              "which is often surprising — a page frequently ranks well for queries the content " +
+              "wasn't explicitly written for, revealing opportunities to expand that content " +
+              "further.\n\n" +
+              "SEO changes typically take weeks to months to show a measurable ranking impact, since " +
+              "search engines need time to re-crawl and re-evaluate a page — this makes SEO a poor " +
+              "fit for anyone expecting an immediate before/after comparison, and a much better fit " +
+              "for sustained, incremental measurement.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "retirement-planning-fundamentals",
+    modules: [
+      {
+        title: "Retirement Accounts",
+        description: "The account types retirement savings actually live in, and why the choice matters.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "traditional-vs-roth-accounts",
+            title: "Traditional vs. Roth Accounts",
+            summary: "The core trade-off between paying taxes now or paying taxes later.",
+            content:
+              "A traditional retirement account (like a Traditional 401(k) or IRA) is funded with " +
+              "pre-tax money — contributions reduce your taxable income now, but withdrawals in " +
+              "retirement are taxed as ordinary income. A Roth account is funded with after-tax " +
+              "money — no tax deduction now, but qualified withdrawals in retirement are completely " +
+              "tax-free, including all the growth.\n\n" +
+              "The core question in choosing between them is whether you expect your tax rate to be " +
+              "higher now or in retirement: if you expect to be in a lower tax bracket in " +
+              "retirement, traditional's upfront deduction is generally more valuable; if you " +
+              "expect a similar or higher bracket in retirement, Roth's tax-free withdrawals " +
+              "generally win.\n\n" +
+              "Since nobody can predict future tax law or their own future income with certainty, " +
+              "many financial planners suggest holding a mix of both account types, which gives " +
+              "flexibility to manage taxable income in retirement rather than being locked into one " +
+              "outcome.",
+            displayOrder: 1,
+          },
+          {
+            slug: "employer-matching-and-vesting",
+            title: "Employer Matching and Vesting",
+            summary: "Free money with strings attached — and why leaving it unclaimed is a real cost.",
+            content:
+              "An employer 401(k) match — commonly something like \"50% of contributions up to 6% of " +
+              "salary\" — is effectively free money added to a retirement account, but only if the " +
+              "employee contributes enough to trigger the full match. Not contributing enough to get " +
+              "the full match is one of the most commonly cited mistakes in retirement planning, " +
+              "since it's a guaranteed return no investment can reliably match.\n\n" +
+              "Vesting is the schedule by which an employee gains full ownership of employer " +
+              "contributions — a \"3-year cliff\" means the employer's contributions aren't owned by " +
+              "the employee at all until 3 years of service, at which point they become 100% owned; " +
+              "a \"graded\" schedule vests a percentage each year instead. An employee's own " +
+              "contributions are always immediately 100% vested — only the employer's match is ever " +
+              "subject to a vesting schedule.\n\n" +
+              "Leaving a job before employer contributions are fully vested means forfeiting the " +
+              "unvested portion, which is a real, concrete cost worth checking before deciding when " +
+              "to leave a role.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Planning for the Long Run",
+        description: "Turning savings into a plan for how much you'll actually need.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "estimating-how-much-youll-need",
+            title: "Estimating How Much You'll Need",
+            summary: "Rough rules of thumb for translating current spending into a retirement target.",
+            content:
+              "A commonly used starting rule of thumb is that retirement savings should replace " +
+              "roughly 70-80% of pre-retirement income, since some expenses (commuting, " +
+              "work-related costs, retirement contributions themselves) typically go away, while " +
+              "others (healthcare) often increase. This is a rough planning heuristic, not a " +
+              "precise formula — actual needs vary enormously based on lifestyle and health.\n\n" +
+              "The \"4% rule\" is a related heuristic: historically, withdrawing about 4% of a " +
+              "portfolio's value in the first year of retirement, then adjusting that dollar amount " +
+              "for inflation each year after, had a high (though not guaranteed) probability of not " +
+              "running out of money over a 30-year retirement. It's a useful starting point for " +
+              "estimating a target portfolio size, not a guarantee.\n\n" +
+              "Because these are long-range estimates built on historical averages and assumptions " +
+              "about future returns, inflation, and lifespan, revisiting the plan periodically — not " +
+              "setting it once and never checking again — is what actually keeps it realistic.",
+            displayOrder: 1,
+          },
+          {
+            slug: "asset-allocation-as-you-age",
+            title: "Asset Allocation as You Age",
+            summary: "Why a retirement portfolio's mix of investments typically shifts over time.",
+            content:
+              "Asset allocation is the mix of investment types (commonly stocks vs. bonds) in a " +
+              "portfolio. Stocks have historically offered higher long-term average returns with " +
+              "more short-term volatility; bonds have historically offered lower returns with more " +
+              "stability. A young saver with decades until retirement generally has time to ride " +
+              "out stock market volatility in exchange for higher expected long-term growth.\n\n" +
+              "As retirement gets closer, the standard guidance is to gradually shift the mix toward " +
+              "more stable assets, since there's less time to recover from a market downturn right " +
+              "before or during retirement, when withdrawals are beginning. Target-date funds " +
+              "automate this shift on a schedule tied to an expected retirement year.\n\n" +
+              "This isn't a rule to follow blindly regardless of individual circumstances — someone " +
+              "with other stable income in retirement (like a pension) may reasonably keep a higher " +
+              "stock allocation longer than someone relying entirely on portfolio withdrawals.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "agile-and-scrum-in-practice",
+    modules: [
+      {
+        title: "Scrum Roles and Events",
+        description: "The people and recurring meetings that make Scrum run.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "scrum-roles-explained",
+            title: "Scrum Roles Explained",
+            summary: "What the Product Owner, Scrum Master, and Development Team each actually own.",
+            content:
+              "Scrum defines three roles. The Product Owner owns the product backlog and decides " +
+              "what gets built and in what priority order, representing stakeholder and customer " +
+              "value. The Scrum Master isn't a manager of the team — they're responsible for the " +
+              "process itself, removing blockers and coaching the team on Scrum practices. The " +
+              "Development Team is self-organizing and collectively responsible for how the work " +
+              "actually gets done.\n\n" +
+              "A common dysfunction is a Product Owner who dictates implementation details (which " +
+              "belongs to the Development Team) or a Scrum Master who acts as a traditional project " +
+              "manager assigning tasks (which undermines the team's self-organization) — both " +
+              "collapse the separation of concerns Scrum is built on.\n\n" +
+              "These roles are about accountability, not hierarchy: the Product Owner doesn't " +
+              "outrank the Development Team, they own a different part of the decision space " +
+              "entirely.",
+            displayOrder: 1,
+          },
+          {
+            slug: "sprint-planning-and-retrospectives",
+            title: "Sprint Planning and Retrospectives",
+            summary: "The two events that bookend a sprint and keep the process improving.",
+            content:
+              "Sprint Planning happens at the start of a sprint: the team selects backlog items to " +
+              "commit to for the sprint and breaks them down into a concrete plan. The output is a " +
+              "Sprint Goal — a shared understanding of what the sprint is meant to achieve — not " +
+              "just a list of tickets.\n\n" +
+              "The Sprint Retrospective happens at the end: the team reflects on how the sprint " +
+              "actually went (not what was built, but how the team worked) and identifies concrete " +
+              "process improvements to try in the next sprint. Skipping retrospectives, or running " +
+              "them without ever acting on what comes out of them, is one of the most common ways " +
+              "teams end up doing \"Scrum in name only.\"\n\n" +
+              "Between these two events sits the Daily Scrum — a short, focused sync for the " +
+              "Development Team to coordinate, not a status report to a manager.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Making Agile Work in Practice",
+        description: "Applying Agile principles beyond the ceremonies themselves.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "writing-good-user-stories",
+            title: "Writing Good User Stories",
+            summary: "Turning a feature idea into something a team can actually estimate and build.",
+            content:
+              "A user story is typically written as \"As a [type of user], I want [goal], so that " +
+              "[benefit]\" — the format forces clarity about who the work is for and why it " +
+              "matters, not just what to build. A story without a clear \"so that\" is often a sign " +
+              "the underlying need hasn't actually been thought through.\n\n" +
+              "Good stories are commonly evaluated against the INVEST criteria: Independent " +
+              "(can be built without depending on other unfinished stories), Negotiable (details can " +
+              "be discussed, not a rigid spec), Valuable, Estimable, Small (fits in one sprint), and " +
+              "Testable (there's a clear way to know it's done).\n\n" +
+              "Acceptance criteria — the specific, testable conditions that define \"done\" for a " +
+              "story — should be agreed on before work starts, not decided retroactively after the " +
+              "team believes it's finished; deciding them afterward is a common source of scope " +
+              "disputes.",
+            displayOrder: 1,
+          },
+          {
+            slug: "measuring-team-velocity",
+            title: "Measuring Team Velocity",
+            summary: "What velocity actually measures, and the ways teams misuse it.",
+            content:
+              "Velocity is the amount of work (usually measured in story points) a team completes " +
+              "per sprint, averaged over recent sprints. Its intended use is forecasting — helping a " +
+              "team estimate how much work they can realistically commit to in future sprints, " +
+              "based on their own recent history.\n\n" +
+              "Velocity is relative to one specific team's own estimation habits, not an absolute " +
+              "measure of productivity or a number that can be meaningfully compared across " +
+              "different teams — two teams with identical output can have very different velocity " +
+              "numbers simply because they size stories differently.\n\n" +
+              "Using velocity as a performance target (\"increase velocity by 20% this quarter\") " +
+              "reliably backfires: teams respond to that incentive by inflating story point " +
+              "estimates rather than actually delivering more, which quietly destroys velocity's " +
+              "usefulness as a forecasting tool.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "fundamental-analysis-for-long-term-investors",
+    modules: [
+      {
+        title: "Reading Financial Statements",
+        description: "The core numbers fundamental analysis is built on.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "the-income-statement-and-balance-sheet",
+            title: "The Income Statement and Balance Sheet",
+            summary: "What a company earned and what it owns and owes.",
+            content:
+              "The income statement shows a company's revenue, expenses, and resulting profit over " +
+              "a period of time (a quarter or a year) — it answers \"did this company make money, " +
+              "and from what?\" Revenue minus cost of goods sold gives gross profit; subtracting " +
+              "operating expenses gives operating income; subtracting taxes and interest gives net " +
+              "income, the often-quoted \"bottom line.\"\n\n" +
+              "The balance sheet is a snapshot at a single point in time of what a company owns " +
+              "(assets), owes (liabilities), and the difference between them (shareholders' " +
+              "equity) — assets always equal liabilities plus equity, by definition. It answers " +
+              "\"what does this company actually have, and how much of it is financed by debt versus " +
+              "ownership?\"\n\n" +
+              "Reading both together matters: a company can show strong income statement profits " +
+              "while carrying balance sheet risk (heavy debt, little cash) that the income statement " +
+              "alone wouldn't reveal.",
+            displayOrder: 1,
+          },
+          {
+            slug: "cash-flow-and-why-it-matters",
+            title: "Cash Flow and Why It Matters",
+            summary: "Why reported profit and actual cash in the bank aren't the same thing.",
+            content:
+              "The cash flow statement tracks actual cash moving in and out of a business, split " +
+              "into operating (cash from core business activities), investing (cash spent on or " +
+              "received from long-term assets), and financing (cash from debt, equity, or dividends) " +
+              "activities. It exists because accounting profit (net income) and actual cash movement " +
+              "can diverge significantly.\n\n" +
+              "A company can report positive net income while having negative operating cash flow — " +
+              "for example, if a large portion of revenue is booked but not yet collected from " +
+              "customers. This divergence is one of the more useful things fundamental analysis " +
+              "looks for, since a company can be profitable on paper while running low on actual " +
+              "cash.\n\n" +
+              "Free cash flow (operating cash flow minus capital expenditures) is a commonly used " +
+              "measure of how much cash a company generates after maintaining and growing its asset " +
+              "base — cash that's actually available for dividends, buybacks, or debt reduction.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Valuing a Company",
+        description: "Turning financial statements into a view on whether a stock is fairly priced.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "valuation-ratios",
+            title: "Valuation Ratios",
+            summary: "Simple ratios for comparing how expensive a stock is relative to its fundamentals.",
+            content:
+              "The price-to-earnings (P/E) ratio — stock price divided by earnings per share — is " +
+              "the most commonly cited valuation ratio, roughly answering \"how many years of " +
+              "current earnings would it take to pay back the stock price?\" A high P/E can mean a " +
+              "stock is overvalued, or it can mean the market expects strong future growth; the " +
+              "ratio alone doesn't distinguish between those two explanations.\n\n" +
+              "Other common ratios include price-to-book (comparing price to the company's net " +
+              "asset value) and price-to-sales (useful for companies with little or no current " +
+              "profit, where P/E isn't meaningful). Each ratio has different blind spots — no single " +
+              "ratio is a complete picture on its own.\n\n" +
+              "Valuation ratios are most meaningful compared against something: the same company's " +
+              "own historical range, or similar companies in the same industry — a P/E of 25 might " +
+              "be expensive in one industry and cheap in another with structurally higher growth " +
+              "expectations.",
+            displayOrder: 1,
+          },
+          {
+            slug: "qualitative-factors-in-analysis",
+            title: "Qualitative Factors in Analysis",
+            summary: "What the numbers alone don't tell you about a business.",
+            content:
+              "Fundamental analysis isn't only about the numbers — a company's competitive " +
+              "advantage (sometimes called an economic \"moat\"), such as brand strength, network " +
+              "effects, high switching costs, or proprietary technology, heavily influences whether " +
+              "current profitability is likely to persist or erode as competitors respond.\n\n" +
+              "Management quality and capital allocation track record matter too: two companies " +
+              "with identical current financials can have very different long-term outcomes " +
+              "depending on whether management historically reinvests cash well, overpays for " +
+              "acquisitions, or returns cash to shareholders sensibly.\n\n" +
+              "Industry dynamics — is the overall market growing or shrinking, is it fragmented or " +
+              "dominated by a few players, is it being disrupted by new technology — provide context " +
+              "that a snapshot of one company's financial statements can't capture on its own, which " +
+              "is why long-term fundamental analysis usually looks well beyond a single quarter's " +
+              "numbers.",
             displayOrder: 2,
           },
         ],

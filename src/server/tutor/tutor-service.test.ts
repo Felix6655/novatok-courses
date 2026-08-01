@@ -8,6 +8,9 @@ const getRelevantLessons = vi.fn();
 const getPinnedLessonContext = vi.fn();
 const generateTutorAnswer = vi.fn();
 const getAIProvider = vi.fn();
+const recordLearningActivity = vi.fn();
+const findEnrollment = vi.fn();
+const getLearningSignals = vi.fn();
 
 vi.mock("@/server/courses", () => ({
   getCourseBySlug: (...args: unknown[]) => getCourseBySlug(...args),
@@ -24,6 +27,15 @@ vi.mock("@/server/tutor/tutor-response", () => ({
 }));
 vi.mock("@/ai/get-ai-provider", () => ({
   getAIProvider: (...args: unknown[]) => getAIProvider(...args),
+}));
+vi.mock("@/server/learning/activity", () => ({
+  recordLearningActivity: (...args: unknown[]) => recordLearningActivity(...args),
+}));
+vi.mock("@/server/learning/enrollment", () => ({
+  findEnrollment: (...args: unknown[]) => findEnrollment(...args),
+}));
+vi.mock("@/server/learning/learning-signals", () => ({
+  getLearningSignals: (...args: unknown[]) => getLearningSignals(...args),
 }));
 
 const { getTutorAnswer } = await import("@/server/tutor/tutor-service");
@@ -51,6 +63,9 @@ beforeEach(() => {
   generateTutorAnswer.mockReset();
   getAIProvider.mockReset();
   getAIProvider.mockReturnValue(fakeProvider);
+  recordLearningActivity.mockReset();
+  findEnrollment.mockReset();
+  getLearningSignals.mockReset();
 });
 
 describe("getTutorAnswer", () => {
@@ -122,7 +137,7 @@ describe("getTutorAnswer", () => {
     });
 
     const injectedProvider: AIProvider = { name: "injected", generateCompletion: vi.fn() };
-    await getTutorAnswer(baseRequest, { provider: injectedProvider });
+    await getTutorAnswer(baseRequest, undefined, { provider: injectedProvider });
 
     expect(getAIProvider).not.toHaveBeenCalled();
     expect(generateTutorAnswer).toHaveBeenCalledWith(expect.anything(), injectedProvider);
@@ -238,6 +253,152 @@ describe("getTutorAnswer", () => {
 
       expect(getPinnedLessonContext).not.toHaveBeenCalled();
       expect(result.pinnedLessonSlug).toBeNull();
+    });
+  });
+
+  describe("studentId behavior (Sprint 6)", () => {
+    it("does not record activity or fetch learning context when no studentId is given", async () => {
+      getCourseBySlug.mockResolvedValue(course);
+      getCourseModulesWithLessons.mockResolvedValue(syllabusWithContent);
+      getRelevantLessons.mockResolvedValue({ lessons: [], outOfScope: false, isMetaQuestion: true });
+      generateTutorAnswer.mockResolvedValue({
+        answer: "ok",
+        relevantLessons: [],
+        outOfScope: false,
+        practiceQuestion: null,
+        answerSource: "ai",
+      });
+
+      await getTutorAnswer(baseRequest);
+
+      expect(recordLearningActivity).not.toHaveBeenCalled();
+      expect(findEnrollment).not.toHaveBeenCalled();
+    });
+
+    it("records a TUTOR_QUESTION activity with bounded metadata (never the question text) when studentId is given", async () => {
+      getCourseBySlug.mockResolvedValue(course);
+      getCourseModulesWithLessons.mockResolvedValue(syllabusWithContent);
+      getRelevantLessons.mockResolvedValue({ lessons: [], outOfScope: false, isMetaQuestion: true });
+      findEnrollment.mockResolvedValue(null);
+      generateTutorAnswer.mockResolvedValue({
+        answer: "ok",
+        relevantLessons: [],
+        outOfScope: false,
+        practiceQuestion: null,
+        answerSource: "ai",
+      });
+
+      await getTutorAnswer(baseRequest, "student-1");
+
+      expect(recordLearningActivity).toHaveBeenCalledWith({
+        studentId: "student-1",
+        courseId: "course-1",
+        lessonId: null,
+        type: "TUTOR_QUESTION",
+        metadata: { responseMode: "NORMAL" },
+      });
+    });
+
+    it("records activity even for an out-of-scope (redirect) question", async () => {
+      getCourseBySlug.mockResolvedValue(course);
+      getCourseModulesWithLessons.mockResolvedValue(syllabusWithContent);
+      getRelevantLessons.mockResolvedValue({ lessons: [], outOfScope: true, isMetaQuestion: false });
+
+      await getTutorAnswer(baseRequest, "student-1");
+
+      expect(recordLearningActivity).toHaveBeenCalled();
+      expect(generateTutorAnswer).not.toHaveBeenCalled();
+    });
+
+    it("does not fetch learning context when the student isn't enrolled", async () => {
+      getCourseBySlug.mockResolvedValue(course);
+      getCourseModulesWithLessons.mockResolvedValue(syllabusWithContent);
+      getRelevantLessons.mockResolvedValue({ lessons: [], outOfScope: false, isMetaQuestion: true });
+      findEnrollment.mockResolvedValue(null);
+      generateTutorAnswer.mockResolvedValue({
+        answer: "ok",
+        relevantLessons: [],
+        outOfScope: false,
+        practiceQuestion: null,
+        answerSource: "ai",
+      });
+
+      await getTutorAnswer(baseRequest, "student-1");
+
+      expect(getLearningSignals).not.toHaveBeenCalled();
+      expect(generateTutorAnswer).toHaveBeenCalledWith(
+        expect.objectContaining({ learningContext: null }),
+        fakeProvider,
+      );
+    });
+
+    it("fetches and forwards a bounded learning context when the student is enrolled", async () => {
+      getCourseBySlug.mockResolvedValue(course);
+      getCourseModulesWithLessons.mockResolvedValue(syllabusWithContent);
+      getRelevantLessons.mockResolvedValue({ lessons: [], outOfScope: false, isMetaQuestion: true });
+      findEnrollment.mockResolvedValue({ id: "enr-1" });
+      getLearningSignals.mockResolvedValue({
+        completedLessons: 2,
+        totalLessons: 5,
+        recentPracticeAccuracy: 0.5,
+        recentPracticeAttempts: 4,
+        recentTutorQuestions: 1,
+        lessonsNeedingPractice: [
+          { lessonSlug: "a", lessonTitle: "Lesson A", moduleTitle: "M", reason: "low accuracy" },
+          { lessonSlug: "b", lessonTitle: "Lesson B", moduleTitle: "M", reason: "low accuracy" },
+          { lessonSlug: "c", lessonTitle: "Lesson C", moduleTitle: "M", reason: "low accuracy" },
+        ],
+        currentLesson: null,
+        nextLesson: null,
+        isCourseComplete: false,
+      });
+      generateTutorAnswer.mockResolvedValue({
+        answer: "ok",
+        relevantLessons: [],
+        outOfScope: false,
+        practiceQuestion: null,
+        answerSource: "ai",
+      });
+
+      await getTutorAnswer(baseRequest, "student-1");
+
+      expect(generateTutorAnswer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          learningContext: {
+            completedLessonCount: 2,
+            totalLessons: 5,
+            recentPracticeAccuracy: 0.5,
+            // capped to 2 titles even though 3 candidates were returned
+            reviewLessonTitles: ["Lesson A", "Lesson B"],
+          },
+        }),
+        fakeProvider,
+      );
+    });
+
+    it("uses the pinned lesson id as activity lessonId when a lessonSlug is given", async () => {
+      getCourseBySlug.mockResolvedValue(course);
+      getCourseModulesWithLessons.mockResolvedValue(syllabusWithContent);
+      getPinnedLessonContext.mockResolvedValue({
+        pinnedLesson: { id: "l1", slug: "variables-and-data-types" },
+        nearbyLessons: [],
+      });
+      generateTutorAnswer.mockResolvedValue({
+        answer: "ok",
+        relevantLessons: [],
+        outOfScope: false,
+        practiceQuestion: null,
+        answerSource: "ai",
+      });
+
+      await getTutorAnswer(
+        { ...baseRequest, lessonSlug: "variables-and-data-types" },
+        "student-1",
+      );
+
+      expect(recordLearningActivity).toHaveBeenCalledWith(
+        expect.objectContaining({ lessonId: "l1" }),
+      );
     });
   });
 });

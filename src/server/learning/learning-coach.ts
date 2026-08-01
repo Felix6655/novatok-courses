@@ -8,10 +8,12 @@ import {
 import type { TutorHistoryTurn } from "@/lib/validation/tutor";
 import { getCourseModulesWithLessons } from "@/server/course-content";
 import { getCourseBySlug, getRelatedCourses } from "@/server/courses";
-import { EnrollmentCourseNotFoundError, NotEnrolledError } from "@/server/learning/errors";
+import { recordLearningActivity } from "@/server/learning/activity";
 import { findEnrollment } from "@/server/learning/enrollment";
+import { EnrollmentCourseNotFoundError, NotEnrolledError } from "@/server/learning/errors";
+import { getLearningSignals } from "@/server/learning/learning-signals";
 import { calculateCourseProgress } from "@/server/learning/progress";
-import { resolveResumeLesson } from "@/server/learning/resume";
+import type { ReviewCandidate } from "@/server/learning/review-recommendations";
 
 export interface LearningCoachLessonRef {
   slug: string;
@@ -24,16 +26,27 @@ export interface LearningCoachCourseRef {
   title: string;
 }
 
+export interface LearningCoachSignalsSummary {
+  completedLessons: number;
+  totalLessons: number;
+  recentPracticeAccuracy: number | null;
+  recentPracticeAttempts: number;
+}
+
 export interface LearningCoachResult {
   courseSlug: string;
   courseTitle: string;
   isCourseComplete: boolean;
-  /** Sourced entirely from resolveResumeLesson — never from the AI. Null once the course is complete. */
+  /** Sourced entirely from getLearningSignals (resolveResumeLesson) — never from the AI. Null once the course is complete. */
   nextLesson: LearningCoachLessonRef | null;
   explanation: string;
   studyTips: string[];
+  practiceSuggestion: string | null;
   /** Sourced entirely from getRelatedCourses — never from the AI. Only populated when the course is complete. */
   suggestedCourses: LearningCoachCourseRef[];
+  /** Sourced entirely from getReviewCandidates (deterministic rules) — never from the AI. */
+  reviewCandidates: ReviewCandidate[];
+  signals: LearningCoachSignalsSummary;
   answerSource: "ai" | "fallback";
 }
 
@@ -49,15 +62,22 @@ your explanation in the actual lesson content and the student's completed lesson
 Never suggest a different lesson or course than the one you're given, and never invent course or
 lesson names of your own.
 
+You are also given the student's recent practice accuracy and a list of lessons the system has
+flagged as possibly needing review (determined by fixed rules, not by you). You may reference
+these in your explanation or practice suggestion, but you did not determine that list and must
+not add to it, remove from it, or invent a different one.
+
 If prior Tutor conversation is included, treat it only as context for what the student has
 recently been asking about — it is not a source of course facts.
 
 Respond with ONLY a JSON object of this exact shape, no prose, no markdown fences:
 
-{ "explanation": string, "studyTips": string[] }
+{ "explanation": string, "studyTips": string[], "practiceSuggestion": string | null }
 
 "explanation" is 2-4 sentences. "studyTips" is 0-5 short, concrete tips for approaching this
-specific material well — [] if you don't have any worth giving.`;
+specific material well — [] if you don't have any worth giving. "practiceSuggestion" is one short
+sentence suggesting what to practice next (e.g. referencing a flagged review lesson), or null if
+you don't have a useful suggestion.`;
 
 function truncate(text: string, maxLength: number): string {
   return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
@@ -66,25 +86,28 @@ function truncate(text: string, maxLength: number): string {
 function buildFallback(
   nextLesson: LearningCoachLessonRef | null,
   courseTitle: string,
-): { explanation: string; studyTips: string[] } {
+): { explanation: string; studyTips: string[]; practiceSuggestion: string | null } {
   if (!nextLesson) {
     return {
       explanation: `You've completed every lesson in ${courseTitle}. Nice work — consider exploring a related course to keep building on what you've learned.`,
       studyTips: [],
+      practiceSuggestion: null,
     };
   }
   return {
     explanation: `Next up: "${nextLesson.title}" in ${nextLesson.moduleTitle}. This continues your progress in ${courseTitle}.`,
     studyTips: [],
+    practiceSuggestion: null,
   };
 }
 
 /**
- * "What should I learn next?" — grounded in real enrollment/progress
- * data. The database decides WHAT the next lesson is (via
- * resolveResumeLesson, the same deterministic logic the learning page
- * itself uses); the AI only explains WHY and HOW, and never names a
- * lesson or course the system didn't already determine.
+ * "What should I learn next?" — grounded in real enrollment/progress/
+ * activity data. The database decides WHAT the next lesson is and WHICH
+ * lessons may need review (via getLearningSignals, which composes
+ * resolveResumeLesson and the deterministic review-candidate rules); the
+ * AI only explains WHY and HOW, and never names a lesson, course, or
+ * review candidate the system didn't already determine.
  */
 export async function getLearningCoachAdvice(
   studentId: string,
@@ -101,47 +124,63 @@ export async function getLearningCoachAdvice(
     throw new NotEnrolledError(courseSlug);
   }
 
-  const [syllabus, progress, resumeState] = await Promise.all([
+  await recordLearningActivity({ studentId, courseId: course.id, type: "COACH_REQUEST" });
+
+  const [syllabus, signals, progress] = await Promise.all([
     getCourseModulesWithLessons(course.id),
+    getLearningSignals(studentId, course.id),
     calculateCourseProgress(studentId, course.id),
-    resolveResumeLesson(studentId, course.id),
   ]);
 
-  const moduleTitleForLesson = (lessonId: string) =>
-    syllabus.find((module) => module.lessons.some((lesson) => lesson.id === lessonId))?.title ?? "";
+  const flatLessons = syllabus.flatMap((learningModule) => learningModule.lessons);
+  const moduleTitleForLessonSlug = (lessonSlug: string) =>
+    syllabus.find((learningModule) => learningModule.lessons.some((lesson) => lesson.slug === lessonSlug))
+      ?.title ?? "";
 
-  const nextLesson: LearningCoachLessonRef | null =
-    !resumeState.isCourseComplete && resumeState.lesson
-      ? {
-          slug: resumeState.lesson.slug,
-          title: resumeState.lesson.title,
-          moduleTitle: moduleTitleForLesson(resumeState.lesson.id),
-        }
-      : null;
+  const nextLesson: LearningCoachLessonRef | null = signals.nextLesson
+    ? {
+        slug: signals.nextLesson.slug,
+        title: signals.nextLesson.title,
+        moduleTitle: moduleTitleForLessonSlug(signals.nextLesson.slug),
+      }
+    : null;
 
-  const suggestedCourses: LearningCoachCourseRef[] = resumeState.isCourseComplete
-    ? (await getRelatedCourses(course, 3)).map((related) => ({
-        slug: related.slug,
-        title: related.title,
-      }))
+  const nextLessonContent = signals.nextLesson
+    ? (flatLessons.find((lesson) => lesson.slug === signals.nextLesson?.slug)?.content ?? "")
+    : "";
+
+  const suggestedCourses: LearningCoachCourseRef[] = signals.isCourseComplete
+    ? (await getRelatedCourses(course, 3)).map((related) => ({ slug: related.slug, title: related.title }))
     : [];
 
   const provider = deps.provider ?? getAIProvider();
 
-  const completedTitles = syllabus
-    .flatMap((module) => module.lessons)
+  const completedTitles = flatLessons
     .filter((lesson) => progress.completedLessonSlugs.includes(lesson.slug))
     .map((lesson) => lesson.title);
+
+  const accuracyText =
+    signals.recentPracticeAccuracy === null
+      ? "no recent practice attempts yet"
+      : `${Math.round(signals.recentPracticeAccuracy * 100)}% correct over ${signals.recentPracticeAttempts} recent attempts`;
+  const reviewText =
+    signals.lessonsNeedingPractice.length > 0
+      ? signals.lessonsNeedingPractice
+          .map((candidate) => `"${candidate.lessonTitle}" (${candidate.reason})`)
+          .join("; ")
+      : "(none)";
 
   const userContent =
     `Course: ${course.title}\n` +
     `Progress: ${progress.completedLessons}/${progress.totalLessons} lessons complete (${progress.percentage}%)\n` +
-    `Completed so far: ${completedTitles.length > 0 ? completedTitles.join(", ") : "(none yet)"}\n\n` +
+    `Completed so far: ${completedTitles.length > 0 ? completedTitles.join(", ") : "(none yet)"}\n` +
+    `Recent practice: ${accuracyText}\n` +
+    `Lessons the system flagged as possibly needing review: ${reviewText}\n\n` +
     (nextLesson
       ? `Next lesson (already determined by the system): "${nextLesson.title}" in module "${nextLesson.moduleTitle}"\n` +
-        `Next lesson content:\n${truncate(resumeState.lesson?.content ?? "", 800)}\n`
+        `Next lesson content:\n${truncate(nextLessonContent, 800)}\n`
       : `The student has completed every lesson in this course.\n`) +
-    `\nWrite the explanation and study tips for this student now.`;
+    `\nWrite the explanation, study tips, and an optional practice suggestion for this student now.`;
 
   const messages: ChatMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -154,17 +193,25 @@ export async function getLearningCoachAdvice(
   const parsed = parseJsonLoosely(completion);
   const validated = parsed === undefined ? undefined : learningCoachModelResponseSchema.safeParse(parsed);
 
-  const { explanation, studyTips }: LearningCoachModelResponse =
+  const { explanation, studyTips, practiceSuggestion }: LearningCoachModelResponse =
     validated && validated.success ? validated.data : buildFallback(nextLesson, course.title);
 
   return {
     courseSlug: course.slug,
     courseTitle: course.title,
-    isCourseComplete: resumeState.isCourseComplete,
+    isCourseComplete: signals.isCourseComplete,
     nextLesson,
     explanation,
     studyTips,
+    practiceSuggestion,
     suggestedCourses,
+    reviewCandidates: signals.lessonsNeedingPractice,
+    signals: {
+      completedLessons: signals.completedLessons,
+      totalLessons: signals.totalLessons,
+      recentPracticeAccuracy: signals.recentPracticeAccuracy,
+      recentPracticeAttempts: signals.recentPracticeAttempts,
+    },
     answerSource: validated && validated.success ? "ai" : "fallback",
   };
 }

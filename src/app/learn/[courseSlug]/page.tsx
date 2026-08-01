@@ -5,6 +5,7 @@ import { EnrollButton } from "@/components/learning/EnrollButton";
 import { LearningCoachPanel } from "@/components/learning/LearningCoachPanel";
 import { LearningSyllabus } from "@/components/learning/LearningSyllabus";
 import { MarkCompleteButton } from "@/components/learning/MarkCompleteButton";
+import { PracticePanel } from "@/components/learning/PracticePanel";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { slugParamSchema } from "@/lib/validation/course-query";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
@@ -187,6 +188,10 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
           </div>
 
           <div className="mt-10">
+            <PracticePanel courseSlug={course.slug} lessonSlug={currentLesson.slug} />
+          </div>
+
+          <div className="mt-6">
             <LearningCoachPanel courseSlug={course.slug} />
           </div>
         </div>

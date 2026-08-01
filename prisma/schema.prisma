@@ -70,6 +70,7 @@ model Course {
   lessons     Lesson[]
   enrollments StudentEnrollment[]
   progress    LessonProgress[]
+  activities  LearningActivity[]
 
   @@index([status, categoryId])
   @@index([status, featured])
@@ -116,6 +117,7 @@ model Lesson {
 
   progress              LessonProgress[]
   currentForEnrollments StudentEnrollment[]
+  activities            LearningActivity[]
 
   @@unique([courseId, slug])
   @@unique([moduleId, displayOrder])
@@ -146,6 +148,40 @@ model StudentEnrollment {
   @@unique([studentId, courseId])
   @@index([studentId])
   @@index([courseId])
+}
+
+enum LearningActivityType {
+  LESSON_STARTED
+  LESSON_COMPLETED
+  TUTOR_QUESTION
+  PRACTICE_ATTEMPT
+  COACH_REQUEST
+}
+
+/**
+ * A bounded, structured record of learning-relevant events — the raw
+ * material for Sprint 6's deterministic learning signals (see
+ * src/server/learning/learning-signals.ts). Deliberately NOT a UI click
+ * log: only the five event types above are ever written. `metadata` is a
+ * small, fixed-shape JSON object per type (e.g. { correct, questionType }
+ * for PRACTICE_ATTEMPT) — never raw AI prompts, answers, or unrestricted
+ * conversation text. See docs/learning-progress.md.
+ */
+model LearningActivity {
+  id        String               @id @default(uuid())
+  studentId String
+  courseId  String
+  lessonId  String?
+  type      LearningActivityType
+  metadata  Json?
+  createdAt DateTime             @default(now())
+
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([studentId, courseId])
+  @@index([studentId, lessonId])
+  @@index([courseId, type])
 }
 
 /**

@@ -123,6 +123,51 @@ describe("buildTutorPromptMessages", () => {
     expect(systemMessage).toContain("prior conversation");
     expect(systemMessage).toContain("source of course facts");
   });
+
+  it("omits the learning-context section entirely when none is given", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [],
+      question: "hi",
+      responseMode: "NORMAL",
+    });
+    const userMessage = messages.find((m) => m.role === "user")?.content ?? "";
+    expect(userMessage).not.toContain("learning context");
+  });
+
+  it("includes a bounded learning-context summary when given, framed as guidance not authoritative", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [],
+      question: "Am I ready for the next lesson?",
+      responseMode: "NORMAL",
+      learningContext: {
+        completedLessonCount: 3,
+        totalLessons: 10,
+        recentPracticeAccuracy: 0.75,
+        reviewLessonTitles: ["Variables and Data Types"],
+      },
+    });
+    const userMessage = messages.find((m) => m.role === "user")?.content ?? "";
+    expect(userMessage).toContain("3/10 lessons completed");
+    expect(userMessage).toContain("75%");
+    expect(userMessage).toContain("Variables and Data Types");
+    expect(userMessage).toContain("guidance only, not authoritative");
+  });
+
+  it("mentions the learning-context boundary in the system prompt", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [],
+      question: "hi",
+      responseMode: "NORMAL",
+    });
+    const systemMessage = messages.find((m) => m.role === "system")?.content.toLowerCase() ?? "";
+    expect(systemMessage).toContain("never as an authoritative record");
+  });
 });
 
 describe("generateTutorAnswer", () => {

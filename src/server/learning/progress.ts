@@ -1,7 +1,9 @@
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { toJSONSafe } from "@/lib/serialize";
 import { getLessonByCourseAndSlug } from "@/server/course-content";
 import { getCourseBySlug } from "@/server/courses";
+import { recordLearningActivity } from "@/server/learning/activity";
 import { findEnrollment, touchEnrollmentAccess } from "@/server/learning/enrollment";
 import {
   EnrollmentCourseNotFoundError,
@@ -9,6 +11,38 @@ import {
   NotEnrolledError,
 } from "@/server/learning/errors";
 import type { SerializedLessonProgress } from "@/types/learning";
+
+function isUniqueConstraintViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+/**
+ * Idempotently records that a student has begun a lesson: creates an
+ * unstarted LessonProgress row (startedAt defaults to now, completedAt
+ * null) the first time this lesson is viewed, and logs one LESSON_STARTED
+ * activity. A no-op on every subsequent view of the same lesson. Race-safe
+ * the same way enrollInCourse is — a P2002 on the concurrent create just
+ * means another request already recorded the start.
+ */
+export async function ensureLessonStarted(
+  studentId: string,
+  courseId: string,
+  lessonId: string,
+): Promise<void> {
+  const existing = await prisma.lessonProgress.findUnique({
+    where: { studentId_lessonId: { studentId, lessonId } },
+  });
+  if (existing) return;
+
+  try {
+    await prisma.lessonProgress.create({ data: { studentId, courseId, lessonId } });
+  } catch (error) {
+    if (isUniqueConstraintViolation(error)) return;
+    throw error;
+  }
+
+  await recordLearningActivity({ studentId, courseId, lessonId, type: "LESSON_STARTED" });
+}
 
 export interface CourseProgress {
   totalLessons: number;
@@ -84,6 +118,8 @@ export async function markLessonComplete(
     where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
   });
 
+  const alreadyCompleted = Boolean(existing?.completedAt);
+
   const progressRow = existing?.completedAt
     ? existing
     : existing
@@ -94,6 +130,15 @@ export async function markLessonComplete(
       : await prisma.lessonProgress.create({
           data: { studentId, courseId: course.id, lessonId: lesson.id, completedAt: new Date() },
         });
+
+  if (!alreadyCompleted) {
+    await recordLearningActivity({
+      studentId,
+      courseId: course.id,
+      lessonId: lesson.id,
+      type: "LESSON_COMPLETED",
+    });
+  }
 
   await touchEnrollmentAccess(studentId, course.id, lesson.id);
   const courseProgress = await calculateCourseProgress(studentId, course.id);

@@ -13,12 +13,20 @@ interface LearningCoachCourseRef {
   title: string;
 }
 
+interface ReviewCandidate {
+  lessonSlug: string;
+  lessonTitle: string;
+  reason: string;
+}
+
 interface LearningCoachResult {
   isCourseComplete: boolean;
   nextLesson: LearningCoachLessonRef | null;
   explanation: string;
   studyTips: string[];
+  practiceSuggestion: string | null;
   suggestedCourses: LearningCoachCourseRef[];
+  reviewCandidates: ReviewCandidate[];
   answerSource: "ai" | "fallback";
 }
 
@@ -103,6 +111,25 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
                 <li key={tip}>{tip}</li>
               ))}
             </ul>
+          )}
+          {result.practiceSuggestion && (
+            <p className="mt-3 text-sm text-neutral-600 italic dark:text-neutral-300">
+              {result.practiceSuggestion}
+            </p>
+          )}
+          {result.reviewCandidates.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                May be worth reviewing
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
+                {result.reviewCandidates.map((candidate) => (
+                  <li key={candidate.lessonSlug}>
+                    <span className="font-medium">{candidate.lessonTitle}</span> — {candidate.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {result.suggestedCourses.length > 0 && (
             <div className="mt-4">

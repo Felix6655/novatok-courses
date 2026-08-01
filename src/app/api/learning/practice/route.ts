@@ -1,28 +1,21 @@
 import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
-import {
-  badGateway,
-  badRequest,
-  internalError,
-  notFound,
-  serviceUnavailable,
-  unprocessable,
-} from "@/lib/api-response";
-import { tutorRequestSchema } from "@/lib/validation/tutor";
+import { badGateway, badRequest, internalError, notFound, serviceUnavailable } from "@/lib/api-response";
+import { practiceRequestSchema } from "@/lib/validation/practice";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
-import { getTutorAnswer } from "@/server/tutor/tutor-service";
 import {
-  TutorCourseNotFoundError,
-  TutorLessonNotFoundError,
-  TutorNoContentError,
-} from "@/server/tutor/errors";
+  EnrollmentCourseNotFoundError,
+  LearningLessonNotFoundError,
+  NotEnrolledError,
+} from "@/server/learning/errors";
+import { generatePracticeQuestion } from "@/server/learning/practice";
 
 export async function POST(request: Request) {
-  const guard = await guardAIRequest(request, "tutor");
+  const guard = await guardAIRequest(request, "practice-generate");
   if (!guard.ok) return guard.response;
 
-  const parsed = tutorRequestSchema.safeParse(guard.body);
+  const parsed = practiceRequestSchema.safeParse(guard.body);
   if (!parsed.success) {
     guard.release();
     return badRequest(parsed.error, "Invalid request body");
@@ -30,14 +23,18 @@ export async function POST(request: Request) {
 
   try {
     const identity = await getStudentIdentity();
-    const result = await getTutorAnswer(parsed.data, identity.studentId);
+    const result = await generatePracticeQuestion(
+      identity.studentId,
+      parsed.data.courseSlug,
+      parsed.data.lessonSlug,
+    );
     return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof TutorCourseNotFoundError || error instanceof TutorLessonNotFoundError) {
+    if (error instanceof EnrollmentCourseNotFoundError || error instanceof LearningLessonNotFoundError) {
       return notFound(error.message);
     }
-    if (error instanceof TutorNoContentError) {
-      return unprocessable(error.message);
+    if (error instanceof NotEnrolledError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof AIProviderUnavailableError || error instanceof AIProviderConfigError) {
       return serviceUnavailable(error.message);

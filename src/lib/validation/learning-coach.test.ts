@@ -33,9 +33,18 @@ describe("learningCoachRequestSchema", () => {
 });
 
 describe("learningCoachModelResponseSchema", () => {
-  it("accepts a minimal valid response and defaults studyTips to []", () => {
+  it("accepts a minimal valid response and defaults studyTips to [] and practiceSuggestion to null", () => {
     const result = learningCoachModelResponseSchema.parse({ explanation: "Keep going!" });
     expect(result.studyTips).toEqual([]);
+    expect(result.practiceSuggestion).toBeNull();
+  });
+
+  it("accepts a bounded practiceSuggestion string", () => {
+    const result = learningCoachModelResponseSchema.parse({
+      explanation: "ok",
+      practiceSuggestion: "Try practicing the last lesson again.",
+    });
+    expect(result.practiceSuggestion).toBe("Try practicing the last lesson again.");
   });
 
   it("rejects an empty explanation", () => {

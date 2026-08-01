@@ -16,11 +16,12 @@ vendor-specific database SDK (no Supabase, no Firebase, no Google Cloud).
 Any standard PostgreSQL host works: local Postgres, Neon, Render, Railway,
 etc.
 
-The AI Course Advisor (Sprint 2), AI Tutor (Sprint 3–4), and AI Learning
-Coach (Sprint 5) all talk to AI providers through the same
-provider-agnostic interface (`src/ai/provider.ts`). Only a local Ollama
-adapter is implemented — no paid cloud AI API is called, and none is
-required to run the app. See
+The AI Course Advisor (Sprint 2), AI Tutor (Sprint 3–4, extended in
+Sprint 6 with bounded learning-state context), and AI Learning Coach
+(Sprint 5, upgraded to V2 in Sprint 6 with practice/review-aware guidance)
+all talk to AI providers through the same provider-agnostic interface
+(`src/ai/provider.ts`). Only a local Ollama adapter is implemented — no
+paid cloud AI API is called, and none is required to run the app. See
 [docs/ai-course-advisor.md](./docs/ai-course-advisor.md),
 [docs/ai-tutor.md](./docs/ai-tutor.md), and
 [docs/learning-progress.md](./docs/learning-progress.md).
@@ -159,7 +160,7 @@ npm run db:seed       # seed categories, courses, modules, and lessons (idempote
 npm run db:smoke      # verify the real service layer against a live database
 npm run smoke:advisor # live E2E: Course Advisor against real Postgres + Ollama
 npm run smoke:tutor   # live E2E: AI Tutor against real Postgres + Ollama
-npm run smoke:coach   # live E2E: enroll -> complete -> resume -> Learning Coach
+npm run smoke:coach   # live E2E: enroll -> tutor -> complete -> practice -> resume -> Learning Coach
 npm run smoke:http    # live HTTP status checks (build/start the app first)
 ```
 
@@ -204,30 +205,47 @@ Sprint 3–4 — AI Tutor:
 
 - `/courses/[slug]/tutor` — ask questions about a specific course's
   material, optionally pinned to one lesson (`?lessonSlug=...`), with
-  bounded follow-up conversation for the page session (12 courses have
+  bounded follow-up conversation for the page session (20 courses have
   seeded content; others show a graceful "not available yet" state)
 - `/api/ai/tutor` — `POST` `{ courseSlug, question, lessonSlug?, responseMode?, history? }`,
   get back a grounded, structured answer
 
 Sprint 5 — student learning, progress, and the AI Learning Coach:
 
-- `/learn` — dashboard of the student's enrolled courses and progress
+- `/learn` — dashboard of the student's enrolled courses, progress,
+  review-candidate hints, and recent activity (Sprint 6)
 - `/learn/[courseSlug]` — the learning experience: syllabus, current
-  lesson, progress bar, mark-complete, Tutor entry point, Learning Coach
-  (optionally `?lessonSlug=...` to jump to a specific lesson)
+  lesson, progress bar, mark-complete, Tutor entry point, a Practice panel
+  (Sprint 6), and the Learning Coach (optionally `?lessonSlug=...` to
+  jump to a specific lesson)
 - `/api/learning/enroll` — `POST { courseSlug }`, free/dev enrollment
 - `/api/learning/progress` — `POST { courseSlug, lessonSlug }`, mark a
   lesson complete
 - `/api/ai/learning-coach` — `POST { courseSlug, recentTutorHistory? }`,
-  a grounded "what should I learn next?" explanation (also protected by
-  the same request guard as the other two AI endpoints)
+  a grounded "what should I learn next?" explanation, now (Sprint 6)
+  including deterministic review candidates and recent practice signals
 
-All three learning routes use a development-only student identity cookie,
+Sprint 6 — practice questions and learning intelligence:
+
+- `/api/learning/practice` — `POST { courseSlug, lessonSlug }`, generates
+  one AI practice question grounded in that lesson (answer key kept
+  server-side only)
+- `/api/learning/practice/evaluate` — `POST { practiceId, studentAnswer }`,
+  deterministic grading for multiple-choice, AI-assisted grading for
+  short-answer; records a `PRACTICE_ATTEMPT` activity, never touches
+  lesson-completion state
+
+All learning routes use a development-only student identity cookie,
 **not real authentication** — see
 [docs/student-identity.md](./docs/student-identity.md).
 
-Both `/api/ai/*` routes are protected against accidental rapid/oversized
-requests — see [docs/ai-tutor.md](./docs/ai-tutor.md#request-protection).
+`/api/ai/*` and `/api/learning/practice*` are protected against accidental
+rapid/oversized requests via `src/lib/ai-request-guard.ts`;
+`/api/learning/enroll` and `/api/learning/progress` use a separate,
+lighter-weight guard proportionate to a non-AI operation
+(`src/lib/learning-mutation-guard.ts`). See
+[docs/ai-tutor.md](./docs/ai-tutor.md#request-protection) and
+[docs/learning-progress.md](./docs/learning-progress.md#request-protection-sprint-6).
 
 See [docs/novatok-integration.md](./docs/novatok-integration.md) for the
 Sprint 1 catalog API shapes,

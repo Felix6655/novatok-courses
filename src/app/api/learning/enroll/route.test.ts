@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { __resetLearningMutationGuardStateForTests } from "@/lib/learning-mutation-guard";
 
 const getStudentIdentity = vi.fn();
 const enrollInCourse = vi.fn();
@@ -25,6 +26,7 @@ beforeEach(() => {
   getStudentIdentity.mockReset();
   enrollInCourse.mockReset();
   getStudentIdentity.mockResolvedValue({ studentId: "dev-student-1" });
+  __resetLearningMutationGuardStateForTests();
 });
 
 describe("POST /api/learning/enroll", () => {
@@ -60,5 +62,21 @@ describe("POST /api/learning/enroll", () => {
     enrollInCourse.mockResolvedValue({ id: "enr-1" });
     await POST(request({ courseSlug: "javascript-fundamentals", studentId: "someone-elses-id" }));
     expect(enrollInCourse).toHaveBeenCalledWith("dev-student-1", "javascript-fundamentals");
+  });
+
+  it("returns 413 when the request body is too large", async () => {
+    const response = await POST(request({ courseSlug: "javascript-fundamentals", junk: "a".repeat(10_000) }));
+    expect(response.status).toBe(413);
+    expect(enrollInCourse).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 after exceeding the mutation rate limit for a client", async () => {
+    enrollInCourse.mockResolvedValue({ id: "enr-1" });
+    let lastStatus = 0;
+    for (let i = 0; i < 31; i++) {
+      const response = await POST(request({ courseSlug: "javascript-fundamentals" }));
+      lastStatus = response.status;
+    }
+    expect(lastStatus).toBe(429);
   });
 });

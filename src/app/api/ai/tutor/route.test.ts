@@ -3,9 +3,13 @@ import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputEr
 import { __resetAIRequestGuardStateForTests } from "@/lib/ai-request-guard";
 
 const getTutorAnswer = vi.fn();
+const getStudentIdentity = vi.fn();
 
 vi.mock("@/server/tutor/tutor-service", () => ({
   getTutorAnswer: (...args: unknown[]) => getTutorAnswer(...args),
+}));
+vi.mock("@/server/identity/dev-identity", () => ({
+  getStudentIdentity: (...args: unknown[]) => getStudentIdentity(...args),
 }));
 
 const { POST } = await import("@/app/api/ai/tutor/route");
@@ -23,6 +27,8 @@ function request(body: unknown) {
 
 beforeEach(() => {
   getTutorAnswer.mockReset();
+  getStudentIdentity.mockReset();
+  getStudentIdentity.mockResolvedValue({ studentId: "dev-student-1" });
   __resetAIRequestGuardStateForTests();
 });
 
@@ -119,6 +125,7 @@ describe("POST /api/ai/tutor", () => {
     );
     expect(getTutorAnswer).toHaveBeenCalledWith(
       expect.objectContaining({ lessonSlug: "variables-and-data-types" }),
+      "dev-student-1",
     );
   });
 
@@ -136,7 +143,7 @@ describe("POST /api/ai/tutor", () => {
       { role: "assistant", content: "A variable stores a value." },
     ];
     await POST(request({ courseSlug: "javascript-fundamentals", question: "Give an example", history }));
-    expect(getTutorAnswer).toHaveBeenCalledWith(expect.objectContaining({ history }));
+    expect(getTutorAnswer).toHaveBeenCalledWith(expect.objectContaining({ history }), "dev-student-1");
   });
 
   it("returns 400 when history exceeds the maximum number of turns", async () => {
