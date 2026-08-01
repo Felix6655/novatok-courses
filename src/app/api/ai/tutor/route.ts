@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
+import { guardAIRequest } from "@/lib/ai-request-guard";
 import {
   badGateway,
   badRequest,
@@ -10,18 +11,19 @@ import {
 } from "@/lib/api-response";
 import { tutorRequestSchema } from "@/lib/validation/tutor";
 import { getTutorAnswer } from "@/server/tutor/tutor-service";
-import { TutorCourseNotFoundError, TutorNoContentError } from "@/server/tutor/errors";
+import {
+  TutorCourseNotFoundError,
+  TutorLessonNotFoundError,
+  TutorNoContentError,
+} from "@/server/tutor/errors";
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Request body must be valid JSON" }, { status: 400 });
-  }
+  const guard = await guardAIRequest(request, "tutor");
+  if (!guard.ok) return guard.response;
 
-  const parsed = tutorRequestSchema.safeParse(body);
+  const parsed = tutorRequestSchema.safeParse(guard.body);
   if (!parsed.success) {
+    guard.release();
     return badRequest(parsed.error, "Invalid request body");
   }
 
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
     const result = await getTutorAnswer(parsed.data);
     return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof TutorCourseNotFoundError) {
+    if (error instanceof TutorCourseNotFoundError || error instanceof TutorLessonNotFoundError) {
       return notFound(error.message);
     }
     if (error instanceof TutorNoContentError) {
@@ -42,5 +44,7 @@ export async function POST(request: Request) {
       return badGateway("The AI provider returned a response that could not be used.");
     }
     return internalError();
+  } finally {
+    guard.release();
   }
 }

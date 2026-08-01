@@ -4,11 +4,28 @@ import { slugParamSchema } from "@/lib/validation/course-query";
 export const TUTOR_RESPONSE_MODES = ["NORMAL", "SIMPLE", "EXAMPLE", "PRACTICE"] as const;
 export type TutorResponseMode = (typeof TUTOR_RESPONSE_MODES)[number];
 
+/**
+ * Small bound on follow-up context: enough for "explain that more
+ * simply" / "give me another example" style follow-ups within one page
+ * session, not a persistent conversation. Client-supplied and never
+ * trusted as fact — see tutor-response.ts's system prompt.
+ */
+export const MAX_HISTORY_TURNS = 6;
+export const MAX_HISTORY_MESSAGE_LENGTH = 1000;
+
+export const tutorHistoryTurnSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().trim().min(1).max(MAX_HISTORY_MESSAGE_LENGTH),
+});
+
+export type TutorHistoryTurn = z.infer<typeof tutorHistoryTurnSchema>;
+
 export const tutorRequestSchema = z.object({
   courseSlug: slugParamSchema,
   question: z.string().trim().min(1).max(500),
   lessonSlug: slugParamSchema.optional(),
   responseMode: z.enum(TUTOR_RESPONSE_MODES).default("NORMAL"),
+  history: z.array(tutorHistoryTurnSchema).max(MAX_HISTORY_TURNS).default([]),
 });
 
 export type TutorRequest = z.infer<typeof tutorRequestSchema>;

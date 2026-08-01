@@ -3,8 +3,31 @@ import { courseContentSeeds } from "@/seed-data/course-content";
 import { courseSeeds } from "@/seed-data/courses";
 
 describe("course content seed data", () => {
-  it("seeds at least a few courses across different courses", () => {
-    expect(courseContentSeeds.length).toBeGreaterThanOrEqual(3);
+  it("seeds a representative 10-15 Tutor-ready courses", () => {
+    expect(courseContentSeeds.length).toBeGreaterThanOrEqual(10);
+    expect(courseContentSeeds.length).toBeLessThanOrEqual(15);
+  });
+
+  it("spans multiple categories, not just one or two", () => {
+    const coursesBySlug = new Map(courseSeeds.map((c) => [c.slug, c]));
+    const categories = new Set(
+      courseContentSeeds.map((c) => coursesBySlug.get(c.courseSlug)?.categorySlug),
+    );
+    expect(categories.size).toBeGreaterThanOrEqual(8);
+  });
+
+  it("spans beginner, intermediate, and advanced levels", () => {
+    const coursesBySlug = new Map(courseSeeds.map((c) => [c.slug, c]));
+    const levels = new Set(courseContentSeeds.map((c) => coursesBySlug.get(c.courseSlug)?.level));
+    expect(levels.has("BEGINNER")).toBe(true);
+    expect(levels.has("INTERMEDIATE")).toBe(true);
+    expect(levels.has("ADVANCED")).toBe(true);
+  });
+
+  it("gives every Tutor-ready course at least 2 modules", () => {
+    for (const content of courseContentSeeds) {
+      expect(content.modules.length).toBeGreaterThanOrEqual(2);
+    }
   });
 
   it("references only real, existing course slugs", () => {

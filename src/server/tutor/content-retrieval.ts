@@ -1,4 +1,4 @@
-import { getCourseLessonsFlat } from "@/server/course-content";
+import { getCourseLessonsFlat, getLessonByCourseAndSlug } from "@/server/course-content";
 import type { SerializedLesson } from "@/types/course";
 
 /**
@@ -115,4 +115,35 @@ export async function getRelevantLessons(
     outOfScope: false,
     isMetaQuestion: false,
   };
+}
+
+export interface PinnedLessonContext {
+  pinnedLesson: SerializedLesson;
+  /** Other lessons from the same module, for a little extra surrounding context. */
+  nearbyLessons: SerializedLesson[];
+}
+
+/**
+ * Loads an explicitly requested lesson as the Tutor's primary context,
+ * verifying it actually belongs to the given course, plus a few
+ * neighboring lessons from the same module. Returns null when the slug
+ * doesn't exist or belongs to a different course — the caller is
+ * responsible for turning that into a clean rejection.
+ */
+export async function getPinnedLessonContext(
+  courseId: string,
+  lessonSlug: string,
+  limit = MAX_RELEVANT_LESSONS,
+): Promise<PinnedLessonContext | null> {
+  const pinnedLesson = await getLessonByCourseAndSlug(courseId, lessonSlug);
+  if (!pinnedLesson) {
+    return null;
+  }
+
+  const allLessons = await getCourseLessonsFlat(courseId);
+  const nearbyLessons = allLessons
+    .filter((lesson) => lesson.moduleId === pinnedLesson.moduleId && lesson.id !== pinnedLesson.id)
+    .slice(0, Math.max(0, limit - 1));
+
+  return { pinnedLesson, nearbyLessons };
 }

@@ -1,24 +1,17 @@
 import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
-import {
-  badGateway,
-  badRequest,
-  internalError,
-  serviceUnavailable,
-} from "@/lib/api-response";
+import { guardAIRequest } from "@/lib/ai-request-guard";
+import { badGateway, badRequest, internalError, serviceUnavailable } from "@/lib/api-response";
 import { courseAdvisorRequestSchema } from "@/lib/validation/learning-intent";
 import { getCourseAdvisorRecommendation } from "@/server/advisor/advisor-service";
 
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Request body must be valid JSON" }, { status: 400 });
-  }
+  const guard = await guardAIRequest(request, "course-advisor");
+  if (!guard.ok) return guard.response;
 
-  const parsed = courseAdvisorRequestSchema.safeParse(body);
+  const parsed = courseAdvisorRequestSchema.safeParse(guard.body);
   if (!parsed.success) {
+    guard.release();
     return badRequest(parsed.error, "Invalid request body");
   }
 
@@ -33,5 +26,7 @@ export async function POST(request: Request) {
       return badGateway("The AI provider returned a response that could not be used.");
     }
     return internalError();
+  } finally {
+    guard.release();
   }
 }

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
+import { __resetAIRequestGuardStateForTests } from "@/lib/ai-request-guard";
 
 const getCourseAdvisorRecommendation = vi.fn();
 
@@ -19,6 +20,7 @@ function request(body: unknown) {
 
 beforeEach(() => {
   getCourseAdvisorRecommendation.mockReset();
+  __resetAIRequestGuardStateForTests();
 });
 
 describe("POST /api/ai/course-advisor", () => {
@@ -96,5 +98,28 @@ describe("POST /api/ai/course-advisor", () => {
     expect(response.status).toBe(500);
     expect(JSON.stringify(body)).not.toContain("secret path");
     expect(body.error).toBe("Unexpected server error");
+  });
+
+  it("returns 413 when the request body is too large", async () => {
+    const response = await POST(request({ message: "a".repeat(30_000) }));
+    expect(response.status).toBe(413);
+    expect(getCourseAdvisorRecommendation).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 after exceeding the per-client rate limit", async () => {
+    getCourseAdvisorRecommendation.mockResolvedValue({
+      interpretedGoal: "Learn Python",
+      intent: {},
+      recommendations: [],
+      pathSummary: null,
+      generatedBy: "ai",
+    });
+
+    let lastStatus = 0;
+    for (let i = 0; i < 11; i++) {
+      const response = await POST(request({ message: "hi" }));
+      lastStatus = response.status;
+    }
+    expect(lastStatus).toBe(429);
   });
 });

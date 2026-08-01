@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { prisma } from "@/lib/prisma";
 import { categorySeeds } from "@/seed-data/categories";
 import { courseContentSeeds } from "@/seed-data/course-content";

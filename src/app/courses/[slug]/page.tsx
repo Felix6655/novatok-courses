@@ -122,8 +122,11 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
             </Link>
           </div>
 
-          <div className="mt-4">
-            <CourseSyllabus modules={syllabus} />
+          <p className="mt-4 text-xs text-neutral-500 dark:text-neutral-400">
+            Click a lesson to ask the Tutor about it specifically:
+          </p>
+          <div className="mt-2">
+            <CourseSyllabus modules={syllabus} tutorCourseSlug={course.slug} />
           </div>
         </section>
       )}

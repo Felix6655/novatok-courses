@@ -13,3 +13,11 @@ export class TutorNoContentError extends Error {
     this.name = "TutorNoContentError";
   }
 }
+
+/** The requested lessonSlug doesn't exist, or doesn't belong to the requested course. Maps to 404. */
+export class TutorLessonNotFoundError extends Error {
+  constructor(courseSlug: string, lessonSlug: string) {
+    super(`No lesson "${lessonSlug}" found in course "${courseSlug}"`);
+    this.name = "TutorLessonNotFoundError";
+  }
+}

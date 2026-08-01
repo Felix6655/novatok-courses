@@ -167,9 +167,21 @@ Error responses:
 | Status | Meaning                                                              |
 | ------ | --------------------------------------------------------------------- |
 | `400`  | Malformed JSON body, or `message` missing/empty/too long             |
+| `413`  | Request body too large (Sprint 4 — see **Request protection** below) |
+| `429`  | Rate limit or concurrency limit hit (Sprint 4 — see below)           |
 | `502`  | The AI provider responded, but its output couldn't be parsed/validated for intent extraction |
 | `503`  | The AI provider is unreachable or misconfigured (e.g. Ollama not running, `OLLAMA_MODEL` unset) |
 | `500`  | Unexpected server error (no internal details are included in the response) |
+
+## Request protection (Sprint 4)
+
+Like `/api/ai/tutor`, this endpoint goes through
+`src/lib/ai-request-guard.ts`: oversized bodies are rejected (`413`), a
+client is limited to 10 requests per 60-second window (`429`), and at
+most 2 AI calls run concurrently per endpoint (`429`) so a burst of
+requests can't pile up against one local Ollama instance. Full details in
+[docs/ai-tutor.md#request-protection](./ai-tutor.md#request-protection)
+— the same guard function protects both endpoints.
 
 ## UI
 

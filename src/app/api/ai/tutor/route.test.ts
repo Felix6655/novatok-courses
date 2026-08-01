@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
+import { __resetAIRequestGuardStateForTests } from "@/lib/ai-request-guard";
 
 const getTutorAnswer = vi.fn();
 
@@ -8,7 +9,9 @@ vi.mock("@/server/tutor/tutor-service", () => ({
 }));
 
 const { POST } = await import("@/app/api/ai/tutor/route");
-const { TutorCourseNotFoundError, TutorNoContentError } = await import("@/server/tutor/errors");
+const { TutorCourseNotFoundError, TutorLessonNotFoundError, TutorNoContentError } = await import(
+  "@/server/tutor/errors"
+);
 
 function request(body: unknown) {
   return new Request("http://localhost/api/ai/tutor", {
@@ -20,6 +23,7 @@ function request(body: unknown) {
 
 beforeEach(() => {
   getTutorAnswer.mockReset();
+  __resetAIRequestGuardStateForTests();
 });
 
 describe("POST /api/ai/tutor", () => {
@@ -88,5 +92,76 @@ describe("POST /api/ai/tutor", () => {
 
     expect(response.status).toBe(500);
     expect(JSON.stringify(body)).not.toContain("secret path");
+  });
+
+  it("returns 404 when the lesson doesn't exist or belongs to another course", async () => {
+    getTutorAnswer.mockRejectedValue(
+      new TutorLessonNotFoundError("javascript-fundamentals", "not-a-real-lesson"),
+    );
+    const response = await POST(
+      request({
+        courseSlug: "javascript-fundamentals",
+        question: "hi",
+        lessonSlug: "not-a-real-lesson",
+      }),
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it("accepts a valid lessonSlug and forwards it to the service", async () => {
+    getTutorAnswer.mockResolvedValue({ answer: "ok" });
+    await POST(
+      request({
+        courseSlug: "javascript-fundamentals",
+        question: "Explain this",
+        lessonSlug: "variables-and-data-types",
+      }),
+    );
+    expect(getTutorAnswer).toHaveBeenCalledWith(
+      expect.objectContaining({ lessonSlug: "variables-and-data-types" }),
+    );
+  });
+
+  it("returns 400 for a malformed lessonSlug", async () => {
+    const response = await POST(
+      request({ courseSlug: "javascript-fundamentals", question: "hi", lessonSlug: "Not A Slug!" }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it("accepts bounded history and forwards it to the service", async () => {
+    getTutorAnswer.mockResolvedValue({ answer: "ok" });
+    const history = [
+      { role: "user", content: "Explain variables" },
+      { role: "assistant", content: "A variable stores a value." },
+    ];
+    await POST(request({ courseSlug: "javascript-fundamentals", question: "Give an example", history }));
+    expect(getTutorAnswer).toHaveBeenCalledWith(expect.objectContaining({ history }));
+  });
+
+  it("returns 400 when history exceeds the maximum number of turns", async () => {
+    const history = Array.from({ length: 7 }, (_, i) => ({ role: "user", content: `turn ${i}` }));
+    const response = await POST(
+      request({ courseSlug: "javascript-fundamentals", question: "hi", history }),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it("returns 413 when the request body is too large", async () => {
+    const response = await POST(
+      request({ courseSlug: "javascript-fundamentals", question: "a".repeat(30_000) }),
+    );
+    expect(response.status).toBe(413);
+    expect(getTutorAnswer).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 after exceeding the per-client rate limit", async () => {
+    getTutorAnswer.mockResolvedValue({ answer: "ok" });
+    let lastStatus = 0;
+    for (let i = 0; i < 11; i++) {
+      const response = await POST(request({ courseSlug: "javascript-fundamentals", question: "hi" }));
+      lastStatus = response.status;
+    }
+    expect(lastStatus).toBe(429);
   });
 });

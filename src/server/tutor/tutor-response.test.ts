@@ -63,6 +63,66 @@ describe("buildTutorPromptMessages", () => {
     const userMessage = messages.find((m) => m.role === "user")?.content ?? "";
     expect(userMessage.toLowerCase()).toContain("practice question");
   });
+
+  it("frames the first candidate lesson as the current lesson when pinnedLessonSlug matches it", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [lesson()],
+      question: "Explain this",
+      responseMode: "NORMAL",
+      pinnedLessonSlug: "variables-and-data-types",
+    });
+    const userMessage = messages.find((m) => m.role === "user")?.content ?? "";
+    expect(userMessage).toContain("Current lesson (the student is asking from this lesson");
+  });
+
+  it("uses the generic relevant-material framing when no lesson is pinned", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [lesson()],
+      question: "Explain this",
+      responseMode: "NORMAL",
+    });
+    const userMessage = messages.find((m) => m.role === "user")?.content ?? "";
+    expect(userMessage).not.toContain("Current lesson");
+    expect(userMessage).toContain("Relevant lesson material:");
+  });
+
+  it("inserts bounded history between the system message and the final question", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [lesson()],
+      question: "Give me another example",
+      responseMode: "NORMAL",
+      history: [
+        { role: "user", content: "Explain variables" },
+        { role: "assistant", content: "A variable stores a value." },
+      ],
+    });
+
+    expect(messages).toHaveLength(4);
+    expect(messages[0].role).toBe("system");
+    expect(messages[1]).toEqual({ role: "user", content: "Explain variables" });
+    expect(messages[2]).toEqual({ role: "assistant", content: "A variable stores a value." });
+    expect(messages[3].role).toBe("user");
+    expect(messages[3].content).toContain("Give me another example");
+  });
+
+  it("mentions that prior conversation isn't an authoritative course source", () => {
+    const messages = buildTutorPromptMessages({
+      courseTitle: "Course",
+      syllabus,
+      candidateLessons: [],
+      question: "hi",
+      responseMode: "NORMAL",
+    });
+    const systemMessage = messages.find((m) => m.role === "system")?.content.toLowerCase() ?? "";
+    expect(systemMessage).toContain("prior conversation");
+    expect(systemMessage).toContain("source of course facts");
+  });
 });
 
 describe("generateTutorAnswer", () => {
@@ -165,5 +225,30 @@ describe("generateTutorAnswer", () => {
       },
     };
     await expect(generateTutorAnswer(baseParams, provider)).rejects.toThrow("connection refused");
+  });
+
+  it("forwards history to the provider as prior chat turns", async () => {
+    let capturedMessageCount = 0;
+    const provider: AIProvider = {
+      name: "fake",
+      generateCompletion: async (request) => {
+        capturedMessageCount = request.messages.length;
+        return JSON.stringify({ answer: "ok", relevantLessonSlugs: [], outOfScope: false, practiceQuestion: null });
+      },
+    };
+
+    await generateTutorAnswer(
+      {
+        ...baseParams,
+        history: [
+          { role: "user", content: "Explain variables" },
+          { role: "assistant", content: "A variable stores a value." },
+        ],
+      },
+      provider,
+    );
+
+    // system + 2 history turns + final user question
+    expect(capturedMessageCount).toBe(4);
   });
 });

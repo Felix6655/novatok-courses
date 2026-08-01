@@ -9,6 +9,7 @@ import { getCourseBySlug } from "@/server/courses";
 
 interface TutorPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lessonSlug?: string }>;
 }
 
 async function loadCourse(rawSlug: string) {
@@ -24,8 +25,9 @@ export async function generateMetadata({ params }: TutorPageProps): Promise<Meta
   return { title: `AI Tutor · ${course.title} | NovaTok Courses` };
 }
 
-export default async function CourseTutorPage({ params }: TutorPageProps) {
+export default async function CourseTutorPage({ params, searchParams }: TutorPageProps) {
   const { slug } = await params;
+  const { lessonSlug } = await searchParams;
   const course = await loadCourse(slug);
 
   if (!course) {
@@ -34,6 +36,17 @@ export default async function CourseTutorPage({ params }: TutorPageProps) {
 
   const syllabus = await getCourseModulesWithLessons(course.id);
   const hasContent = syllabus.some((module) => module.lessons.length > 0);
+
+  const lessonOptions = syllabus.flatMap((module) =>
+    module.lessons.map((lesson) => ({
+      slug: lesson.slug,
+      title: lesson.title,
+      moduleTitle: module.title,
+    })),
+  );
+
+  const initialLessonSlug =
+    lessonSlug && lessonOptions.some((option) => option.slug === lessonSlug) ? lessonSlug : null;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -64,12 +77,16 @@ export default async function CourseTutorPage({ params }: TutorPageProps) {
               Course content
             </p>
             <div className="mt-2">
-              <CourseSyllabus modules={syllabus} />
+              <CourseSyllabus modules={syllabus} tutorCourseSlug={course.slug} />
             </div>
           </div>
 
           <div className="mt-8">
-            <TutorForm courseSlug={course.slug} />
+            <TutorForm
+              courseSlug={course.slug}
+              lessonOptions={lessonOptions}
+              initialLessonSlug={initialLessonSlug}
+            />
           </div>
         </>
       ) : (

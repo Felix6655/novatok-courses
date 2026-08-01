@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { tutorModelResponseSchema, tutorRequestSchema } from "@/lib/validation/tutor";
+import {
+  MAX_HISTORY_TURNS,
+  tutorModelResponseSchema,
+  tutorRequestSchema,
+} from "@/lib/validation/tutor";
 
 describe("tutorRequestSchema", () => {
   it("accepts a minimal valid request and defaults responseMode to NORMAL", () => {
@@ -8,6 +12,7 @@ describe("tutorRequestSchema", () => {
       question: "Explain variables in simpler terms.",
     });
     expect(result.responseMode).toBe("NORMAL");
+    expect(result.history).toEqual([]);
   });
 
   it("accepts an explicit responseMode and optional lessonSlug", () => {
@@ -53,6 +58,76 @@ describe("tutorRequestSchema", () => {
   it("rejects a malformed courseSlug", () => {
     expect(
       tutorRequestSchema.safeParse({ courseSlug: "Not A Slug!", question: "hi" }).success,
+    ).toBe(false);
+  });
+
+  it("accepts bounded history turns", () => {
+    const result = tutorRequestSchema.parse({
+      courseSlug: "javascript-fundamentals",
+      question: "Give me another example.",
+      history: [
+        { role: "user", content: "Explain variables" },
+        { role: "assistant", content: "A variable stores a value." },
+      ],
+    });
+    expect(result.history).toHaveLength(2);
+  });
+
+  it(`rejects history longer than ${MAX_HISTORY_TURNS} turns`, () => {
+    const history = Array.from({ length: MAX_HISTORY_TURNS + 1 }, (_, i) => ({
+      role: "user" as const,
+      content: `turn ${i}`,
+    }));
+    expect(
+      tutorRequestSchema.safeParse({
+        courseSlug: "javascript-fundamentals",
+        question: "hi",
+        history,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts history at exactly the maximum turn count", () => {
+    const history = Array.from({ length: MAX_HISTORY_TURNS }, (_, i) => ({
+      role: "user" as const,
+      content: `turn ${i}`,
+    }));
+    expect(
+      tutorRequestSchema.safeParse({
+        courseSlug: "javascript-fundamentals",
+        question: "hi",
+        history,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects a history turn with an invalid role", () => {
+    expect(
+      tutorRequestSchema.safeParse({
+        courseSlug: "javascript-fundamentals",
+        question: "hi",
+        history: [{ role: "system", content: "not allowed" }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects an oversized history message", () => {
+    expect(
+      tutorRequestSchema.safeParse({
+        courseSlug: "javascript-fundamentals",
+        question: "hi",
+        history: [{ role: "user", content: "a".repeat(1001) }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects an empty history message", () => {
+    expect(
+      tutorRequestSchema.safeParse({
+        courseSlug: "javascript-fundamentals",
+        question: "hi",
+        history: [{ role: "user", content: "" }],
+      }).success,
     ).toBe(false);
   });
 });

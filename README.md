@@ -36,20 +36,42 @@ paid cloud AI API is called, and none is required to run the app. See
    npm install
    ```
 
-2. **Configure PostgreSQL**
+2. **Get a PostgreSQL instance**
 
-   Copy the environment template and set `DATABASE_URL` to your Postgres
-   connection string:
+   Any standard Postgres works. If you don't already have one running
+   locally, the quickest option is a throwaway Docker container — this
+   does **not** require Supabase, Firebase, or any hosted service:
+
+   ```bash
+   docker run --name novatok-courses-postgres -e POSTGRES_PASSWORD=postgres \
+     -p 5432:5432 -d postgres:16
+   ```
+
+   **If you already run Postgres in Docker for other projects and it
+   hosts other apps' tables**, create a separate database inside that
+   same server rather than pointing this project at the shared one —
+   Prisma's schema-sync commands (`migrate dev`, `db push`) try to own the
+   entire target schema and will treat unrelated tables as drift, offering
+   to drop them:
+
+   ```bash
+   docker exec <your-postgres-container> psql -U postgres -d postgres \
+     -c "CREATE DATABASE novatok_courses;"
+   ```
+
+3. **Configure `DATABASE_URL`**
+
+   Copy the environment template and point it at your Postgres instance:
 
    ```bash
    cp .env.example .env
    ```
 
    ```env
-   DATABASE_URL="postgresql://user:password@localhost:5432/novatok_courses?schema=public"
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/novatok_courses?schema=public"
    ```
 
-3. **Run the Prisma migration**
+4. **Run the Prisma migration**
 
    Creates the database schema (`Category`, `Course`, `CourseModule`,
    `Lesson` tables and enums):
@@ -58,10 +80,10 @@ paid cloud AI API is called, and none is required to run the app. See
    npm run db:migrate
    ```
 
-4. **Seed the database**
+5. **Seed the database**
 
-   Loads 15 categories, 50 realistic courses, and lesson content (10
-   modules / 17 lessons) for 5 of those courses. The seed upserts by
+   Loads 15 categories, 50 realistic courses, and lesson content (24
+   modules / 45 lessons) for 12 of those courses. The seed upserts by
    slug/displayOrder, so running it repeatedly is safe and never creates
    duplicates:
 
@@ -69,7 +91,17 @@ paid cloud AI API is called, and none is required to run the app. See
    npm run db:seed
    ```
 
-5. **(Optional) Configure the AI Course Advisor and AI Tutor**
+6. **(Optional) Verify against the real database**
+
+   ```bash
+   npm run db:smoke
+   ```
+
+   Exercises the actual service layer — categories, course filters,
+   search, module/lesson retrieval — against your live database and
+   prints pass/fail per check.
+
+7. **(Optional) Configure the AI Course Advisor and AI Tutor**
 
    The catalog, search, and filters work without this. To use
    `/courses/advisor` or `/courses/[slug]/tutor`, install
@@ -88,7 +120,7 @@ paid cloud AI API is called, and none is required to run the app. See
    OLLAMA_MODEL="llama3.2"
    ```
 
-6. **Run the development server**
+8. **Run the development server**
 
    ```bash
    npm run dev
@@ -113,8 +145,17 @@ npm run test          # vitest
 npm run db:validate   # validate prisma/schema.prisma
 npm run db:generate   # regenerate the Prisma client
 npm run db:migrate    # apply Prisma migrations (prisma migrate dev)
-npm run db:seed       # seed categories and courses (idempotent)
+npm run db:seed       # seed categories, courses, modules, and lessons (idempotent)
+npm run db:smoke      # verify the real service layer against a live database
+npm run smoke:advisor # live E2E: Course Advisor against real Postgres + Ollama
+npm run smoke:tutor   # live E2E: AI Tutor against real Postgres + Ollama
 ```
+
+The three `smoke:*`/`db:smoke` scripts require a reachable, seeded
+`DATABASE_URL`; the two `smoke:*` scripts additionally require a running
+Ollama with `OLLAMA_MODEL` set to a model you've already pulled. None of
+them are part of `npm test` — the automated suite never requires a live
+database or AI provider.
 
 ## Validation before committing
 
@@ -145,13 +186,17 @@ Sprint 2 — AI Course Advisor:
 - `/api/ai/course-advisor` — `POST` a `{ "message": string }` learning
   goal, get back grounded, structured recommendations
 
-Sprint 3 — AI Tutor:
+Sprint 3–4 — AI Tutor:
 
 - `/courses/[slug]/tutor` — ask questions about a specific course's
-  material (5 courses have seeded content; others show a graceful
-  "not available yet" state)
-- `/api/ai/tutor` — `POST` `{ courseSlug, question, responseMode? }`, get
-  back a grounded, structured answer
+  material, optionally pinned to one lesson (`?lessonSlug=...`), with
+  bounded follow-up conversation for the page session (12 courses have
+  seeded content; others show a graceful "not available yet" state)
+- `/api/ai/tutor` — `POST` `{ courseSlug, question, lessonSlug?, responseMode?, history? }`,
+  get back a grounded, structured answer
+
+Both `/api/ai/*` routes are protected against accidental rapid/oversized
+requests — see [docs/ai-tutor.md](./docs/ai-tutor.md#request-protection).
 
 See [docs/novatok-integration.md](./docs/novatok-integration.md) for the
 Sprint 1 catalog API shapes,

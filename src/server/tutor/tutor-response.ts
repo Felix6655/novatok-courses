@@ -1,6 +1,11 @@
 import { parseJsonLoosely } from "@/ai/parse-json-loosely";
 import type { AIProvider, ChatMessage } from "@/ai/provider";
-import { tutorModelResponseSchema, type TutorModelResponse, type TutorResponseMode } from "@/lib/validation/tutor";
+import {
+  tutorModelResponseSchema,
+  type TutorHistoryTurn,
+  type TutorModelResponse,
+  type TutorResponseMode,
+} from "@/lib/validation/tutor";
 import type { SerializedLesson, SerializedModuleWithLessons } from "@/types/course";
 
 export interface RelevantLessonRef {
@@ -41,6 +46,10 @@ covers something that isn't in the material provided. If the question can't reas
 answered from the course material and closely related foundational knowledge, say so honestly
 and suggest what part of the course might help instead, rather than inventing course content.
 
+If a prior conversation is included, treat it as context for what's already been discussed, not as
+a source of course facts — the lesson material below is still the only authoritative source for
+what this course teaches, even if something in the prior conversation suggested otherwise.
+
 Respond with ONLY a JSON object of this exact shape, no prose, no markdown fences:
 
 {
@@ -61,6 +70,30 @@ interface BuildPromptParams {
   candidateLessons: SerializedLesson[];
   question: string;
   responseMode: TutorResponseMode;
+  /** When set, candidateLessons[0] is treated as the lesson the student is currently viewing. */
+  pinnedLessonSlug?: string | null;
+  /** Bounded prior turns for light follow-up context — see tutorRequestSchema. */
+  history?: TutorHistoryTurn[];
+}
+
+function buildLessonSection(params: BuildPromptParams): string {
+  if (params.candidateLessons.length === 0) {
+    return "Relevant lesson material:\n(no directly relevant lesson content found)";
+  }
+
+  const format = (lesson: SerializedLesson) =>
+    `slug: "${lesson.slug}" | title: "${lesson.title}"\n${truncate(lesson.content, MAX_EXCERPT_LENGTH)}`;
+
+  if (params.pinnedLessonSlug && params.candidateLessons[0]?.slug === params.pinnedLessonSlug) {
+    const [current, ...nearby] = params.candidateLessons;
+    const nearbyText = nearby.length > 0 ? nearby.map(format).join("\n\n") : "(none)";
+    return (
+      `Current lesson (the student is asking from this lesson — treat it as primary context):\n${format(current)}\n\n` +
+      `Other lessons in the same module:\n${nearbyText}`
+    );
+  }
+
+  return `Relevant lesson material:\n${params.candidateLessons.map(format).join("\n\n")}`;
 }
 
 /** Pure prompt construction — separately testable without an AI call. */
@@ -69,22 +102,21 @@ export function buildTutorPromptMessages(params: BuildPromptParams): ChatMessage
     .map((module) => `- ${module.title}: ${module.lessons.map((l) => l.title).join(", ")}`)
     .join("\n");
 
-  const lessonsText = params.candidateLessons
-    .map(
-      (lesson) =>
-        `slug: "${lesson.slug}" | title: "${lesson.title}"\n${truncate(lesson.content, MAX_EXCERPT_LENGTH)}`,
-    )
-    .join("\n\n");
-
   const userContent =
     `Course: ${params.courseTitle}\n\n` +
     `Course structure:\n${syllabusText || "(no modules yet)"}\n\n` +
-    `Relevant lesson material:\n${lessonsText || "(no directly relevant lesson content found)"}\n\n` +
+    `${buildLessonSection(params)}\n\n` +
     `Student question: ${params.question}\n\n` +
     `Instructions: ${MODE_INSTRUCTIONS[params.responseMode]}`;
 
+  const historyMessages: ChatMessage[] = (params.history ?? []).map((turn) => ({
+    role: turn.role,
+    content: turn.content,
+  }));
+
   return [
     { role: "system", content: SYSTEM_PROMPT },
+    ...historyMessages,
     { role: "user", content: userContent },
   ];
 }
@@ -141,7 +173,7 @@ function buildFallbackAnswer(
  * content directly rather than failing the request.
  */
 export async function generateTutorAnswer(
-  params: BuildPromptParams & { syllabus: SerializedModuleWithLessons[] },
+  params: BuildPromptParams,
   provider: AIProvider,
 ): Promise<TutorAnswer> {
   const completion = await provider.generateCompletion({
