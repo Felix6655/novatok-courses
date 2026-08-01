@@ -16,11 +16,12 @@ vendor-specific database SDK (no Supabase, no Firebase, no Google Cloud).
 Any standard PostgreSQL host works: local Postgres, Neon, Render, Railway,
 etc.
 
-The AI Course Advisor (Sprint 2) talks to AI providers through a
-provider-agnostic interface (`src/ai/provider.ts`). Only a local Ollama
-adapter is implemented — no paid cloud AI API is called, and none is
-required to run the app. See
-[docs/ai-course-advisor.md](./docs/ai-course-advisor.md).
+The AI Course Advisor (Sprint 2) and AI Tutor (Sprint 3) both talk to AI
+providers through the same provider-agnostic interface
+(`src/ai/provider.ts`). Only a local Ollama adapter is implemented — no
+paid cloud AI API is called, and none is required to run the app. See
+[docs/ai-course-advisor.md](./docs/ai-course-advisor.md) and
+[docs/ai-tutor.md](./docs/ai-tutor.md).
 
 ## Prerequisites
 
@@ -50,7 +51,8 @@ required to run the app. See
 
 3. **Run the Prisma migration**
 
-   Creates the database schema (`Category`, `Course` tables and enums):
+   Creates the database schema (`Category`, `Course`, `CourseModule`,
+   `Lesson` tables and enums):
 
    ```bash
    npm run db:migrate
@@ -58,20 +60,23 @@ required to run the app. See
 
 4. **Seed the database**
 
-   Loads 15 categories and 50 realistic courses. The seed upserts by slug,
-   so running it repeatedly is safe and never creates duplicates:
+   Loads 15 categories, 50 realistic courses, and lesson content (10
+   modules / 17 lessons) for 5 of those courses. The seed upserts by
+   slug/displayOrder, so running it repeatedly is safe and never creates
+   duplicates:
 
    ```bash
    npm run db:seed
    ```
 
-5. **(Optional) Configure the AI Course Advisor**
+5. **(Optional) Configure the AI Course Advisor and AI Tutor**
 
    The catalog, search, and filters work without this. To use
-   `/courses/advisor`, install [Ollama](https://ollama.com/download), pull
-   a model, and set the AI variables in `.env` — see
-   [docs/ai-course-advisor.md](./docs/ai-course-advisor.md) for the full
-   walkthrough:
+   `/courses/advisor` or `/courses/[slug]/tutor`, install
+   [Ollama](https://ollama.com/download), pull a model, and set the AI
+   variables in `.env` — see
+   [docs/ai-course-advisor.md](./docs/ai-course-advisor.md) and
+   [docs/ai-tutor.md](./docs/ai-tutor.md) for the full walkthrough:
 
    ```bash
    ollama pull llama3.2
@@ -90,9 +95,11 @@ required to run the app. See
    ```
 
    Open [http://localhost:3000/courses](http://localhost:3000/courses) to
-   see the catalog, or
+   see the catalog,
    [http://localhost:3000/courses/advisor](http://localhost:3000/courses/advisor)
-   for the AI Course Advisor.
+   for the AI Course Advisor, or
+   [http://localhost:3000/courses/javascript-fundamentals/tutor](http://localhost:3000/courses/javascript-fundamentals/tutor)
+   for the AI Tutor on a course that has seeded lesson content.
 
 ## Scripts
 
@@ -138,7 +145,16 @@ Sprint 2 — AI Course Advisor:
 - `/api/ai/course-advisor` — `POST` a `{ "message": string }` learning
   goal, get back grounded, structured recommendations
 
+Sprint 3 — AI Tutor:
+
+- `/courses/[slug]/tutor` — ask questions about a specific course's
+  material (5 courses have seeded content; others show a graceful
+  "not available yet" state)
+- `/api/ai/tutor` — `POST` `{ courseSlug, question, responseMode? }`, get
+  back a grounded, structured answer
+
 See [docs/novatok-integration.md](./docs/novatok-integration.md) for the
-Sprint 1 catalog API shapes and
+Sprint 1 catalog API shapes,
 [docs/ai-course-advisor.md](./docs/ai-course-advisor.md) for the advisor's
-architecture, configuration, and API contract.
+architecture, and [docs/ai-tutor.md](./docs/ai-tutor.md) for the Tutor's
+content model, grounding rules, and API contract.

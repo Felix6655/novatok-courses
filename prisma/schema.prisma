@@ -65,11 +65,55 @@ model Course {
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
-  category Category @relation(fields: [categoryId], references: [id])
+  category Category      @relation(fields: [categoryId], references: [id])
+  modules  CourseModule[]
+  lessons  Lesson[]
 
   @@index([status, categoryId])
   @@index([status, featured])
   @@index([status, level])
   @@index([status, price])
   @@index([categoryId])
+}
+
+/// A unit of course structure grouping ordered Lessons. Sprint 3 content
+/// foundation for the AI Tutor — not a full LMS authoring model.
+model CourseModule {
+  id           String   @id @default(uuid())
+  courseId     String
+  title        String
+  description  String
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id])
+  lessons Lesson[]
+
+  @@unique([courseId, displayOrder])
+  @@index([courseId])
+}
+
+/// Real learning content the AI Tutor grounds its answers in. `courseId`
+/// is denormalized from the parent module so retrieval can query "all
+/// lessons for this course" directly without a join.
+model Lesson {
+  id           String   @id @default(uuid())
+  moduleId     String
+  courseId     String
+  slug         String
+  title        String
+  summary      String
+  content      String
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  module CourseModule @relation(fields: [moduleId], references: [id])
+  course Course       @relation(fields: [courseId], references: [id])
+
+  @@unique([courseId, slug])
+  @@unique([moduleId, displayOrder])
+  @@index([moduleId])
+  @@index([courseId])
 }

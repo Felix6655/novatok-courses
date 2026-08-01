@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { CourseActions } from "@/components/courses/CourseActions";
 import { CourseGrid } from "@/components/courses/CourseGrid";
 import { CourseMetadata } from "@/components/courses/CourseMetadata";
+import { CourseSyllabus } from "@/components/courses/CourseSyllabus";
 import { PriceDisplay } from "@/components/courses/PriceDisplay";
 import { slugParamSchema } from "@/lib/validation/course-query";
+import { getCourseModulesWithLessons } from "@/server/course-content";
 import { getCourseBySlug, getRelatedCourses } from "@/server/courses";
 
 interface CourseDetailPageProps {
@@ -37,6 +39,8 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
   }
 
   const relatedCourses = await getRelatedCourses(course);
+  const syllabus = await getCourseModulesWithLessons(course.id);
+  const hasTutorContent = syllabus.some((module) => module.lessons.length > 0);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
@@ -98,6 +102,31 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
       <div className="mt-6">
         <CourseActions title={course.title} enrollmentUrl={course.enrollmentUrl} />
       </div>
+
+      {hasTutorContent && (
+        <section className="mt-8 rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+                AI Tutor
+              </h2>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                Ask questions about this course&apos;s material and get grounded explanations.
+              </p>
+            </div>
+            <Link
+              href={`/courses/${course.slug}/tutor`}
+              className="shrink-0 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+            >
+              Ask AI Tutor
+            </Link>
+          </div>
+
+          <div className="mt-4">
+            <CourseSyllabus modules={syllabus} />
+          </div>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">

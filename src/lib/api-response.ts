@@ -18,6 +18,11 @@ export function notFound(message: string) {
   return NextResponse.json({ error: message }, { status: 404 });
 }
 
+/** The request is well-formed, but there's nothing usable to act on (e.g. no content yet). */
+export function unprocessable(message: string) {
+  return NextResponse.json({ error: message }, { status: 422 });
+}
+
 /** The configured AI provider could not be reached or isn't configured. */
 export function serviceUnavailable(message: string) {
   return NextResponse.json({ error: message }, { status: 503 });
