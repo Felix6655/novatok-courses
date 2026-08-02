@@ -1,12 +1,15 @@
+﻿"use client";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { EmptyState } from "@/components/courses/EmptyState";
 import type { CourseAdvisorResult } from "@/server/advisor/advisor-service";
+import { useI18n } from "@/i18n/client";
 
 interface CourseAdvisorResultsProps {
   result: CourseAdvisorResult;
 }
 
 export function CourseAdvisorResults({ result }: CourseAdvisorResultsProps) {
+  const { dictionary } = useI18n();
   return (
     <div className="mt-8">
       <p className="text-sm font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
@@ -28,8 +31,8 @@ export function CourseAdvisorResults({ result }: CourseAdvisorResultsProps) {
       <div className="mt-6">
         {result.recommendations.length === 0 ? (
           <EmptyState
-            title="No matching courses found"
-            description="Try describing your goal differently, or broaden the topics you mention."
+            title={dictionary.noRecommendations}
+            description={dictionary.retry}
           />
         ) : (
           <ol className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

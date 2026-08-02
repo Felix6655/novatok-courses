@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/i18n/client";
 import { useState, type FormEvent } from "react";
 import type { SerializedCategory } from "@/types/course";
 
@@ -24,6 +25,7 @@ const LEVEL_OPTIONS = [
 ];
 
 export function CourseFilters({ basePath, categories, defaultValues }: CourseFiltersProps) {
+  const { dictionary } = useI18n();
   const router = useRouter();
   const [search, setSearch] = useState(defaultValues.search ?? "");
   const [category, setCategory] = useState(defaultValues.category ?? "");
@@ -59,12 +61,12 @@ export function CourseFilters({ basePath, categories, defaultValues }: CourseFil
     >
       <div className="lg:col-span-2">
         <label htmlFor="course-search" className="sr-only">
-          Search courses
+          {dictionary.search}
         </label>
         <input
           id="course-search"
           type="search"
-          placeholder="Search courses..."
+          placeholder={dictionary.search}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
@@ -85,7 +87,7 @@ export function CourseFilters({ basePath, categories, defaultValues }: CourseFil
             }}
             className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
           >
-            <option value="">All categories</option>
+            <option value="">{dictionary.allCategories}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.slug}>
                 {c.name}
@@ -151,7 +153,7 @@ export function CourseFilters({ basePath, categories, defaultValues }: CourseFil
         type="submit"
         className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 sm:col-span-2 lg:col-span-5 lg:w-fit dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >
-        Apply filters
+        {dictionary.filters}
       </button>
     </form>
   );

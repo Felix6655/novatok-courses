@@ -5,6 +5,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SUPPORTED_LOCALES } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { getRequestLocale } from "@/i18n/request";
+import { I18nProvider } from "@/i18n/client";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -18,5 +19,5 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getRequestLocale();
   const dictionary = getDictionary(locale);
-  return <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}><body className="min-h-full flex flex-col"><nav aria-label="Primary" className="flex gap-5 border-b px-6 py-3 text-sm"><Link href={`/${locale}/courses`}>{dictionary.courses}</Link><Link href={`/${locale}/advisor`}>{dictionary.advisor}</Link><Link href={`/${locale}/learn`}>{dictionary.learn}</Link></nav><LanguageSwitcher locale={locale}/>{children}</body></html>;
+  return <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}><body className="min-h-full flex flex-col"><I18nProvider dictionary={dictionary} locale={locale}><nav aria-label="Primary" className="flex gap-5 border-b px-6 py-3 text-sm"><Link href={`/${locale}/courses`}>{dictionary.courses}</Link><Link href={`/${locale}/courses/advisor`}>{dictionary.advisor}</Link><Link href={`/${locale}/learn`}>{dictionary.learn}</Link></nav><LanguageSwitcher locale={locale}/>{children}</I18nProvider></body></html>;
 }

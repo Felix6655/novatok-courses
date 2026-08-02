@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useI18n } from "@/i18n/client";
 import { useState } from "react";
 
 interface LearningCoachLessonRef {
@@ -37,6 +38,7 @@ interface LearningCoachPanelProps {
 type Status = "idle" | "loading" | "error";
 
 export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
+  const { locale, dictionary } = useI18n();
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<LearningCoachResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
       const response = await fetch("/api/ai/learning-coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug }),
+        body: JSON.stringify({ courseSlug, locale }),
       });
       const body = await response.json();
       if (!response.ok) {
@@ -63,7 +65,7 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
       setResult(body as LearningCoachResult);
       setStatus("idle");
     } catch {
-      setErrorMessage("Could not reach the server. Please try again.");
+      setErrorMessage(dictionary.error);
       setStatus("error");
     }
   }
@@ -73,7 +75,7 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-            AI Learning Coach
+            {dictionary.coach}
           </h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
             Grounded in your actual progress in this course.
@@ -85,7 +87,7 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
           disabled={status === "loading"}
           className="shrink-0 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
         >
-          {status === "loading" ? "Thinking..." : "What should I learn next?"}
+          {status === "loading" ? dictionary.loading : dictionary.next}
         </button>
       </div>
 
@@ -99,7 +101,7 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
         <div className="mt-4">
           {result.nextLesson && (
             <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Next: {result.nextLesson.title} ({result.nextLesson.moduleTitle})
+              {dictionary.next}: {result.nextLesson.title} ({result.nextLesson.moduleTitle})
             </p>
           )}
           <p className="mt-2 whitespace-pre-line text-neutral-800 dark:text-neutral-200">
@@ -125,7 +127,7 @@ export function LearningCoachPanel({ courseSlug }: LearningCoachPanelProps) {
               <ul className="mt-2 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
                 {result.reviewCandidates.map((candidate) => (
                   <li key={candidate.lessonSlug}>
-                    <span className="font-medium">{candidate.lessonTitle}</span> — {candidate.reason}
+                    <span className="font-medium">{candidate.lessonTitle}</span> â€” {candidate.reason}
                   </li>
                 ))}
               </ul>

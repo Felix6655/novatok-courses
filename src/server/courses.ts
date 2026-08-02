@@ -2,19 +2,19 @@
 import { toJSONSafe } from "@/lib/serialize";
 import type { CourseListQuery } from "@/lib/validation/course-query";
 import type { Locale } from "@/i18n/config";
-import { applyTranslation, translationLocales } from "@/i18n/localize";
+import { applyTranslation, resolveTranslation, translationLocales } from "@/i18n/localize";
 import { buildCourseWhere, computePagination, type PaginationMeta } from "@/server/course-query-builder";
 
 const RELATED_COURSES_LIMIT = 4;
 
-export async function listCourses(filters: CourseListQuery, locale?: Locale) {
+export async function listCourses(filters: CourseListQuery, locale?: Locale, options: { includeDrafts?: boolean } = {}) {
   const canonicalWhere = buildCourseWhere(filters);
   const where = locale && filters.search ? {
     ...canonicalWhere,
     OR: [
       { title: { contains: filters.search, mode: "insensitive" as const } },
       { shortDescription: { contains: filters.search, mode: "insensitive" as const } },
-      { translations: { some: { locale, OR: [
+      { translations: { some: { locale, ...(options.includeDrafts ? {} : { status: "PUBLISHED" as const }), OR: [
         { title: { contains: filters.search, mode: "insensitive" as const } },
         { shortDescription: { contains: filters.search, mode: "insensitive" as const } },
       ] } } },
@@ -28,10 +28,10 @@ export async function listCourses(filters: CourseListQuery, locale?: Locale) {
     return toJSONSafe({ courses, pagination: computePagination(total, filters.page, filters.limit) });
   }
   const [courses, total] = await Promise.all([
-    prisma.course.findMany({ where, include: { category: true, translations: { where: { locale: { in: translationLocales(locale) } } } }, orderBy: [{ featured: "desc" }, { createdAt: "desc" }], skip: (filters.page - 1) * filters.limit, take: filters.limit }),
+    prisma.course.findMany({ where, include: { category: true, translations: { where: { locale: { in: translationLocales(locale) }, ...(options.includeDrafts ? {} : { status: "PUBLISHED" as const }) } } }, orderBy: [{ featured: "desc" }, { createdAt: "desc" }], skip: (filters.page - 1) * filters.limit, take: filters.limit }),
     prisma.course.count({ where }),
   ]);
-  const localized = courses.map(({ translations, ...canonical }) => applyTranslation(canonical, translations, locale));
+  const localized = courses.map(({ translations, ...canonical }) => ({ ...applyTranslation(canonical, translations, locale), _localization: resolveTranslation(translations, locale) }));
   const pagination: PaginationMeta = computePagination(total, filters.page, filters.limit);
   return toJSONSafe({ courses: localized, pagination });
 }

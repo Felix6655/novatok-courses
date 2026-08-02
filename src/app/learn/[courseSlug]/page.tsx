@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EnrollButton } from "@/components/learning/EnrollButton";
@@ -11,6 +11,8 @@ import { slugParamSchema } from "@/lib/validation/course-query";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
 import { EnrollmentCourseNotFoundError, LearningLessonNotFoundError } from "@/server/learning/errors";
 import { getLearningState } from "@/server/learning/learning-state";
+import { getRequestLocale } from "@/i18n/request";
+import { getDictionary } from "@/i18n/dictionaries";
 
 interface LearnCoursePageProps {
   params: Promise<{ courseSlug: string }>;
@@ -25,7 +27,7 @@ export async function generateMetadata({ params }: LearnCoursePageProps): Promis
   try {
     const identity = await getStudentIdentity();
     const state = await getLearningState(identity.studentId, parsedSlug.data);
-    return { title: `Learn · ${state.course.title} | NovaTok Courses` };
+    const locale=await getRequestLocale(); const d=getDictionary(locale); return { title: `${d.learn} · ${state.course.title} | NovaTok Courses`, alternates:{canonical:`/${locale}/learn/${state.course.slug}`} };
   } catch {
     return { title: "Course not found | NovaTok Courses" };
   }
@@ -33,6 +35,7 @@ export async function generateMetadata({ params }: LearnCoursePageProps): Promis
 
 export default async function LearnCoursePage({ params, searchParams }: LearnCoursePageProps) {
   const { courseSlug } = await params;
+  const dictionary = getDictionary(await getRequestLocale());
   const { lessonSlug } = await searchParams;
 
   const parsedSlug = slugParamSchema.safeParse(courseSlug);
@@ -64,13 +67,13 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
           {state.course.title}
         </h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-300">
-          Enroll to start learning — it&apos;s free for now.
+          {dictionary.start}
         </p>
         <div className="mt-6">
           <EnrollButton courseSlug={state.course.slug} />
         </div>
         <Link href={`/courses/${state.course.slug}`} className="mt-4 text-sm text-neutral-500 hover:underline">
-          View course details
+          {dictionary.backToCourses}
         </Link>
       </main>
     );
@@ -133,7 +136,7 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
         <div>
           {progress.isComplete && (
             <div className="mb-6 rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-              You&apos;ve completed every lesson in this course. 🎉 Feel free to review any lesson
+              You&apos;ve completed every lesson in this course. ðŸŽ‰ Feel free to review any lesson
               from the syllabus, or ask the AI Learning Coach what to explore next.
             </div>
           )}
@@ -170,7 +173,7 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
                 href={`/learn/${course.slug}?lessonSlug=${previousLesson.slug}`}
                 className="text-sm text-neutral-600 hover:underline dark:text-neutral-300"
               >
-                ← {previousLesson.title}
+                â† {previousLesson.title}
               </Link>
             ) : (
               <span />
@@ -180,7 +183,7 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
                 href={`/learn/${course.slug}?lessonSlug=${nextLesson.slug}`}
                 className="text-sm text-neutral-600 hover:underline dark:text-neutral-300"
               >
-                {nextLesson.title} →
+                {nextLesson.title} â†’
               </Link>
             ) : (
               <span />

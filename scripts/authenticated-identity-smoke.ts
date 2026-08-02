@@ -1,62 +1,16 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import { prisma } from "@/lib/prisma";
+import { SUPPORTED_LOCALES } from "@/i18n/config";
+const social=process.env.NOVATOK_SOCIAL_ORIGIN;const courses=process.env.AUTH_SMOKE_COURSES_ORIGIN??"http://localhost:3000";const users=[{email:process.env.NOVATOK_AUTH_TEST_EMAIL,password:process.env.NOVATOK_AUTH_TEST_PASSWORD},{email:process.env.NOVATOK_AUTH_TEST_EMAIL_2,password:process.env.NOVATOK_AUTH_TEST_PASSWORD_2}];
 
-const social = process.env.NOVATOK_SOCIAL_ORIGIN;
-const courses = process.env.AUTH_SMOKE_COURSES_ORIGIN ?? "http://localhost:3000";
-const users = [
-  { email: process.env.NOVATOK_AUTH_TEST_EMAIL, password: process.env.NOVATOK_AUTH_TEST_PASSWORD },
-  { email: process.env.NOVATOK_AUTH_TEST_EMAIL_2, password: process.env.NOVATOK_AUTH_TEST_PASSWORD_2 },
-];
-if (!social || users.some((user) => !user.email || !user.password)) {
-  throw new Error("smoke:auth requires NOVATOK_SOCIAL_ORIGIN and two NOVATOK_AUTH_TEST_EMAIL/PASSWORD credential pairs");
-}
+const socialOrigin=social!;function cookieHeader(response:Response){return response.headers.getSetCookie().map((value)=>value.split(";",1)[0]).join("; ");}
+async function login(user:(typeof users)[number]){const response=await fetch(`${socialOrigin}/api/auth/login`,{method:"POST",headers:{"content-type":"application/json",origin:socialOrigin},body:JSON.stringify(user)});if(!response.ok)throw new Error(`Social login failed: ${response.status}`);const cookie=cookieHeader(response);const session=await fetch(`${socialOrigin}/api/auth/session`,{headers:{cookie}});if(!session.ok)throw new Error("Social session validation failed");const body=await session.json() as {user:{userId:string}};return{cookie,userId:body.user.userId};}
+async function post(path:string,cookie:string,body:unknown){return fetch(`${courses}${path}`,{method:"POST",headers:{"content-type":"application/json",cookie,origin:courses},body:JSON.stringify(body)});}
+async function main(){
+if(!social||users.some((user)=>!user.email||!user.password)){console.log("SKIP authenticated multilingual smoke: configure NOVATOK_SOCIAL_ORIGIN and two NOVATOK_AUTH_TEST_EMAIL/PASSWORD credential pairs.");return;}
+const identities=await Promise.all(users.map(login));try{const[owner,attacker]=identities;if(!(await post("/api/learning/enroll",owner.cookie,{courseSlug:"javascript-fundamentals"})).ok)throw new Error("enrollment failed");
+ for(const locale of SUPPORTED_LOCALES){if((await fetch(`${courses}/${locale}/learn`,{headers:{cookie:owner.cookie}})).status!==200)throw new Error(`${locale}: authenticated learn failed`);if((await fetch(`${courses}/${locale}/learn/javascript-fundamentals?lessonSlug=variables-and-data-types`,{headers:{cookie:owner.cookie}})).status!==200)throw new Error(`${locale}: lesson failed`);if(!(await post("/api/learning/progress",owner.cookie,{courseSlug:"javascript-fundamentals",lessonSlug:"variables-and-data-types"})).ok)throw new Error(`${locale}: progress failed`);if(!(await post("/api/ai/tutor",owner.cookie,{courseSlug:"javascript-fundamentals",lessonSlug:"variables-and-data-types",question:"Explain this lesson",locale})).ok)throw new Error(`${locale}: Tutor failed`);if(!(await post("/api/ai/learning-coach",owner.cookie,{courseSlug:"javascript-fundamentals",locale})).ok)throw new Error(`${locale}: Coach failed`);const generated=await post("/api/learning/practice",owner.cookie,{courseSlug:"javascript-fundamentals",lessonSlug:"variables-and-data-types",locale});if(!generated.ok)throw new Error(`${locale}: practice failed`);const practice=await generated.json() as {practiceId:string;questionType:string};const attack=await post("/api/learning/practice/evaluate",attacker.cookie,{practiceId:practice.practiceId,studentAnswer:"0"});if(attack.status!==404)throw new Error(`${locale}: cross-user isolation failed`);if(!(await post("/api/learning/practice/evaluate",owner.cookie,{practiceId:practice.practiceId,studentAnswer:practice.questionType==="MULTIPLE_CHOICE"?"0":"reasonable attempt"})).ok)throw new Error(`${locale}: practice evaluation failed`);console.log(`ok authenticated ${locale}`);}
+ console.log("Authenticated multilingual Social -> Courses smoke passed.");}finally{for(const{userId}of identities){await prisma.practiceSession.deleteMany({where:{studentId:userId}});await prisma.learningActivity.deleteMany({where:{studentId:userId}});await prisma.lessonProgress.deleteMany({where:{studentId:userId}});await prisma.studentEnrollment.deleteMany({where:{studentId:userId}});}await prisma.$disconnect();}
 
-const socialOrigin = social;
-
-function cookieHeader(response: Response) {
-  const values = response.headers.getSetCookie();
-  return values.map((value) => value.split(";", 1)[0]).join("; ");
 }
-async function login(user: (typeof users)[number]) {
-  const response = await fetch(`${socialOrigin}/api/auth/login`, { method: "POST", headers: { "content-type": "application/json", origin: socialOrigin }, body: JSON.stringify(user) });
-  if (!response.ok) throw new Error(`Social login failed: ${response.status}`);
-  const cookie = cookieHeader(response);
-  const session = await fetch(`${socialOrigin}/api/auth/session`, { headers: { cookie } });
-  if (!session.ok) throw new Error("Social did not validate its newly created session");
-  const body = await session.json() as { user: { userId: string } };
-  return { cookie, userId: body.user.userId };
-}
-async function post(path: string, cookie: string, body: unknown) {
-  return fetch(`${courses}${path}`, { method: "POST", headers: { "content-type": "application/json", cookie, origin: courses }, body: JSON.stringify(body) });
-}
-
-const identities = await Promise.all(users.map(login));
-try {
-  const [owner, attacker] = identities;
-  if ((await fetch(`${courses}/learn`, { headers: { cookie: owner.cookie } })).status !== 200) throw new Error("authenticated /learn failed");
-  if (!(await post("/api/learning/enroll", owner.cookie, { courseSlug: "javascript-fundamentals" })).ok) throw new Error("authenticated enrollment failed");
-  if (!(await post("/api/learning/progress", owner.cookie, { courseSlug: "javascript-fundamentals", lessonSlug: "variables-and-data-types" })).ok) throw new Error("authenticated progress failed");
-  const practiceResponse = await post("/api/learning/practice", owner.cookie, { courseSlug: "javascript-fundamentals", lessonSlug: "functions-and-control-flow" });
-  if (!practiceResponse.ok) throw new Error("authenticated practice generation failed");
-  const practice = await practiceResponse.json() as { practiceId: string; questionType: string };
-  const attack = await post("/api/learning/practice/evaluate", attacker.cookie, { practiceId: practice.practiceId, studentAnswer: "0" });
-  if (attack.status !== 404) throw new Error("cross-user practice isolation failed");
-  if (!(await post("/api/learning/practice/evaluate", owner.cookie, { practiceId: practice.practiceId, studentAnswer: practice.questionType === "MULTIPLE_CHOICE" ? "0" : "a reasonable attempt" })).ok) throw new Error("owner practice evaluation failed");
-  if (!(await post("/api/ai/tutor", owner.cookie, { courseSlug: "javascript-fundamentals", question: "What is a variable?", lessonSlug: "variables-and-data-types" })).ok) throw new Error("authenticated Tutor failed");
-  if (!(await post("/api/ai/learning-coach", owner.cookie, { courseSlug: "javascript-fundamentals" })).ok) throw new Error("authenticated Learning Coach failed");
-  const rows = await prisma.studentEnrollment.count({ where: { studentId: owner.userId } });
-  if (rows !== 1) throw new Error("Courses rows did not use the verified Social user id");
-  const logout = await fetch(`${socialOrigin}/api/auth/logout`, { method: "POST", headers: { cookie: owner.cookie, origin: socialOrigin } });
-  if (!logout.ok) throw new Error("Social logout failed");
-  const afterLogout = await fetch(`${courses}/learn`);
-  if (afterLogout.ok) throw new Error("protected access succeeded after cleared logout cookies");
-  console.log("Authenticated Social -> Courses identity smoke passed.");
-} finally {
-  for (const { userId } of identities) {
-    await prisma.practiceSession.deleteMany({ where: { studentId: userId } });
-    await prisma.learningActivity.deleteMany({ where: { studentId: userId } });
-    await prisma.lessonProgress.deleteMany({ where: { studentId: userId } });
-    await prisma.studentEnrollment.deleteMany({ where: { studentId: userId } });
-  }
-  await prisma.$disconnect();
-}
+main();

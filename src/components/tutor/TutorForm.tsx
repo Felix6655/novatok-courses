@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useI18n } from "@/i18n/client";
 import { useState, type FormEvent } from "react";
 import { TutorAnswer } from "@/components/tutor/TutorAnswer";
 import { MAX_HISTORY_TURNS, type TutorHistoryTurn, type TutorResponseMode } from "@/lib/validation/tutor";
@@ -61,6 +62,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 ];
 
 export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: TutorFormProps) {
+  const { locale, dictionary } = useI18n();
   const [lessonSlug, setLessonSlug] = useState<string | null>(initialLessonSlug);
   const [question, setQuestion] = useState("");
   const [responseMode, setResponseMode] = useState<TutorResponseMode>("NORMAL");
@@ -94,6 +96,7 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
           responseMode: mode,
           lessonSlug: lessonSlug ?? undefined,
           history: buildHistory(),
+          locale,
         }),
       });
 
@@ -104,7 +107,7 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
           response.status === 503
             ? `${body.error ?? "The AI provider is unavailable."} Make sure Ollama is running locally.`
             : response.status === 429
-              ? (body.error ?? "Too many requests — please wait a moment and try again.")
+              ? (body.error ?? "Too many requests â€” please wait a moment and try again.")
               : (body.error ?? "Something went wrong answering your question.");
         setErrorMessage(message);
         setStatus("error");
@@ -115,7 +118,7 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
       setQuestion("");
       setStatus("idle");
     } catch {
-      setErrorMessage("Could not reach the server. Please try again.");
+      setErrorMessage(dictionary.error);
       setStatus("error");
     }
   }
@@ -144,7 +147,7 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
             htmlFor="tutor-lesson"
             className="mb-1 block text-xs font-medium text-neutral-500 dark:text-neutral-400"
           >
-            Ask about
+            {dictionary.question}
           </label>
           <select
             id="tutor-lesson"
@@ -152,10 +155,10 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
             onChange={(event) => setLessonSlug(event.target.value || null)}
             className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
           >
-            <option value="">General questions about this course</option>
+            <option value="">{dictionary.generalQuestion}</option>
             {lessonOptions.map((lesson) => (
               <option key={lesson.slug} value={lesson.slug}>
-                {lesson.moduleTitle} — {lesson.title}
+                {lesson.moduleTitle} â€” {lesson.title}
               </option>
             ))}
           </select>
@@ -164,13 +167,13 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="tutor-question" className="sr-only">
-          Ask a question about this course
+          {dictionary.askTutor}
         </label>
         <textarea
           id="tutor-question"
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="e.g. Explain variables in simpler terms."
+          placeholder={dictionary.question}
           rows={3}
           className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
         />
@@ -180,7 +183,7 @@ export function TutorForm({ courseSlug, lessonOptions, initialLessonSlug }: Tuto
             disabled={isLoading || !question.trim()}
             className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
           >
-            {isLoading ? "Thinking..." : turns.length > 0 ? "Ask follow-up" : "Ask"}
+            {isLoading ? dictionary.loading : dictionary.send}
           </button>
           {QUICK_ACTIONS.map((action) => (
             <button

@@ -3,24 +3,24 @@ import { toJSONSafe } from "@/lib/serialize";
 import type { Locale } from "@/i18n/config";
 import { applyTranslation, translationLocales } from "@/i18n/localize";
 
-export async function getLocalizedCourseBySlug(slug: string, locale: Locale) {
+export async function getLocalizedCourseBySlug(slug: string, locale: Locale, options: { includeDrafts?: boolean } = {}) {
   const course = await prisma.course.findFirst({
     where: { slug, status: "PUBLISHED" },
-    include: { category: true, translations: { where: { locale: { in: translationLocales(locale) } } } },
+    include: { category: true, translations: { where: { locale: { in: translationLocales(locale) }, ...(options.includeDrafts ? {} : { status: "PUBLISHED" as const }) } } },
   });
   if (!course) return null;
   const { translations, ...canonical } = course;
   return toJSONSafe(applyTranslation(canonical, translations, locale));
 }
 
-export async function getLocalizedCourseContent(courseId: string, locale: Locale) {
+export async function getLocalizedCourseContent(courseId: string, locale: Locale, options: { includeDrafts?: boolean } = {}) {
   const modules = await prisma.courseModule.findMany({
     where: { courseId },
     include: {
-      translations: { where: { locale: { in: translationLocales(locale) } } },
+      translations: { where: { locale: { in: translationLocales(locale) }, ...(options.includeDrafts ? {} : { status: "PUBLISHED" as const }) } },
       lessons: {
         orderBy: { displayOrder: "asc" },
-        include: { translations: { where: { locale: { in: translationLocales(locale) } } } },
+        include: { translations: { where: { locale: { in: translationLocales(locale) }, ...(options.includeDrafts ? {} : { status: "PUBLISHED" as const }) } } },
       },
     },
     orderBy: { displayOrder: "asc" },
@@ -42,7 +42,7 @@ export async function searchLocalizedCourses(query: string, locale: Locale, limi
     where: {
       status: "PUBLISHED",
       OR: [
-        { translations: { some: { locale, OR: [
+        { translations: { some: { locale, status: "PUBLISHED", OR: [
           { title: { contains: query, mode: "insensitive" } },
           { shortDescription: { contains: query, mode: "insensitive" } },
           { fullDescription: { contains: query, mode: "insensitive" } },
@@ -52,7 +52,7 @@ export async function searchLocalizedCourses(query: string, locale: Locale, limi
         { fullDescription: { contains: query, mode: "insensitive" } },
       ],
     },
-    include: { category: true, translations: { where: { locale: { in: translationLocales(locale) } } } },
+    include: { category: true, translations: { where: { locale: { in: translationLocales(locale) }, status: "PUBLISHED" } } },
     take: limit,
   });
   return toJSONSafe(courses.map((course) => {

@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
 import { getRecentActivity, getStudentDashboard } from "@/server/learning/dashboard";
+import { getRequestLocale } from "@/i18n/request";
+import { getDictionary } from "@/i18n/dictionaries";
 
-export const metadata: Metadata = {
-  title: "My Learning | NovaTok Courses",
-  description: "Your enrolled courses and progress.",
-};
+export async function generateMetadata(): Promise<Metadata> { const locale=await getRequestLocale(); const d=getDictionary(locale); return { title:`${d.learn} | NovaTok Courses`, description:d.progress, alternates:{canonical:`/${locale}/learn`} }; }
 
 const ACTIVITY_LABELS: Record<string, string> = {
   LESSON_STARTED: "Started",
@@ -18,6 +17,8 @@ const ACTIVITY_LABELS: Record<string, string> = {
 };
 
 export default async function LearnDashboardPage() {
+  const locale = await getRequestLocale();
+  const dictionary = getDictionary(locale);
   const identity = await getStudentIdentity();
   const [enrollments, recentActivity] = await Promise.all([
     getStudentDashboard(identity.studentId),
@@ -30,7 +31,7 @@ export default async function LearnDashboardPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-        My Learning
+        {dictionary.learn}
       </h1>
       <p className="mt-2 text-neutral-600 dark:text-neutral-300">
         Your enrolled courses and progress.
@@ -48,7 +49,7 @@ export default async function LearnDashboardPage() {
             href="/courses"
             className="mt-6 inline-block rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
           >
-            Browse courses
+            {dictionary.courses}
           </Link>
         </div>
       ) : (
@@ -77,7 +78,7 @@ export default async function LearnDashboardPage() {
                         href={`/learn/${enrollment.course.slug}`}
                         className="shrink-0 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
                       >
-                        Continue learning
+                        {dictionary.continue}
                       </Link>
                     </div>
                     <div className="mt-4 max-w-sm">
@@ -92,7 +93,7 @@ export default async function LearnDashboardPage() {
                         {enrollment.reviewCandidateCount === 1
                           ? "1 lesson may be worth reviewing"
                           : `${enrollment.reviewCandidateCount} lessons may be worth reviewing`}
-                        {" — ask the AI Learning Coach why."}
+                        {" â€” ask the AI Learning Coach why."}
                       </p>
                     )}
                   </li>
@@ -150,7 +151,7 @@ export default async function LearnDashboardPage() {
                         {enrollment.course.title}
                       </span>
                       <span className="ml-2 text-xs text-emerald-700 dark:text-emerald-400">
-                        ✓ Completed
+                        âœ“ Completed
                       </span>
                     </div>
                     <Link

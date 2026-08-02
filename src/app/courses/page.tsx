@@ -51,9 +51,9 @@ async function CoursesContent({ rawParams, locale }: { rawParams: Record<string,
 
   const [categories, { courses, pagination }, featured] = await Promise.all([
     listCategories(),
-    listCourses(filters, locale),
+    listCourses(filters, locale, { includeDrafts: process.env.NODE_ENV !== "production" && rawParams.translationPreview === "1" }),
     isDefaultView && filters.page === 1
-      ? listCourses({ ...courseListQuerySchema.parse({}), featured: true, limit: 4 }, locale)
+      ? listCourses({ ...courseListQuerySchema.parse({}), featured: true, limit: 4 }, locale, { includeDrafts: process.env.NODE_ENV !== "production" && rawParams.translationPreview === "1" })
       : Promise.resolve(null),
   ]);
 
@@ -70,6 +70,14 @@ async function CoursesContent({ rawParams, locale }: { rawParams: Record<string,
         </p>
       </div>
 
+      {process.env.NODE_ENV !== "production" && rawParams.translationPreview === "1" && (
+        <aside className="mt-4 rounded-md border border-amber-400 bg-amber-50 p-3 text-sm text-amber-950">
+          Translation preview ({locale}): this page labels requested translations versus English/canonical fallback. Draft content remains review-only.
+          <ul className="mt-1 list-disc pl-5">
+            {courses.map((course) => { const state = (course as typeof course & { _localization?: { source: string; status: string | null } })._localization; return <li key={course.id}>{course.slug}: {state?.source ?? "canonical"}{state?.status ? ` (${state.status})` : ""}</li>; })}
+          </ul>
+        </aside>
+      )}
       <div className="mt-8">
         <CategoryNavigation categories={categories} />
       </div>

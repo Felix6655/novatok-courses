@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CourseActions } from "@/components/courses/CourseActions";
@@ -7,8 +7,10 @@ import { CourseMetadata } from "@/components/courses/CourseMetadata";
 import { CourseSyllabus } from "@/components/courses/CourseSyllabus";
 import { PriceDisplay } from "@/components/courses/PriceDisplay";
 import { slugParamSchema } from "@/lib/validation/course-query";
-import { getCourseModulesWithLessons } from "@/server/course-content";
-import { getCourseBySlug, getRelatedCourses } from "@/server/courses";
+import { getRelatedCourses } from "@/server/courses";
+import { getLocalizedCourseBySlug, getLocalizedCourseContent } from "@/server/localized-content";
+import { getRequestLocale } from "@/i18n/request";
+import { getDictionary } from "@/i18n/dictionaries";
 
 interface CourseDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -17,7 +19,8 @@ interface CourseDetailPageProps {
 async function loadCourse(rawSlug: string) {
   const parsedSlug = slugParamSchema.safeParse(rawSlug);
   if (!parsedSlug.success) return null;
-  return getCourseBySlug(parsedSlug.data);
+  const locale = await getRequestLocale();
+  return getLocalizedCourseBySlug(parsedSlug.data, locale);
 }
 
 export async function generateMetadata({ params }: CourseDetailPageProps): Promise<Metadata> {
@@ -39,14 +42,16 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
   }
 
   const relatedCourses = await getRelatedCourses(course);
-  const syllabus = await getCourseModulesWithLessons(course.id);
+  const locale = await getRequestLocale();
+  const dictionary = getDictionary(locale);
+  const syllabus = await getLocalizedCourseContent(course.id, locale);
   const hasTutorContent = syllabus.some((module) => module.lessons.length > 0);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <nav className="text-sm text-neutral-500 dark:text-neutral-400">
         <Link href="/courses" className="hover:underline">
-          Courses
+          {dictionary.courses}
         </Link>
         {" / "}
         <Link href={`/categories/${course.category.slug}`} className="hover:underline">
@@ -60,7 +65,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
         </span>
         {course.featured && (
           <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-            Featured
+            {dictionary.featured}
           </span>
         )}
       </div>
@@ -73,7 +78,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
       </p>
 
       <div className="mt-4 text-sm text-neutral-600 dark:text-neutral-300">
-        Taught by <span className="font-medium">{course.instructorName}</span>
+        {dictionary.instructor}: <span className="font-medium">{course.instructorName}</span>
       </div>
 
       <div className="mt-6">
@@ -156,7 +161,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
           <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {course.learningOutcomes.map((outcome) => (
               <li key={outcome} className="flex gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                <span aria-hidden>✓</span>
+                <span aria-hidden>âœ“</span>
                 {outcome}
               </li>
             ))}

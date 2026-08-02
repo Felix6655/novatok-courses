@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/i18n/client";
 
 interface MarkCompleteButtonProps {
   courseSlug: string;
@@ -10,6 +11,7 @@ interface MarkCompleteButtonProps {
 }
 
 export function MarkCompleteButton({ courseSlug, lessonSlug, isCompleted }: MarkCompleteButtonProps) {
+  const { dictionary } = useI18n();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function MarkCompleteButton({ courseSlug, lessonSlug, isCompleted }: Mark
       }
       router.refresh();
     } catch {
-      setErrorMessage("Could not reach the server. Please try again.");
+      setErrorMessage(dictionary.error);
       setIsSubmitting(false);
     }
   }
@@ -39,7 +41,7 @@ export function MarkCompleteButton({ courseSlug, lessonSlug, isCompleted }: Mark
   if (isCompleted) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-        <span aria-hidden>✓</span> Completed
+        <span aria-hidden>âœ“</span> Completed
       </span>
     );
   }
@@ -52,7 +54,7 @@ export function MarkCompleteButton({ courseSlug, lessonSlug, isCompleted }: Mark
         disabled={isSubmitting}
         className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
       >
-        {isSubmitting ? "Saving..." : "Mark lesson complete"}
+        {isSubmitting ? dictionary.loading : dictionary.complete}
       </button>
       {errorMessage && <p className="mt-2 text-sm text-red-700 dark:text-red-400">{errorMessage}</p>}
     </div>

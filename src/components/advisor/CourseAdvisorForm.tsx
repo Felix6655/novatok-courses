@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useI18n } from "@/i18n/client";
 import { useState, type FormEvent } from "react";
 import { CourseAdvisorResults } from "@/components/advisor/CourseAdvisorResults";
 import type { CourseAdvisorResult } from "@/server/advisor/advisor-service";
@@ -13,6 +14,7 @@ const EXAMPLE_PROMPTS = [
 ];
 
 export function CourseAdvisorForm() {
+  const { locale, dictionary } = useI18n();
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<CourseAdvisorResult | null>(null);
@@ -29,7 +31,7 @@ export function CourseAdvisorForm() {
       const response = await fetch("/api/ai/course-advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, locale }),
       });
 
       const body = await response.json();
@@ -47,7 +49,7 @@ export function CourseAdvisorForm() {
       setResult(body as CourseAdvisorResult);
       setStatus("success");
     } catch {
-      setErrorMessage("Could not reach the server. Please try again.");
+      setErrorMessage(dictionary.error);
       setStatus("error");
     }
   }
@@ -56,13 +58,13 @@ export function CourseAdvisorForm() {
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="advisor-message" className="sr-only">
-          Describe your learning goal
+          {dictionary.advisorPrompt}
         </label>
         <textarea
           id="advisor-message"
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          placeholder="e.g. I have never coded before and want to learn Python so I can build AI tools."
+          placeholder={dictionary.advisorPrompt}
           rows={3}
           className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
         />
@@ -72,7 +74,7 @@ export function CourseAdvisorForm() {
             disabled={status === "loading" || !message.trim()}
             className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
           >
-            {status === "loading" ? "Thinking..." : "Get recommendations"}
+            {status === "loading" ? dictionary.loading : dictionary.recommendations}
           </button>
           {EXAMPLE_PROMPTS.map((example) => (
             <button
@@ -81,7 +83,7 @@ export function CourseAdvisorForm() {
               onClick={() => setMessage(example)}
               className="rounded-full border border-neutral-300 px-3 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-300"
             >
-              {example.length > 40 ? `${example.slice(0, 40)}…` : example}
+              {example.length > 40 ? `${example.slice(0, 40)}â€¦` : example}
             </button>
           ))}
         </div>

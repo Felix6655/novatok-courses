@@ -1,10 +1,13 @@
+﻿"use client";
 import type { TutorResult } from "@/server/tutor/tutor-service";
+import { useI18n } from "@/i18n/client";
 
 interface TutorAnswerProps {
   result: TutorResult;
 }
 
 export function TutorAnswer({ result }: TutorAnswerProps) {
+  const { dictionary } = useI18n();
   return (
     <div className="mt-6 rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
       <p className="whitespace-pre-line text-neutral-800 dark:text-neutral-200">{result.answer}</p>
@@ -23,10 +26,10 @@ export function TutorAnswer({ result }: TutorAnswerProps) {
           )}
           <details className="mt-3 text-sm">
             <summary className="cursor-pointer text-neutral-600 dark:text-neutral-400">
-              Show answer
+              {dictionary.answer}
             </summary>
             <p className="mt-2 text-neutral-800 dark:text-neutral-200">
-              <span className="font-medium">Answer: </span>
+              <span className="font-medium">{dictionary.answer}: </span>
               {result.practiceQuestion.answer}
             </p>
             <p className="mt-1 text-neutral-600 dark:text-neutral-400">

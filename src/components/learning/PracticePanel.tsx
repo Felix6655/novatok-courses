@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useI18n } from "@/i18n/client";
 import { useState } from "react";
 
 type QuestionType = "MULTIPLE_CHOICE" | "SHORT_ANSWER";
@@ -26,6 +27,7 @@ interface PracticePanelProps {
 type Status = "idle" | "generating" | "answering" | "submitting" | "result" | "error";
 
 export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
+  const { locale, dictionary } = useI18n();
   const [status, setStatus] = useState<Status>("idle");
   const [practice, setPractice] = useState<GeneratedPractice | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<string>("");
@@ -43,7 +45,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
       const response = await fetch("/api/learning/practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug, lessonSlug }),
+        body: JSON.stringify({ courseSlug, lessonSlug, locale }),
       });
       const body = await response.json();
       if (!response.ok) {
@@ -58,7 +60,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
       setPractice(body as GeneratedPractice);
       setStatus("answering");
     } catch {
-      setErrorMessage("Could not reach the server. Please try again.");
+      setErrorMessage(dictionary.error);
       setStatus("error");
     }
   }
@@ -89,7 +91,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
       setResult(body as PracticeAttemptResult);
       setStatus("result");
     } catch {
-      setErrorMessage("Could not reach the server. Please try again.");
+      setErrorMessage(dictionary.error);
       setStatus("error");
     }
   }
@@ -112,7 +114,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
             disabled={status === "generating"}
             className="shrink-0 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-300"
           >
-            {status === "generating" ? "Generating..." : result ? "Try another question" : "Start practice"}
+            {status === "generating" ? "Generating..." : result ? "{dictionary.tryAgain}" : "Start practice"}
           </button>
         )}
       </div>
@@ -164,7 +166,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
             }
             className="mt-3 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
           >
-            {status === "submitting" ? "Checking..." : "Submit answer"}
+            {status === "submitting" ? "Checking..." : "{dictionary.submitAnswer}"}
           </button>
         </div>
       )}
