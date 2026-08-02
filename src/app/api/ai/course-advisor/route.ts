@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
 import { badGateway, badRequest, internalError, serviceUnavailable } from "@/lib/api-response";
@@ -16,7 +16,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await getCourseAdvisorRecommendation(parsed.data.message);
+    const result = parsed.data.locale
+      ? await getCourseAdvisorRecommendation(parsed.data.message, { locale: parsed.data.locale })
+      : await getCourseAdvisorRecommendation(parsed.data.message);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof AIProviderUnavailableError || error instanceof AIProviderConfigError) {

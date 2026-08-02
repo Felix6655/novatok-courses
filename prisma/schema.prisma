@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+﻿// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -72,6 +72,7 @@ model Course {
   progress         LessonProgress[]
   activities       LearningActivity[]
   practiceSessions PracticeSession[]
+  translations     CourseTranslation[]
 
   @@index([status, categoryId])
   @@index([status, featured])
@@ -81,7 +82,7 @@ model Course {
 }
 
 /// A unit of course structure grouping ordered Lessons. Sprint 3 content
-/// foundation for the AI Tutor — not a full LMS authoring model.
+/// foundation for the AI Tutor â€” not a full LMS authoring model.
 model CourseModule {
   id           String   @id @default(uuid())
   courseId     String
@@ -92,7 +93,8 @@ model CourseModule {
   updatedAt    DateTime @updatedAt
 
   course  Course   @relation(fields: [courseId], references: [id])
-  lessons Lesson[]
+  lessons      Lesson[]
+  translations CourseModuleTranslation[]
 
   @@unique([courseId, displayOrder])
   @@index([courseId])
@@ -120,6 +122,7 @@ model Lesson {
   currentForEnrollments StudentEnrollment[]
   activities            LearningActivity[]
   practiceSessions      PracticeSession[]
+  translations          LessonTranslation[]
 
   @@unique([courseId, slug])
   @@unique([moduleId, displayOrder])
@@ -129,7 +132,7 @@ model Lesson {
 
 /**
  * A student's enrollment in a course. `studentId` is an opaque identifier
- * from the identity boundary (src/server/identity/) — Sprint 5 uses a
+ * from the identity boundary (src/server/identity/) â€” Sprint 5 uses a
  * development-only identity, not real authentication. See
  * docs/student-identity.md for how this connects to real NovaTok Social
  * user IDs later without changing this model.
@@ -161,12 +164,12 @@ enum LearningActivityType {
 }
 
 /**
- * A bounded, structured record of learning-relevant events — the raw
+ * A bounded, structured record of learning-relevant events â€” the raw
  * material for Sprint 6's deterministic learning signals (see
  * src/server/learning/learning-signals.ts). Deliberately NOT a UI click
  * log: only the five event types above are ever written. `metadata` is a
  * small, fixed-shape JSON object per type (e.g. { correct, questionType }
- * for PRACTICE_ATTEMPT) — never raw AI prompts, answers, or unrestricted
+ * for PRACTICE_ATTEMPT) â€” never raw AI prompts, answers, or unrestricted
  * conversation text. See docs/learning-progress.md.
  */
 model LearningActivity {
@@ -194,13 +197,13 @@ enum PracticeQuestionType {
 /**
  * Sprint 7: the PostgreSQL-backed replacement for Sprint 6's in-memory
  * practice-store.ts. Holds a generated practice question's answer key
- * server-side between generation and evaluation — never exposed through
+ * server-side between generation and evaluation â€” never exposed through
  * the generate API. One-shot: `consumedAt` is set atomically (via a
  * `WHERE consumedAt IS NULL` conditional update, not a read-then-write)
  * the moment a student's answer is evaluated, so a concurrent replay of
  * the same practiceId cannot double-consume it. `expiresAt` bounds how
  * long an unanswered question stays valid. Only the minimum state needed
- * to grade one attempt is stored — no prompt/conversation history.
+ * to grade one attempt is stored â€” no prompt/conversation history.
  */
 model PracticeSession {
   id                 String               @id @default(uuid())
@@ -246,4 +249,41 @@ model LessonProgress {
   @@unique([studentId, lessonId])
   @@index([studentId, courseId])
   @@index([lessonId])
+}
+
+model CourseTranslation {
+  id               String @id @default(uuid())
+  courseId         String
+  locale           String
+  title            String
+  shortDescription String
+  fullDescription  String
+  prerequisites    String[] @default([])
+  learningOutcomes String[] @default([])
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  @@unique([courseId, locale])
+  @@index([locale, title])
+}
+
+model CourseModuleTranslation {
+  id          String @id @default(uuid())
+  moduleId    String
+  locale      String
+  title       String
+  description String
+  module CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  @@unique([moduleId, locale])
+  @@index([locale])
+}
+
+model LessonTranslation {
+  id       String @id @default(uuid())
+  lessonId String
+  locale   String
+  title    String
+  summary  String
+  content  String
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@unique([lessonId, locale])
+  @@index([locale, title])
 }

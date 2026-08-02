@@ -1,5 +1,6 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { slugParamSchema } from "@/lib/validation/course-query";
+import { localeSchema } from "@/i18n/config";
 
 export const PRACTICE_QUESTION_TYPES = ["MULTIPLE_CHOICE", "SHORT_ANSWER"] as const;
 export type PracticeQuestionType = (typeof PRACTICE_QUESTION_TYPES)[number];
@@ -7,6 +8,7 @@ export type PracticeQuestionType = (typeof PRACTICE_QUESTION_TYPES)[number];
 export const practiceRequestSchema = z.object({
   courseSlug: slugParamSchema,
   lessonSlug: slugParamSchema,
+  locale: localeSchema.optional(),
 });
 
 export type PracticeRequest = z.infer<typeof practiceRequestSchema>;
@@ -14,7 +16,7 @@ export type PracticeRequest = z.infer<typeof practiceRequestSchema>;
 /**
  * Shape the AI provider must return when generating a practice question.
  * The answer key (correctChoiceIndex / modelAnswer) is never sent back to
- * the client from the generate endpoint — see src/server/learning/practice-store.ts.
+ * the client from the generate endpoint â€” see src/server/learning/practice-store.ts.
  * Structural refinements below ensure a MULTIPLE_CHOICE question always
  * carries a usable, in-range answer key and a SHORT_ANSWER question always
  * carries a reference answer, so evaluation never has to guess.
@@ -55,7 +57,7 @@ export type PracticeEvaluateRequest = z.infer<typeof practiceEvaluateRequestSche
 
 /**
  * Bounded shape the AI provider must return when evaluating a SHORT_ANSWER
- * attempt. MULTIPLE_CHOICE attempts never call the AI for evaluation —
+ * attempt. MULTIPLE_CHOICE attempts never call the AI for evaluation â€”
  * see src/server/learning/practice.ts.
  */
 export const practiceEvaluationModelResponseSchema = z.object({

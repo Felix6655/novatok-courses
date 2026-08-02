@@ -1,0 +1,11 @@
+import type { Locale } from "./config";
+const en={courses:"Courses",advisor:"Course Advisor",learn:"My Learning",search:"Search courses",start:"Start Learning",continue:"Continue Learning",progress:"Progress",tutor:"AI Tutor",coach:"Learning Coach",practice:"Practice",language:"Language",loading:"Loading…",error:"Something went wrong",empty:"No courses found",complete:"Mark complete",next:"Next lesson"};
+export type Dictionary=typeof en;
+export const dictionaries:Record<Locale,Dictionary>={
+ en,
+ es:{courses:"Cursos",advisor:"Asesor de cursos",learn:"Mi aprendizaje",search:"Buscar cursos",start:"Comenzar a aprender",continue:"Continuar aprendiendo",progress:"Progreso",tutor:"Tutor de IA",coach:"Coach de aprendizaje",practice:"Práctica",language:"Idioma",loading:"Cargando…",error:"Algo salió mal",empty:"No se encontraron cursos",complete:"Marcar como completada",next:"Siguiente lección"},
+ pt:{courses:"Cursos",advisor:"Consultor de cursos",learn:"Meu aprendizado",search:"Buscar cursos",start:"Começar a aprender",continue:"Continuar aprendendo",progress:"Progresso",tutor:"Tutor de IA",coach:"Coach de aprendizagem",practice:"Prática",language:"Idioma",loading:"Carregando…",error:"Algo deu errado",empty:"Nenhum curso encontrado",complete:"Marcar como concluída",next:"Próxima aula"},
+ fr:{courses:"Cours",advisor:"Conseiller de cours",learn:"Mon apprentissage",search:"Rechercher des cours",start:"Commencer",continue:"Continuer",progress:"Progression",tutor:"Tuteur IA",coach:"Coach d’apprentissage",practice:"Exercice",language:"Langue",loading:"Chargement…",error:"Une erreur est survenue",empty:"Aucun cours trouvé",complete:"Marquer comme terminée",next:"Leçon suivante"},
+ de:{courses:"Kurse",advisor:"Kursberater",learn:"Mein Lernen",search:"Kurse suchen",start:"Lernen beginnen",continue:"Weiterlernen",progress:"Fortschritt",tutor:"KI-Tutor",coach:"Lerncoach",practice:"Übung",language:"Sprache",loading:"Wird geladen…",error:"Etwas ist schiefgelaufen",empty:"Keine Kurse gefunden",complete:"Als abgeschlossen markieren",next:"Nächste Lektion"},
+};
+export function getDictionary(locale:Locale){return dictionaries[locale]??en;}

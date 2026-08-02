@@ -1,7 +1,8 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { parseJsonLoosely } from "@/ai/parse-json-loosely";
 import type { AIProvider } from "@/ai/provider";
 import type { LearningIntent } from "@/lib/validation/learning-intent";
+import { LANGUAGE_INSTRUCTIONS, type Locale } from "@/i18n/config";
 import type { SerializedCourseWithCategory } from "@/types/course";
 
 const modelRecommendationSchema = z.object({
@@ -61,7 +62,7 @@ function buildCandidatesPrompt(candidates: SerializedCourseWithCategory[]): stri
 /**
  * Deterministic fallback used whenever the model's course-selection output
  * is missing, unparseable, or entirely hallucinated. It never fabricates
- * data — it just presents the already-grounded, DB-ranked candidates
+ * data â€” it just presents the already-grounded, DB-ranked candidates
  * as-is, so a weak or misbehaving model degrades the experience rather
  * than breaking it.
  */
@@ -82,13 +83,14 @@ function buildFallbackResult(candidates: SerializedCourseWithCategory[]): Recomm
  * given candidate set, then grounds the result: any slug the model
  * returns that isn't in `candidates` is silently dropped rather than
  * shown to the user. Network/provider failures are NOT caught here and
- * propagate to the caller — that's a real outage, distinct from "the
+ * propagate to the caller â€” that's a real outage, distinct from "the
  * model responded with unusable content".
  */
 export async function generateRecommendation(
   intent: LearningIntent,
   candidates: SerializedCourseWithCategory[],
   provider: AIProvider,
+  locale: Locale = "en",
 ): Promise<RecommendationResult> {
   if (candidates.length === 0) {
     return { recommendations: [], pathSummary: null, generatedBy: "fallback-ranking" };
@@ -96,7 +98,7 @@ export async function generateRecommendation(
 
   const completion = await provider.generateCompletion({
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: `${SYSTEM_PROMPT}\n\n${LANGUAGE_INSTRUCTIONS[locale]}` },
       {
         role: "user",
         content:

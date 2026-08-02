@@ -1,6 +1,7 @@
-import { getAIProvider } from "@/ai/get-ai-provider";
+﻿import { getAIProvider } from "@/ai/get-ai-provider";
 import type { AIProvider } from "@/ai/provider";
 import type { LearningIntent } from "@/lib/validation/learning-intent";
+import type { Locale } from "@/i18n/config";
 import { getCandidateCourses } from "@/server/advisor/catalog-retrieval";
 import { extractLearningIntent } from "@/server/advisor/extract-intent";
 import { generateRecommendation, type CourseRecommendation } from "@/server/advisor/recommendation";
@@ -16,6 +17,7 @@ export interface CourseAdvisorResult {
 export interface CourseAdvisorDeps {
   /** Injectable for tests; defaults to the env-configured provider. */
   provider?: AIProvider;
+  locale?: Locale;
 }
 
 /**
@@ -29,9 +31,17 @@ export async function getCourseAdvisorRecommendation(
 ): Promise<CourseAdvisorResult> {
   const provider = deps.provider ?? getAIProvider();
 
-  const intent = await extractLearningIntent(message, provider);
+  const extracted = deps.locale ? await extractLearningIntent(message, provider, deps.locale) : await extractLearningIntent(message, provider);
+  const localeHints: Partial<Record<Locale, string[]>> = {
+    es: /ciberseguridad/i.test(message) ? ["Cybersecurity"] : [],
+    pt: /programa(?:ção|cao)/i.test(message) ? ["JavaScript", "Software Development"] : [],
+    fr: /intelligence artificielle/i.test(message) ? ["AI"] : [],
+    de: /projektmanagement/i.test(message) ? ["Project Management"] : [],
+  };
+  const hints = deps.locale ? (localeHints[deps.locale] ?? []) : [];
+  const intent = hints.length ? { ...extracted, topics: [...new Set([...extracted.topics, ...hints])].slice(0, 8) } : extracted;
   const candidates = await getCandidateCourses(intent);
-  const recommendation = await generateRecommendation(intent, candidates, provider);
+  const recommendation = deps.locale ? await generateRecommendation(intent, candidates, provider, deps.locale) : await generateRecommendation(intent, candidates, provider);
 
   return {
     interpretedGoal: intent.goal,

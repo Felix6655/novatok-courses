@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
 import { badRequest, internalError, notFound, serviceUnavailable } from "@/lib/api-response";
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const identity = await getStudentIdentity();
     const result = await getLearningCoachAdvice(identity.studentId, parsed.data.courseSlug, {
       recentTutorHistory: parsed.data.recentTutorHistory,
+      ...(parsed.data.locale ? { locale: parsed.data.locale } : {}),
     });
     return NextResponse.json(result);
   } catch (error) {

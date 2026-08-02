@@ -1,7 +1,8 @@
-import { InvalidModelOutputError } from "@/ai/errors";
+﻿import { InvalidModelOutputError } from "@/ai/errors";
 import { parseJsonLoosely } from "@/ai/parse-json-loosely";
 import type { AIProvider } from "@/ai/provider";
 import { learningIntentSchema, type LearningIntent } from "@/lib/validation/learning-intent";
+import { LANGUAGE_INSTRUCTIONS, type Locale } from "@/i18n/config";
 
 const SYSTEM_PROMPT = `You are a learning-intent extraction engine for NovaTok Courses.
 Read the student's message and output ONLY a single JSON object (no prose, no markdown fences) with this exact shape:
@@ -29,10 +30,11 @@ with no surrounding text.`;
 export async function extractLearningIntent(
   message: string,
   provider: AIProvider,
+  locale: Locale = "en",
 ): Promise<LearningIntent> {
   const completion = await provider.generateCompletion({
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: `${SYSTEM_PROMPT}\n\nUnderstand input in any supported language. The topics array MUST use concise English catalog keywords even when the input is not English; this is an internal retrieval contract. The goal may remain in the student's language. ${LANGUAGE_INSTRUCTIONS[locale]}` },
       { role: "user", content: message },
     ],
     temperature: 0,

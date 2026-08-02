@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CategoryNavigation } from "@/components/courses/CategoryNavigation";
 import { CourseFilters } from "@/components/courses/CourseFilters";
@@ -12,6 +12,8 @@ import {
 } from "@/lib/validation/course-query";
 import { listCategories } from "@/server/categories";
 import { listCourses } from "@/server/courses";
+import { getRequestLocale } from "@/i18n/request";
+import type { Locale } from "@/i18n/config";
 
 export const metadata: Metadata = {
   title: "Courses | NovaTok Courses",
@@ -32,15 +34,16 @@ interface CoursesPageProps {
  */
 export default async function CoursesPage({ searchParams }: CoursesPageProps) {
   const rawParams = normalizePageSearchParams(await searchParams);
+  const locale = await getRequestLocale();
 
   return (
     <Suspense fallback={<CoursesLoadingSkeleton />}>
-      <CoursesContent rawParams={rawParams} />
+      <CoursesContent rawParams={rawParams} locale={locale} />
     </Suspense>
   );
 }
 
-async function CoursesContent({ rawParams }: { rawParams: Record<string, string> }) {
+async function CoursesContent({ rawParams, locale }: { rawParams: Record<string, string>; locale: Locale }) {
   const parsed = courseListQuerySchema.safeParse(rawParams);
   const filters = parsed.success ? parsed.data : courseListQuerySchema.parse({});
 
@@ -48,9 +51,9 @@ async function CoursesContent({ rawParams }: { rawParams: Record<string, string>
 
   const [categories, { courses, pagination }, featured] = await Promise.all([
     listCategories(),
-    listCourses(filters),
+    listCourses(filters, locale),
     isDefaultView && filters.page === 1
-      ? listCourses({ ...courseListQuerySchema.parse({}), featured: true, limit: 4 })
+      ? listCourses({ ...courseListQuerySchema.parse({}), featured: true, limit: 4 }, locale)
       : Promise.resolve(null),
   ]);
 
@@ -62,7 +65,7 @@ async function CoursesContent({ rawParams }: { rawParams: Record<string, string>
         </h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-300">
           Practical courses across business, technology, finance, and skilled
-          trades — built by NovaTok Social to help creators and professionals
+          trades â€” built by NovaTok Social to help creators and professionals
           grow.
         </p>
       </div>

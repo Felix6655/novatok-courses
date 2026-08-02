@@ -1,8 +1,9 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import { prisma } from "@/lib/prisma";
 import { categorySeeds } from "@/seed-data/categories";
 import { courseContentSeeds } from "@/seed-data/course-content";
 import { courseSeeds } from "@/seed-data/courses";
+import { lessonTemplates, localizedCourseMetadata, translatedCourseSlugs, translatedTitles } from "@/seed-data/translations";
 
 /**
  * Upserts by slug so re-running the seed never creates duplicates and
@@ -112,6 +113,32 @@ async function main() {
     }
   }
 
+  // Representative V1 translations: six catalog entries and three complete Tutor-ready syllabi.
+  for (const courseSlug of translatedCourseSlugs) {
+    const courseId = courseIdBySlug.get(courseSlug)!;
+    for (const [locale, copy] of Object.entries(localizedCourseMetadata)) {
+      await prisma.courseTranslation.upsert({
+        where: { courseId_locale: { courseId, locale } },
+        update: { title: translatedTitles[courseSlug][locale], shortDescription: copy.short, fullDescription: copy.full, prerequisites: [], learningOutcomes: [] },
+        create: { courseId, locale, title: translatedTitles[courseSlug][locale], shortDescription: copy.short, fullDescription: copy.full, prerequisites: [], learningOutcomes: [] },
+      });
+    }
+  }
+  for (const courseSeed of courseContentSeeds.filter((item) => translatedCourseSlugs.slice(0, 3).includes(item.courseSlug as never))) {
+    const courseId = courseIdBySlug.get(courseSeed.courseSlug)!;
+    for (const moduleSeed of courseSeed.modules) {
+      const moduleRecord = await prisma.courseModule.findUniqueOrThrow({ where: { courseId_displayOrder: { courseId, displayOrder: moduleSeed.displayOrder } } });
+      for (const [locale, copy] of Object.entries(lessonTemplates)) {
+        const moduleData = { title: `${copy.module} ${moduleSeed.displayOrder}: ${moduleSeed.title}`, description: `${copy.summary} ${moduleSeed.title}.` };
+        await prisma.courseModuleTranslation.upsert({ where: { moduleId_locale: { moduleId: moduleRecord.id, locale } }, update: moduleData, create: { moduleId: moduleRecord.id, locale, ...moduleData } });
+        for (const lessonSeed of moduleSeed.lessons) {
+          const lesson = await prisma.lesson.findUniqueOrThrow({ where: { courseId_slug: { courseId, slug: lessonSeed.slug } } });
+          const lessonData = { title: lessonSeed.title, summary: `${copy.summary} ${lessonSeed.title}.`, content: copy.content.replace("{title}", lessonSeed.title) };
+          await prisma.lessonTranslation.upsert({ where: { lessonId_locale: { lessonId: lesson.id, locale } }, update: lessonData, create: { lessonId: lesson.id, locale, ...lessonData } });
+        }
+      }
+    }
+  }
   const categoryCount = await prisma.category.count();
   const courseCount = await prisma.course.count();
   const moduleCount = await prisma.courseModule.count();

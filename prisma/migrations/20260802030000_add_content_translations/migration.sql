@@ -1,0 +1,12 @@
+CREATE TABLE "CourseTranslation" ("id" TEXT NOT NULL,"courseId" TEXT NOT NULL,"locale" TEXT NOT NULL,"title" TEXT NOT NULL,"shortDescription" TEXT NOT NULL,"fullDescription" TEXT NOT NULL,"prerequisites" TEXT[] DEFAULT ARRAY[]::TEXT[],"learningOutcomes" TEXT[] DEFAULT ARRAY[]::TEXT[],CONSTRAINT "CourseTranslation_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "CourseModuleTranslation" ("id" TEXT NOT NULL,"moduleId" TEXT NOT NULL,"locale" TEXT NOT NULL,"title" TEXT NOT NULL,"description" TEXT NOT NULL,CONSTRAINT "CourseModuleTranslation_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "LessonTranslation" ("id" TEXT NOT NULL,"lessonId" TEXT NOT NULL,"locale" TEXT NOT NULL,"title" TEXT NOT NULL,"summary" TEXT NOT NULL,"content" TEXT NOT NULL,CONSTRAINT "LessonTranslation_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "CourseTranslation_courseId_locale_key" ON "CourseTranslation"("courseId","locale");
+CREATE INDEX "CourseTranslation_locale_title_idx" ON "CourseTranslation"("locale","title");
+CREATE UNIQUE INDEX "CourseModuleTranslation_moduleId_locale_key" ON "CourseModuleTranslation"("moduleId","locale");
+CREATE INDEX "CourseModuleTranslation_locale_idx" ON "CourseModuleTranslation"("locale");
+CREATE UNIQUE INDEX "LessonTranslation_lessonId_locale_key" ON "LessonTranslation"("lessonId","locale");
+CREATE INDEX "LessonTranslation_locale_title_idx" ON "LessonTranslation"("locale","title");
+ALTER TABLE "CourseTranslation" ADD CONSTRAINT "CourseTranslation_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CourseModuleTranslation" ADD CONSTRAINT "CourseModuleTranslation_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "CourseModule"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "LessonTranslation" ADD CONSTRAINT "LessonTranslation_lessonId_fkey" FOREIGN KEY ("lessonId") REFERENCES "Lesson"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
 import { badGateway, badRequest, internalError, notFound, serviceUnavailable } from "@/lib/api-response";
@@ -23,11 +23,10 @@ export async function POST(request: Request) {
 
   try {
     const identity = await getStudentIdentity();
-    const result = await generatePracticeQuestion(
-      identity.studentId,
-      parsed.data.courseSlug,
-      parsed.data.lessonSlug,
-    );
+    const args = [identity.studentId, parsed.data.courseSlug, parsed.data.lessonSlug] as const;
+    const result = parsed.data.locale
+      ? await generatePracticeQuestion(...args, { locale: parsed.data.locale })
+      : await generatePracticeQuestion(...args);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof EnrollmentCourseNotFoundError || error instanceof LearningLessonNotFoundError) {
