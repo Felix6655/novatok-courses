@@ -35,7 +35,7 @@ function cookiePair(setCookieHeader: string): string {
 async function postJson(path: string, cookie: string, body: unknown) {
   return fetch(`${BASE_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", cookie },
+    headers: { "Content-Type": "application/json", cookie, Origin: new URL(BASE_URL).origin },
     body: JSON.stringify(body),
   });
 }

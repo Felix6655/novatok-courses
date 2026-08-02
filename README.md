@@ -26,11 +26,10 @@ paid cloud AI API is called, and none is required to run the app. See
 [docs/ai-tutor.md](./docs/ai-tutor.md), and
 [docs/learning-progress.md](./docs/learning-progress.md).
 
-Student identity (enrollment, progress) uses a development-only cookie —
-**not production authentication**. Production identity requests fail
-loudly unless that development mode is explicitly opted into. See
-[docs/student-identity.md](./docs/student-identity.md) and
-[docs/production-hardening.md](./docs/production-hardening.md).
+Production identity is verified by NovaTok Social through the server-side
+`StudentIdentity` adapter. Isolated local development retains an explicit
+development-cookie mode. See [docs/student-identity.md](./docs/student-identity.md)
+and [docs/production-hardening.md](./docs/production-hardening.md).
 
 ## Prerequisites
 

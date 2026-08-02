@@ -37,30 +37,17 @@ export function getDatabaseUrl(): string {
   return parsed.data.DATABASE_URL;
 }
 
-/**
- * The production identity safety rail. NovaTok Courses does not yet have
- * a production identity adapter (see docs/student-identity.md) —
- * src/server/identity/dev-identity.ts's auto-assigned cookie is
- * explicitly a development/testing convenience, never a security
- * boundary. Without this check, deploying with NODE_ENV=production and
- * simply forgetting to wire up real identity would silently give every
- * visitor a forgeable fake account instead of failing loudly.
- *
- * Production requires explicitly opting into the dev identity via
- * STUDENT_IDENTITY_MODE=development; any other value (or NODE_ENV values
- * other than "production", e.g. local dev or the test runner) is
- * unaffected. Called from getStudentIdentity() itself, the one place
- * every learning route/page already goes through to resolve identity.
- */
+/** Production requires the authoritative NovaTok Social session adapter.
+ * Development/test default to the isolated dev cookie unless social mode
+ * is explicitly selected. There is never a production fallback. */
 export function assertIdentityModeIsSafe(): void {
-  if (process.env.NODE_ENV !== "production") return;
-
-  if (process.env.STUDENT_IDENTITY_MODE !== "development") {
+  const mode = process.env.STUDENT_IDENTITY_MODE;
+  if (process.env.NODE_ENV === "production" && mode !== "novatok-social") {
     throw new EnvValidationError(
-      "Refusing to resolve a student identity in production without explicit configuration. " +
-        "NovaTok Courses does not yet have a production identity adapter (see docs/student-identity.md). " +
-        "Set STUDENT_IDENTITY_MODE=development to explicitly opt into the development-only cookie " +
-        "identity for this deployment, or implement a production identity adapter first.",
+      "Production identity requires STUDENT_IDENTITY_MODE=novatok-social; development identity is forbidden.",
     );
+  }
+  if (mode && mode !== "development" && mode !== "novatok-social") {
+    throw new EnvValidationError("STUDENT_IDENTITY_MODE must be development or novatok-social.");
   }
 }

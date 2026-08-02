@@ -270,7 +270,7 @@ itself.
 `getTutorAnswer` now accepts an optional `studentId`, supplied by
 `POST /api/ai/tutor` from `getStudentIdentity()` — never from the request
 body. This is fully backward compatible: a request with no resolvable
-identity (shouldn't happen in practice, since middleware always assigns
+identity (shouldn't happen in practice, since the development proxy always assigns
 the dev cookie) behaves exactly like Sprint 3-5.
 
 - **Activity**: every question logs one `TUTOR_QUESTION`

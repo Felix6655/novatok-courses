@@ -45,13 +45,12 @@ and deploy lifecycle.
   practice results never modify `LessonProgress`/`StudentEnrollment`,
   only `LearningActivity`. See docs/ai-course-advisor.md, docs/ai-tutor.md,
   and docs/learning-progress.md.
-- Student identity (`src/server/identity/dev-identity.ts`,
-  `src/middleware.ts`) is a development-only cookie, explicitly NOT
-  production authentication — see docs/student-identity.md before
-  changing it or building on top of it. Learning services
-  (`src/server/learning/*`) take `studentId` as a plain function
-  parameter and never read it from a request body/query param.
-  `LearningActivity` metadata is a small, fixed-shape JSON per event type
+- Student identity is resolved only through `src/server/identity/dev-identity.ts`:
+  production delegates to NovaTok Social's authoritative server session and
+  non-production may use the explicit dev cookie provisioned by `src/proxy.ts`.
+  See docs/student-identity.md. Learning services (`src/server/learning/*`)
+  take `studentId` as a plain function parameter and never read it from a
+  request body/query param. `LearningActivity` metadata is a small, fixed-shape JSON per event type
   — never raw AI prompts, answers, or unrestricted conversation text.
 - Local dev Postgres runs in Docker as a shared server across NovaTok
   modules (container `novatok-postgres`, database `novatok` holds other
