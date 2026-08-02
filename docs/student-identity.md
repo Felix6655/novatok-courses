@@ -15,6 +15,13 @@ person — the cookie is trusted purely because we set it ourselves,
 server-side, on that visitor's first request. This is explicitly a
 development/testing convenience, not a security boundary.
 
+Sprint 7 audited the available NovaTok Social repository and found no
+stable, documented server-verifiable session contract to integrate. It
+therefore did not add a competing auth vendor. In production,
+`getStudentIdentity()` fails with `EnvValidationError` unless
+`STUDENT_IDENTITY_MODE=development` explicitly opts into this temporary
+identity. See [production-hardening.md](./production-hardening.md).
+
 ## How it works
 
 ```text

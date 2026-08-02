@@ -125,6 +125,22 @@ describe("POST /api/learning/practice", () => {
     expect(generatePracticeQuestion).not.toHaveBeenCalled();
   });
 
+  it("never trusts a client-supplied studentId in the body", async () => {
+    generatePracticeQuestion.mockResolvedValue({ practiceId: "practice-abc" });
+    await POST(
+      request({
+        courseSlug: "javascript-fundamentals",
+        lessonSlug: "variables-and-data-types",
+        studentId: "someone-elses-id",
+      }),
+    );
+    expect(generatePracticeQuestion).toHaveBeenCalledWith(
+      "dev-student-1",
+      "javascript-fundamentals",
+      "variables-and-data-types",
+    );
+  });
+
   it("returns 429 after exceeding the per-client rate limit", async () => {
     generatePracticeQuestion.mockResolvedValue({ practiceId: "practice-abc" });
     let lastStatus = 0;

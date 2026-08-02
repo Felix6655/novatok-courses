@@ -54,6 +54,16 @@ describe("POST /api/ai/learning-coach", () => {
     );
   });
 
+  it("never trusts a client-supplied studentId in the body", async () => {
+    getLearningCoachAdvice.mockResolvedValue({ explanation: "ok" });
+    await POST(request({ courseSlug: "javascript-fundamentals", studentId: "someone-elses-id" }));
+    expect(getLearningCoachAdvice).toHaveBeenCalledWith(
+      "dev-student-1",
+      "javascript-fundamentals",
+      expect.anything(),
+    );
+  });
+
   it("returns 400 for a malformed courseSlug", async () => {
     const response = await POST(request({ courseSlug: "Not A Slug!" }));
     expect(response.status).toBe(400);

@@ -45,6 +45,18 @@ describe("POST /api/ai/tutor", () => {
     expect(body.answer).toBe("A variable stores a value.");
   });
 
+  it("never trusts a client-supplied studentId in the body, always resolving it from getStudentIdentity()", async () => {
+    getTutorAnswer.mockResolvedValue({ answer: "ok" });
+    await POST(
+      request({
+        courseSlug: "javascript-fundamentals",
+        question: "Explain variables",
+        studentId: "someone-elses-id",
+      }),
+    );
+    expect(getTutorAnswer).toHaveBeenCalledWith(expect.anything(), "dev-student-1");
+  });
+
   it("returns 400 when the request body isn't valid JSON", async () => {
     const response = await POST(request("not json"));
     expect(response.status).toBe(400);

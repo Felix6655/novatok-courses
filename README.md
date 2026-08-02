@@ -27,9 +27,10 @@ paid cloud AI API is called, and none is required to run the app. See
 [docs/learning-progress.md](./docs/learning-progress.md).
 
 Student identity (enrollment, progress) uses a development-only cookie —
-**not production authentication**. See
-[docs/student-identity.md](./docs/student-identity.md) before assuming
-otherwise.
+**not production authentication**. Production identity requests fail
+loudly unless that development mode is explicitly opted into. See
+[docs/student-identity.md](./docs/student-identity.md) and
+[docs/production-hardening.md](./docs/production-hardening.md).
 
 ## Prerequisites
 
@@ -82,7 +83,8 @@ otherwise.
 4. **Run the Prisma migrations**
 
    Creates the database schema (`Category`, `Course`, `CourseModule`,
-   `Lesson`, `StudentEnrollment`, `LessonProgress` tables and enums):
+   `Lesson`, `StudentEnrollment`, `LessonProgress`, `LearningActivity`,
+   and `PracticeSession` tables and enums):
 
    ```bash
    npm run db:migrate
@@ -90,8 +92,8 @@ otherwise.
 
 5. **Seed the database**
 
-   Loads 15 categories, 50 realistic courses, and lesson content (24
-   modules / 45 lessons) for 12 of those courses. The seed upserts by
+   Loads 15 categories, 50 realistic courses, and lesson content (40
+   modules / 77 lessons) for 20 of those courses. The seed upserts by
    slug/displayOrder, so running it repeatedly is safe and never creates
    duplicates:
 
@@ -161,11 +163,13 @@ npm run db:smoke      # verify the real service layer against a live database
 npm run smoke:advisor # live E2E: Course Advisor against real Postgres + Ollama
 npm run smoke:tutor   # live E2E: AI Tutor against real Postgres + Ollama
 npm run smoke:coach   # live E2E: enroll -> tutor -> complete -> practice -> resume -> Learning Coach
+npm run smoke:practice # live E2E: PostgreSQL practice ownership, expiry, and replay protection
 npm run smoke:http    # live HTTP status checks (build/start the app first)
 ```
 
 The `smoke:*`/`db:smoke` scripts require a reachable, seeded
-`DATABASE_URL`; `smoke:advisor`, `smoke:tutor`, and `smoke:coach`
+`DATABASE_URL`; `smoke:advisor`, `smoke:tutor`, `smoke:coach`, and
+`smoke:practice`
 additionally require a running Ollama with `OLLAMA_MODEL` set to a model
 you've already pulled; `smoke:http` requires the app itself running
 (`npm run build && npm run start`, or `npm run dev`). None of them are

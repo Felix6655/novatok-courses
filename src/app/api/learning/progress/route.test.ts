@@ -84,6 +84,25 @@ describe("POST /api/learning/progress", () => {
     expect(response.status).toBe(403);
   });
 
+  it("never trusts a client-supplied studentId in the body", async () => {
+    markLessonComplete.mockResolvedValue({
+      progress: { id: "prog-1" },
+      courseProgress: { totalLessons: 4, completedLessons: 1, percentage: 25, isComplete: false, completedLessonSlugs: ["a"] },
+    });
+    await POST(
+      request({
+        courseSlug: "javascript-fundamentals",
+        lessonSlug: "variables-and-data-types",
+        studentId: "someone-elses-id",
+      }),
+    );
+    expect(markLessonComplete).toHaveBeenCalledWith(
+      "dev-student-1",
+      "javascript-fundamentals",
+      "variables-and-data-types",
+    );
+  });
+
   it("returns 429 after exceeding the mutation rate limit for a client", async () => {
     markLessonComplete.mockResolvedValue({
       progress: { id: "prog-1" },

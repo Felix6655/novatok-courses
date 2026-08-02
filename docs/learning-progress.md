@@ -165,18 +165,15 @@ One PRACTICE_ATTEMPT LearningActivity recorded — { correct, questionType }
 ```
 
 **The answer key is never client-trusted.** `generatePracticeQuestion`
-stores the full generated question (including its answer key) in
-`src/server/learning/practice-store.ts` — an in-memory, single-process,
-one-shot store keyed by a random UUID, same trade-off already accepted for
-`src/lib/ai-request-guard.ts` and documented there: swap for a shared
-store before running more than one instance in production. The client
-only ever receives the question and (for multiple choice) the visible
-choice text — never `correctChoiceIndex` or `modelAnswer`. Taking an entry
-deletes it immediately, so a `practiceId` can be evaluated exactly once,
-regardless of whether the caller is the entry's owner (ids are unguessable
-UUIDs, so this is a one-shot-replay protection, not a meaningful access
-check on its own — the studentId check below is the actual access check).
-
+persists the full generated question and answer key in PostgreSQL's
+`PracticeSession` table through `src/server/learning/practice-store.ts`.
+The client receives only the question and visible choices — never
+`correctChoiceIndex` or `modelAnswer`. Evaluation uses one conditional
+`UPDATE` whose predicates require the matching student owner, an
+unconsumed row, and an unexpired row before setting `consumedAt`. This
+atomically prevents cross-student consumption and concurrent replay.
+Expired rows for a student are cleaned opportunistically when that
+student generates another question.
 **Practice results never modify `LessonProgress` or `StudentEnrollment`.**
 The only durable effect of a practice attempt is one `LearningActivity`
 row — completion and progress remain entirely under the deterministic
@@ -384,7 +381,7 @@ None of these read `studentId` from the request body — always from
 `getStudentIdentity()`. See
 [docs/student-identity.md](./student-identity.md).
 
-### Request protection (Sprint 6)
+### Request protection (Sprint 6, hardened in Sprint 7)
 
 - `POST /api/ai/*` and `POST /api/learning/practice*` go through
   `src/lib/ai-request-guard.ts` (body size cap, 10 req/min per client,
@@ -397,10 +394,10 @@ None of these read `studentId` from the request body — always from
   and a 5KB body cap, but **no concurrency cap** — these are fast DB
   writes, not calls into a single local Ollama instance that needs
   protecting from request pile-ups, so applying the AI guard's stricter
-  limits here would be disproportionate. Same in-memory,
-  single-process trade-off as the AI guard, documented in the same place:
-  swap for a shared store before running more than one instance in
-  production.
+  limits here would be disproportionate. Both guards now depend on the
+  shared `RateLimitAdapter` interface, currently backed by separate
+  in-memory, single-process adapters. Implement a shared adapter before
+  running more than one application instance.
 
 ## Real database smoke procedure
 
@@ -412,6 +409,7 @@ npm run db:smoke        # catalog + content (existing)
 npm run smoke:advisor   # Course Advisor E2E (existing)
 npm run smoke:tutor     # AI Tutor E2E (existing)
 npm run smoke:coach     # enroll -> tutor -> complete -> practice -> resume -> Learning Coach E2E
+npm run smoke:practice  # PostgreSQL practice ownership/expiry/replay security E2E
 npm run smoke:http      # HTTP-level route/status checks, incl. the 404 regression check
 ```
 

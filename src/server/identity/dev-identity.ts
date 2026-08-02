@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { assertIdentityModeIsSafe } from "@/lib/env";
 import { DEV_STUDENT_COOKIE } from "@/server/identity/constants";
 import type { StudentIdentity } from "@/server/identity/types";
 
@@ -25,6 +26,12 @@ import type { StudentIdentity } from "@/server/identity/types";
  * throwing/redirecting when there isn't one. Every caller already depends
  * on the StudentIdentity shape, not on how it was obtained — see
  * docs/student-identity.md for the full migration plan.
+ *
+ * Sprint 7 safety rail: assertIdentityModeIsSafe() (src/lib/env.ts) makes
+ * this throw immediately in a NODE_ENV=production deployment unless
+ * STUDENT_IDENTITY_MODE=development was explicitly set — a production
+ * deploy that forgot to wire up real identity fails loudly at startup
+ * instead of silently handing out forgeable cookie identities.
  */
 export { DEV_STUDENT_COOKIE } from "@/server/identity/constants";
 
@@ -39,7 +46,17 @@ export class MissingStudentIdentityError extends Error {
 }
 
 export async function getStudentIdentity(): Promise<StudentIdentity> {
+  // cookies() must be called before the safety-rail check below: it's a
+  // Next.js "dynamic API" that, during next build's static-prerender
+  // pass, signals "this route needs a real request" via an internal
+  // mechanism rather than a normal return. Throwing our own error before
+  // reaching it would surface as a hard build failure instead of Next
+  // correctly marking the route dynamic. At real request time this
+  // ordering makes no behavioral difference — both run before any cookie
+  // value is read.
   const cookieStore = await cookies();
+  assertIdentityModeIsSafe();
+
   const studentId = cookieStore.get(DEV_STUDENT_COOKIE)?.value;
 
   if (!studentId) {

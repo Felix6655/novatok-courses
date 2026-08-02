@@ -17,6 +17,7 @@
     "smoke:advisor": "tsx scripts/advisor-e2e-smoke.ts",
     "smoke:tutor": "tsx scripts/tutor-e2e-smoke.ts",
     "smoke:coach": "tsx scripts/learning-coach-e2e-smoke.ts",
+    "smoke:practice": "tsx scripts/practice-e2e-smoke.ts",
     "smoke:http": "tsx scripts/http-routes-smoke.ts"
   },
   "dependencies": {

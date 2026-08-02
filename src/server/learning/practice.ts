@@ -125,7 +125,7 @@ export async function generatePracticeQuestion(
     );
   }
 
-  const practiceId = storePendingPractice({
+  const practiceId = await storePendingPractice({
     studentId,
     courseId: course.id,
     courseSlug: course.slug,
@@ -210,7 +210,7 @@ export async function evaluatePracticeAttempt(
   studentAnswer: string,
   deps: PracticeDeps = {},
 ): Promise<PracticeAttemptResult> {
-  const pending = takePendingPractice(practiceId, studentId);
+  const pending = await takePendingPractice(practiceId, studentId);
   if (!pending) {
     throw new PracticeNotFoundError();
   }

@@ -37,6 +37,7 @@ function check(label: string, condition: boolean, detail?: string) {
 }
 
 async function cleanup() {
+  await prisma.practiceSession.deleteMany({ where: { studentId } });
   await prisma.learningActivity.deleteMany({ where: { studentId } });
   await prisma.lessonProgress.deleteMany({ where: { studentId } });
   await prisma.studentEnrollment.deleteMany({ where: { studentId } });

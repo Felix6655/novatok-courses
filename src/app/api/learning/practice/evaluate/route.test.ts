@@ -82,6 +82,12 @@ describe("POST /api/learning/practice/evaluate", () => {
     expect(response.status).toBe(502);
   });
 
+  it("never trusts a client-supplied studentId in the body", async () => {
+    evaluatePracticeAttempt.mockResolvedValue({ correct: true });
+    await POST(request({ practiceId: "practice-abc", studentAnswer: "2", studentId: "someone-elses-id" }));
+    expect(evaluatePracticeAttempt).toHaveBeenCalledWith("dev-student-1", "practice-abc", "2");
+  });
+
   it("returns 429 after exceeding the per-client rate limit", async () => {
     evaluatePracticeAttempt.mockResolvedValue({ correct: true });
     let lastStatus = 0;

@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import type { PracticeQuestionType } from "@/lib/validation/practice";
 
 export interface PendingPractice {
@@ -13,54 +14,84 @@ export interface PendingPractice {
   correctChoiceIndex: number | null;
   modelAnswer: string | null;
   explanation: string;
-  expiresAt: number;
 }
 
 const TTL_MS = 15 * 60 * 1000;
 
 /**
- * In-memory, single-process, one-shot store for a just-generated practice
- * question's answer key. Deliberately never sent to the client — see
- * practiceRequestSchema's generate response, which omits correctChoiceIndex
- * and modelAnswer. Same trade-off already accepted for src/lib/ai-request-guard.ts:
- * the smallest thing that fits a single dev/local instance, not a
- * distributed cache. Swap for a shared store before running more than one
- * instance in production.
+ * PostgreSQL-backed practice-question store (Sprint 7; replaces Sprint
+ * 6's in-memory Map). A generated question's answer key is written to the
+ * `PracticeSession` table and never sent to the client — see
+ * practiceRequestSchema's generate response. Survives process
+ * restarts/multiple instances by construction, unlike the Sprint 6
+ * version.
  */
-const store = new Map<string, PendingPractice>();
+export async function storePendingPractice(data: PendingPractice): Promise<string> {
+  // Opportunistic, bounded cleanup: only this student's own expired rows,
+  // on their own write path — no global sweep job required.
+  await prisma.practiceSession.deleteMany({
+    where: { studentId: data.studentId, expiresAt: { lt: new Date() } },
+  });
 
-function sweepExpired(now: number): void {
-  for (const [id, entry] of store) {
-    if (entry.expiresAt < now) {
-      store.delete(id);
-    }
-  }
-}
+  const created = await prisma.practiceSession.create({
+    data: {
+      studentId: data.studentId,
+      courseId: data.courseId,
+      lessonId: data.lessonId,
+      questionType: data.questionType,
+      question: data.question,
+      choices: data.choices ?? [],
+      correctChoiceIndex: data.correctChoiceIndex,
+      modelAnswer: data.modelAnswer,
+      explanation: data.explanation,
+      expiresAt: new Date(Date.now() + TTL_MS),
+    },
+  });
 
-export function storePendingPractice(data: Omit<PendingPractice, "expiresAt">): string {
-  const now = Date.now();
-  sweepExpired(now);
-  const practiceId = crypto.randomUUID();
-  store.set(practiceId, { ...data, expiresAt: now + TTL_MS });
-  return practiceId;
+  return created.id;
 }
 
 /**
- * Consumes (deletes) a pending practice question. Returns undefined for an
- * unknown id, an expired id, or an id that belongs to a different student —
- * the caller can't tell which, which is the point (no information leak
- * about other students' practice sessions).
+ * Consumes a pending practice question in one atomic step: `updateMany`
+ * with `consumedAt: null` in its WHERE clause is a single conditional SQL
+ * UPDATE, so two concurrent evaluate requests for the same practiceId
+ * can't both "win" — only one will match zero-consumed rows and flip
+ * `consumedAt`, the other gets `count: 0`. Returns undefined for an
+ * unknown id, an expired id, an already-consumed id, or an id that
+ * belongs to a different student — the caller can't tell which, which is
+ * the point (no information leak about other students' practice
+ * sessions).
  */
-export function takePendingPractice(practiceId: string, studentId: string): PendingPractice | undefined {
-  const entry = store.get(practiceId);
-  if (!entry) return undefined;
-  store.delete(practiceId);
-  if (entry.expiresAt < Date.now()) return undefined;
-  if (entry.studentId !== studentId) return undefined;
-  return entry;
-}
+export async function takePendingPractice(
+  practiceId: string,
+  studentId: string,
+): Promise<PendingPractice | undefined> {
+  const now = new Date();
 
-/** Test-only: clears in-memory store state between test cases. */
-export function __resetPracticeStoreForTests(): void {
-  store.clear();
+  const consumed = await prisma.practiceSession.updateMany({
+    where: { id: practiceId, studentId, consumedAt: null, expiresAt: { gt: now } },
+    data: { consumedAt: now },
+  });
+  if (consumed.count === 0) return undefined;
+
+  const row = await prisma.practiceSession.findUnique({
+    where: { id: practiceId },
+    include: { course: true, lesson: true },
+  });
+  if (!row) return undefined;
+
+  return {
+    studentId: row.studentId,
+    courseId: row.courseId,
+    courseSlug: row.course.slug,
+    lessonId: row.lessonId,
+    lessonSlug: row.lesson.slug,
+    lessonTitle: row.lesson.title,
+    questionType: row.questionType,
+    question: row.question,
+    choices: row.choices.length > 0 ? row.choices : null,
+    correctChoiceIndex: row.correctChoiceIndex,
+    modelAnswer: row.modelAnswer,
+    explanation: row.explanation,
+  };
 }

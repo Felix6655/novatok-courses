@@ -81,6 +81,7 @@ async function main() {
   } else {
     const cookie = cookiePair(setCookie);
     console.log(`  ok   dev identity cookie assigned by middleware`);
+    let otherStudentIdForCleanup: string | undefined;
 
     const enrollResponse = await postJson("/api/learning/enroll", cookie, {
       courseSlug: "javascript-fundamentals",
@@ -111,7 +112,19 @@ async function main() {
       404,
     );
 
-    console.log("  (practice endpoints call the AI provider — real Ollama call, may take a few seconds)");
+    console.log("  (AI endpoints call the AI provider — real Ollama call, may take a few seconds)");
+    const tutorResponse = await postJson("/api/ai/tutor", cookie, {
+      courseSlug: "javascript-fundamentals",
+      question: "What is a variable?",
+      lessonSlug: "variables-and-data-types",
+    });
+    checkResponseStatus("POST /api/ai/tutor (valid)", tutorResponse, 200);
+
+    const coachResponse = await postJson("/api/ai/learning-coach", cookie, {
+      courseSlug: "javascript-fundamentals",
+    });
+    checkResponseStatus("POST /api/ai/learning-coach (valid)", coachResponse, 200);
+
     const practiceResponse = await postJson("/api/learning/practice", cookie, {
       courseSlug: "javascript-fundamentals",
       lessonSlug: "functions-and-control-flow",
@@ -120,11 +133,36 @@ async function main() {
 
     if (practiceOk) {
       const practiceBody = await practiceResponse.json();
+
+      console.log("  (ownership isolation: a second, unrelated identity attempts the same practiceId)");
+      // A fresh fetch() call with no cookie header at all — Node's fetch has no
+      // persistent cookie jar across calls, so this is a genuinely new request
+      // from middleware's point of view, exactly like the very first request
+      // above, and middleware mints a brand new dev identity cookie for it.
+      const otherIdentityResponse = await fetch(`${BASE_URL}/learn`, { redirect: "manual" });
+      const otherSetCookie = otherIdentityResponse.headers.get("set-cookie");
+      if (otherSetCookie && cookiePair(otherSetCookie) !== cookie) {
+        const otherCookie = cookiePair(otherSetCookie);
+        otherStudentIdForCleanup = otherCookie.split("=")[1];
+        const ownershipRejectResponse = await postJson("/api/learning/practice/evaluate", otherCookie, {
+          practiceId: practiceBody.practiceId,
+          studentAnswer: "0",
+        });
+        checkResponseStatus(
+          "POST /api/learning/practice/evaluate (different student, ownership rejected)",
+          ownershipRejectResponse,
+          404,
+        );
+      } else {
+        failures++;
+        console.log("  FAIL could not obtain a second, distinct dev identity for the ownership check");
+      }
+
       const evaluateResponse = await postJson("/api/learning/practice/evaluate", cookie, {
         practiceId: practiceBody.practiceId,
         studentAnswer: practiceBody.questionType === "MULTIPLE_CHOICE" ? "0" : "a reasonable attempt",
       });
-      checkResponseStatus("POST /api/learning/practice/evaluate (valid)", evaluateResponse, 200);
+      checkResponseStatus("POST /api/learning/practice/evaluate (valid, real owner)", evaluateResponse, 200);
 
       const replayResponse = await postJson("/api/learning/practice/evaluate", cookie, {
         practiceId: practiceBody.practiceId,
@@ -141,9 +179,13 @@ async function main() {
     await import("dotenv/config");
     const { prisma } = await import("@/lib/prisma");
     const studentId = cookie.split("=")[1];
-    await prisma.learningActivity.deleteMany({ where: { studentId } });
-    await prisma.lessonProgress.deleteMany({ where: { studentId } });
-    await prisma.studentEnrollment.deleteMany({ where: { studentId } });
+    const idsToClean = otherStudentIdForCleanup ? [studentId, otherStudentIdForCleanup] : [studentId];
+    for (const id of idsToClean) {
+      await prisma.practiceSession.deleteMany({ where: { studentId: id } });
+      await prisma.learningActivity.deleteMany({ where: { studentId: id } });
+      await prisma.lessonProgress.deleteMany({ where: { studentId: id } });
+      await prisma.studentEnrollment.deleteMany({ where: { studentId: id } });
+    }
     await prisma.$disconnect();
   }
 

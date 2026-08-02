@@ -1,39 +1,33 @@
 import { NextResponse } from "next/server";
+import { InMemoryRateLimitAdapter } from "@/lib/rate-limit/in-memory-adapter";
+import type { RateLimitAdapter } from "@/lib/rate-limit/types";
 
 const MAX_BODY_BYTES = 20_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 10;
 const MAX_CONCURRENT_AI_CALLS = 2;
 
-interface RateLimitBucket {
-  count: number;
-  resetAt: number;
-}
-
-const requestBuckets = new Map<string, RateLimitBucket>();
+/**
+ * Rate limiting goes through the RateLimitAdapter boundary (see
+ * src/lib/rate-limit/types.ts) so this file no longer manipulates
+ * in-memory state directly — swap `rateLimitAdapter` for a shared-store
+ * implementation before running more than one instance in production.
+ *
+ * The concurrency cap below is deliberately NOT part of that
+ * abstraction: it caps how many calls THIS process has in flight against
+ * a single local Ollama instance, which is inherently a per-process
+ * concern (coordinating it across instances would mean a distributed
+ * work queue, a materially different and heavier problem than rate
+ * limiting, and out of scope until there's an actual need to run more
+ * than one instance against one Ollama).
+ */
+const rateLimitAdapter: RateLimitAdapter = new InMemoryRateLimitAdapter();
 const concurrencyByEndpoint = new Map<string, number>();
 
 function getClientKey(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0].trim();
   return request.headers.get("x-real-ip") ?? "unknown";
-}
-
-function checkRateLimit(key: string): { allowed: boolean; retryAfterSeconds: number } {
-  const now = Date.now();
-  const bucket = requestBuckets.get(key);
-
-  if (!bucket || now >= bucket.resetAt) {
-    requestBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
-
-  if (bucket.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return { allowed: false, retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000) };
-  }
-
-  bucket.count += 1;
-  return { allowed: true, retryAfterSeconds: 0 };
 }
 
 function acquireConcurrencySlot(endpoint: string): boolean {
@@ -100,7 +94,7 @@ export async function guardAIRequest(
   }
 
   const rateLimitKey = `${endpoint}:${getClientKey(request)}`;
-  const rate = checkRateLimit(rateLimitKey);
+  const rate = await rateLimitAdapter.consume(rateLimitKey, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS);
   if (!rate.allowed) {
     return {
       ok: false,
@@ -126,6 +120,6 @@ export async function guardAIRequest(
 
 /** Test-only: clears in-memory guard state between test cases. */
 export function __resetAIRequestGuardStateForTests(): void {
-  requestBuckets.clear();
+  rateLimitAdapter.reset();
   concurrencyByEndpoint.clear();
 }

@@ -1,38 +1,23 @@
 import { NextResponse } from "next/server";
+import { InMemoryRateLimitAdapter } from "@/lib/rate-limit/in-memory-adapter";
+import type { RateLimitAdapter } from "@/lib/rate-limit/types";
 
 const MAX_BODY_BYTES = 5_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** More generous than the AI guard's 10/min — these are cheap DB writes, not AI calls. */
 const RATE_LIMIT_MAX_REQUESTS = 30;
 
-interface RateLimitBucket {
-  count: number;
-  resetAt: number;
-}
-
-const requestBuckets = new Map<string, RateLimitBucket>();
+/**
+ * Same RateLimitAdapter boundary as src/lib/ai-request-guard.ts, but its
+ * own instance/namespace — this guard has no concurrency-cap concept at
+ * all (see the module doc comment below), only a rate limit.
+ */
+const rateLimitAdapter: RateLimitAdapter = new InMemoryRateLimitAdapter();
 
 function getClientKey(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0].trim();
   return request.headers.get("x-real-ip") ?? "unknown";
-}
-
-function checkRateLimit(key: string): { allowed: boolean; retryAfterSeconds: number } {
-  const now = Date.now();
-  const bucket = requestBuckets.get(key);
-
-  if (!bucket || now >= bucket.resetAt) {
-    requestBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
-
-  if (bucket.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return { allowed: false, retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000) };
-  }
-
-  bucket.count += 1;
-  return { allowed: true, retryAfterSeconds: 0 };
 }
 
 export type LearningMutationGuardResult =
@@ -80,7 +65,7 @@ export async function guardLearningMutation(
   }
 
   const rateLimitKey = `${endpoint}:${getClientKey(request)}`;
-  const rate = checkRateLimit(rateLimitKey);
+  const rate = await rateLimitAdapter.consume(rateLimitKey, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS);
   if (!rate.allowed) {
     return {
       ok: false,
@@ -96,5 +81,5 @@ export async function guardLearningMutation(
 
 /** Test-only: clears in-memory guard state between test cases. */
 export function __resetLearningMutationGuardStateForTests(): void {
-  requestBuckets.clear();
+  rateLimitAdapter.reset();
 }

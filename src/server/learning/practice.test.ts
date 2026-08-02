@@ -108,7 +108,7 @@ describe("generatePracticeQuestion", () => {
     getCourseBySlug.mockResolvedValue(course);
     findEnrollment.mockResolvedValue({ id: "enr-1" });
     getLessonByCourseAndSlug.mockResolvedValue(lesson);
-    storePendingPractice.mockReturnValue("practice-abc");
+    storePendingPractice.mockResolvedValue("practice-abc");
 
     const provider = fakeProvider(
       JSON.stringify({
@@ -177,14 +177,14 @@ const pendingShortAnswer = {
 
 describe("evaluatePracticeAttempt", () => {
   it("throws PracticeNotFoundError for an unknown/expired/wrong-student practiceId", async () => {
-    takePendingPractice.mockReturnValue(undefined);
+    takePendingPractice.mockResolvedValue(undefined);
     await expect(
       evaluatePracticeAttempt("student-1", "unknown-id", "2"),
     ).rejects.toBeInstanceOf(PracticeNotFoundError);
   });
 
   it("evaluates a correct MULTIPLE_CHOICE answer deterministically without calling the AI", async () => {
-    takePendingPractice.mockReturnValue(pendingMultipleChoice);
+    takePendingPractice.mockResolvedValue(pendingMultipleChoice);
 
     const result = await evaluatePracticeAttempt("student-1", "practice-abc", "2");
 
@@ -202,7 +202,7 @@ describe("evaluatePracticeAttempt", () => {
   });
 
   it("evaluates an incorrect MULTIPLE_CHOICE answer deterministically", async () => {
-    takePendingPractice.mockReturnValue(pendingMultipleChoice);
+    takePendingPractice.mockResolvedValue(pendingMultipleChoice);
 
     const result = await evaluatePracticeAttempt("student-1", "practice-abc", "0");
 
@@ -213,14 +213,14 @@ describe("evaluatePracticeAttempt", () => {
   });
 
   it("treats a non-numeric MULTIPLE_CHOICE answer as incorrect rather than throwing", async () => {
-    takePendingPractice.mockReturnValue(pendingMultipleChoice);
+    takePendingPractice.mockResolvedValue(pendingMultipleChoice);
 
     const result = await evaluatePracticeAttempt("student-1", "practice-abc", "not-a-number");
     expect(result.correct).toBe(false);
   });
 
   it("evaluates a SHORT_ANSWER attempt using the AI provider", async () => {
-    takePendingPractice.mockReturnValue(pendingShortAnswer);
+    takePendingPractice.mockResolvedValue(pendingShortAnswer);
     const provider = fakeProvider(
       JSON.stringify({ correct: true, feedback: "Exactly right." }),
     );
@@ -238,7 +238,7 @@ describe("evaluatePracticeAttempt", () => {
   });
 
   it("throws InvalidModelOutputError when the SHORT_ANSWER evaluation response is unusable", async () => {
-    takePendingPractice.mockReturnValue(pendingShortAnswer);
+    takePendingPractice.mockResolvedValue(pendingShortAnswer);
     const provider = fakeProvider("not valid json");
 
     await expect(

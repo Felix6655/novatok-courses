@@ -65,12 +65,13 @@ model Course {
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
-  category    Category            @relation(fields: [categoryId], references: [id])
-  modules     CourseModule[]
-  lessons     Lesson[]
-  enrollments StudentEnrollment[]
-  progress    LessonProgress[]
-  activities  LearningActivity[]
+  category         Category            @relation(fields: [categoryId], references: [id])
+  modules          CourseModule[]
+  lessons          Lesson[]
+  enrollments      StudentEnrollment[]
+  progress         LessonProgress[]
+  activities       LearningActivity[]
+  practiceSessions PracticeSession[]
 
   @@index([status, categoryId])
   @@index([status, featured])
@@ -118,6 +119,7 @@ model Lesson {
   progress              LessonProgress[]
   currentForEnrollments StudentEnrollment[]
   activities            LearningActivity[]
+  practiceSessions      PracticeSession[]
 
   @@unique([courseId, slug])
   @@unique([moduleId, displayOrder])
@@ -182,6 +184,44 @@ model LearningActivity {
   @@index([studentId, courseId])
   @@index([studentId, lessonId])
   @@index([courseId, type])
+}
+
+enum PracticeQuestionType {
+  MULTIPLE_CHOICE
+  SHORT_ANSWER
+}
+
+/**
+ * Sprint 7: the PostgreSQL-backed replacement for Sprint 6's in-memory
+ * practice-store.ts. Holds a generated practice question's answer key
+ * server-side between generation and evaluation — never exposed through
+ * the generate API. One-shot: `consumedAt` is set atomically (via a
+ * `WHERE consumedAt IS NULL` conditional update, not a read-then-write)
+ * the moment a student's answer is evaluated, so a concurrent replay of
+ * the same practiceId cannot double-consume it. `expiresAt` bounds how
+ * long an unanswered question stays valid. Only the minimum state needed
+ * to grade one attempt is stored — no prompt/conversation history.
+ */
+model PracticeSession {
+  id                 String               @id @default(uuid())
+  studentId          String
+  courseId           String
+  lessonId           String
+  questionType       PracticeQuestionType
+  question           String
+  choices            String[]             @default([])
+  correctChoiceIndex Int?
+  modelAnswer        String?
+  explanation        String
+  createdAt          DateTime             @default(now())
+  expiresAt          DateTime
+  consumedAt         DateTime?
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([expiresAt])
 }
 
 /**

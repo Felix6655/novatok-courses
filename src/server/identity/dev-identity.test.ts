@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const cookiesGet = vi.fn();
 
@@ -29,5 +29,31 @@ describe("getStudentIdentity", () => {
   it("throws MissingStudentIdentityError when the cookie is absent", async () => {
     cookiesGet.mockReturnValue(undefined);
     await expect(getStudentIdentity()).rejects.toBeInstanceOf(MissingStudentIdentityError);
+  });
+
+  describe("production identity safety rail", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("refuses to resolve an identity in production without an explicit opt-in", async () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("STUDENT_IDENTITY_MODE", "");
+      cookiesGet.mockImplementation((name: string) =>
+        name === DEV_STUDENT_COOKIE ? { value: "dev-abc-123" } : undefined,
+      );
+
+      await expect(getStudentIdentity()).rejects.toThrow(/production identity adapter/);
+    });
+
+    it("resolves normally in production when STUDENT_IDENTITY_MODE=development is explicit", async () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("STUDENT_IDENTITY_MODE", "development");
+      cookiesGet.mockImplementation((name: string) =>
+        name === DEV_STUDENT_COOKIE ? { value: "dev-abc-123" } : undefined,
+      );
+
+      await expect(getStudentIdentity()).resolves.toEqual({ studentId: "dev-abc-123" });
+    });
   });
 });

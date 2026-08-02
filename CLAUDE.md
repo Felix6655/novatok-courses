@@ -65,9 +65,10 @@ and deploy lifecycle.
   `src/lib/ai-request-guard.ts` (body size, rate limit, concurrency cap).
   `/api/learning/enroll` and `/api/learning/progress` go through a
   separate, lighter `src/lib/learning-mutation-guard.ts` (rate limit only,
-  no concurrency cap — they're plain DB writes, not AI calls). Both are
-  intentionally in-memory/single-process — don't add Redis or a
-  distributed limiter unless actually running more than one instance.
+  no concurrency cap — they're plain DB writes, not AI calls). Both rate
+  limits use the shared `RateLimitAdapter` boundary with an intentionally
+  in-memory/single-process implementation — don't add Redis or another
+  distributed adapter unless actually running more than one instance.
 - Do not add CI configuration until explicitly requested.
 - Keep the Prisma schema minimal and only add models when a feature that
   needs them is actually being implemented — no speculative schema.
