@@ -114,7 +114,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
             disabled={status === "generating"}
             className="shrink-0 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-300"
           >
-            {status === "generating" ? "Generating..." : result ? "{dictionary.tryAgain}" : "Start practice"}
+            {status === "generating" ? "Generating..." : result ? dictionary.tryAgain : "Start practice"}
           </button>
         )}
       </div>
@@ -166,7 +166,7 @@ export function PracticePanel({ courseSlug, lessonSlug }: PracticePanelProps) {
             }
             className="mt-3 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
           >
-            {status === "submitting" ? "Checking..." : "{dictionary.submitAnswer}"}
+            {status === "submitting" ? "Checking..." : dictionary.submitAnswer}
           </button>
         </div>
       )}
