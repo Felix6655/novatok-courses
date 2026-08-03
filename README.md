@@ -251,7 +251,8 @@ lighter-weight guard proportionate to a non-AI operation
 [docs/learning-progress.md](./docs/learning-progress.md#request-protection-sprint-6).
 
 See [docs/novatok-integration.md](./docs/novatok-integration.md) for the
-Sprint 1 catalog API shapes,
+Sprint 1 catalog API shapes and [docs/sprint-1.md](./docs/sprint-1.md) for
+the catalog scope and repeatable validation checklist,
 [docs/ai-course-advisor.md](./docs/ai-course-advisor.md) for the advisor's
 architecture, [docs/ai-tutor.md](./docs/ai-tutor.md) for the Tutor's
 content model, grounding rules, and API contract, and
