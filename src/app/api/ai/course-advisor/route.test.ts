@@ -89,7 +89,8 @@ describe("POST /api/ai/course-advisor", () => {
     expect(response.status).toBe(502);
   });
 
-  it("returns 500 with no stack trace for an unexpected error", async () => {
+  it("returns 500 with no stack trace for an unexpected error, but logs it server-side", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     getCourseAdvisorRecommendation.mockRejectedValue(new Error("something exploded with a secret path"));
 
     const response = await POST(request({ message: "hi" }));
@@ -98,6 +99,10 @@ describe("POST /api/ai/course-advisor", () => {
     expect(response.status).toBe(500);
     expect(JSON.stringify(body)).not.toContain("secret path");
     expect(body.error).toBe("Unexpected server error");
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(String(consoleError.mock.calls[0][0])).toContain("secret path");
+
+    consoleError.mockRestore();
   });
 
   it("returns 413 when the request body is too large", async () => {

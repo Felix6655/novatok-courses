@@ -4,7 +4,8 @@ import { __resetLearningMutationGuardStateForTests } from "@/lib/learning-mutati
 const getStudentIdentity = vi.fn();
 const enrollInCourse = vi.fn();
 
-vi.mock("@/server/identity/dev-identity", () => ({
+vi.mock("@/server/identity/dev-identity", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/identity/dev-identity")>()),
   getStudentIdentity: (...args: unknown[]) => getStudentIdentity(...args),
 }));
 vi.mock("@/server/learning/enrollment", () => ({
@@ -13,6 +14,7 @@ vi.mock("@/server/learning/enrollment", () => ({
 
 const { POST } = await import("@/app/api/learning/enroll/route");
 const { EnrollmentCourseNotFoundError } = await import("@/server/learning/errors");
+const { MissingStudentIdentityError } = await import("@/server/identity/dev-identity");
 
 function request(body: unknown) {
   return new Request("http://localhost/api/learning/enroll", {
@@ -56,6 +58,32 @@ describe("POST /api/learning/enroll", () => {
     enrollInCourse.mockRejectedValue(new EnrollmentCourseNotFoundError("draft-course"));
     const response = await POST(request({ courseSlug: "draft-course" }));
     expect(response.status).toBe(404);
+  });
+
+  it("returns 401 instead of an unhandled error when no student identity can be resolved", async () => {
+    getStudentIdentity.mockRejectedValue(new MissingStudentIdentityError());
+    const response = await POST(request({ courseSlug: "javascript-fundamentals" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(enrollInCourse).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("development proxy");
+  });
+
+  it("logs and returns 500 with no stack trace for an unexpected error", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    enrollInCourse.mockRejectedValue(new Error("something exploded with a secret path"));
+
+    const response = await POST(request({ courseSlug: "javascript-fundamentals" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe("Unexpected server error");
+    expect(JSON.stringify(body)).not.toContain("secret path");
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(String(consoleError.mock.calls[0][0])).toContain("secret path");
+
+    consoleError.mockRestore();
   });
 
   it("never trusts a client-supplied studentId in the body", async () => {

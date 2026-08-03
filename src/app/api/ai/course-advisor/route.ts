@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     if (error instanceof InvalidModelOutputError) {
       return badGateway("The AI provider returned a response that could not be used.");
     }
+    console.error(error);
     return internalError();
   } finally {
     guard.release();

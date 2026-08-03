@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { badRequest, notFound } from "@/lib/api-response";
+import { badRequest, internalError, notFound, unauthorized } from "@/lib/api-response";
 import { guardLearningMutation } from "@/lib/learning-mutation-guard";
 import { completeLessonRequestSchema } from "@/lib/validation/learning";
-import { getStudentIdentity } from "@/server/identity/dev-identity";
+import { getStudentIdentity, MissingStudentIdentityError } from "@/server/identity/dev-identity";
+import { InvalidSocialSessionError } from "@/server/identity/novatok-social-identity";
 import {
   EnrollmentCourseNotFoundError,
   LearningLessonNotFoundError,
@@ -19,9 +20,8 @@ export async function POST(request: Request) {
     return badRequest(parsed.error, "Invalid request body");
   }
 
-  const identity = await getStudentIdentity();
-
   try {
+    const identity = await getStudentIdentity();
     const result = await markLessonComplete(
       identity.studentId,
       parsed.data.courseSlug,
@@ -29,12 +29,16 @@ export async function POST(request: Request) {
     );
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof MissingStudentIdentityError || error instanceof InvalidSocialSessionError) {
+      return unauthorized();
+    }
     if (error instanceof EnrollmentCourseNotFoundError || error instanceof LearningLessonNotFoundError) {
       return notFound(error.message);
     }
     if (error instanceof NotEnrolledError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
-    throw error;
+    console.error(error);
+    return internalError();
   }
 }

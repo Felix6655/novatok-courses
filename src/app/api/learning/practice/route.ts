@@ -1,9 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError, InvalidModelOutputError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
-import { badGateway, badRequest, internalError, notFound, serviceUnavailable } from "@/lib/api-response";
+import { badGateway, badRequest, internalError, notFound, serviceUnavailable, unauthorized } from "@/lib/api-response";
 import { practiceRequestSchema } from "@/lib/validation/practice";
-import { getStudentIdentity } from "@/server/identity/dev-identity";
+import { getStudentIdentity, MissingStudentIdentityError } from "@/server/identity/dev-identity";
+import { InvalidSocialSessionError } from "@/server/identity/novatok-social-identity";
 import {
   EnrollmentCourseNotFoundError,
   LearningLessonNotFoundError,
@@ -29,6 +30,9 @@ export async function POST(request: Request) {
       : await generatePracticeQuestion(...args);
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof MissingStudentIdentityError || error instanceof InvalidSocialSessionError) {
+      return unauthorized();
+    }
     if (error instanceof EnrollmentCourseNotFoundError || error instanceof LearningLessonNotFoundError) {
       return notFound(error.message);
     }
@@ -41,6 +45,7 @@ export async function POST(request: Request) {
     if (error instanceof InvalidModelOutputError) {
       return badGateway("The AI provider returned a response that could not be used.");
     }
+    console.error(error);
     return internalError();
   } finally {
     guard.release();

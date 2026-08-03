@@ -18,6 +18,11 @@ export function notFound(message: string) {
   return NextResponse.json({ error: message }, { status: 404 });
 }
 
+/** No valid student identity could be resolved for this request (missing/expired session). */
+export function unauthorized(message = "Authentication required") {
+  return NextResponse.json({ error: message }, { status: 401 });
+}
+
 /** The request is well-formed, but there's nothing usable to act on (e.g. no content yet). */
 export function unprocessable(message: string) {
   return NextResponse.json({ error: message }, { status: 422 });

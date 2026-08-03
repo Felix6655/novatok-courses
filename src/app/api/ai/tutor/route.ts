@@ -7,10 +7,12 @@ import {
   internalError,
   notFound,
   serviceUnavailable,
+  unauthorized,
   unprocessable,
 } from "@/lib/api-response";
 import { tutorRequestSchema } from "@/lib/validation/tutor";
-import { getStudentIdentity } from "@/server/identity/dev-identity";
+import { getStudentIdentity, MissingStudentIdentityError } from "@/server/identity/dev-identity";
+import { InvalidSocialSessionError } from "@/server/identity/novatok-social-identity";
 import { getTutorAnswer } from "@/server/tutor/tutor-service";
 import {
   TutorCourseNotFoundError,
@@ -33,6 +35,9 @@ export async function POST(request: Request) {
     const result = await getTutorAnswer(parsed.data, identity.studentId);
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof MissingStudentIdentityError || error instanceof InvalidSocialSessionError) {
+      return unauthorized();
+    }
     if (error instanceof TutorCourseNotFoundError || error instanceof TutorLessonNotFoundError) {
       return notFound(error.message);
     }
@@ -45,6 +50,7 @@ export async function POST(request: Request) {
     if (error instanceof InvalidModelOutputError) {
       return badGateway("The AI provider returned a response that could not be used.");
     }
+    console.error(error);
     return internalError();
   } finally {
     guard.release();

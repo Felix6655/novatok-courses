@@ -5,7 +5,8 @@ import { __resetAIRequestGuardStateForTests } from "@/lib/ai-request-guard";
 const getStudentIdentity = vi.fn();
 const getLearningCoachAdvice = vi.fn();
 
-vi.mock("@/server/identity/dev-identity", () => ({
+vi.mock("@/server/identity/dev-identity", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/identity/dev-identity")>()),
   getStudentIdentity: (...args: unknown[]) => getStudentIdentity(...args),
 }));
 vi.mock("@/server/learning/learning-coach", () => ({
@@ -14,6 +15,7 @@ vi.mock("@/server/learning/learning-coach", () => ({
 
 const { POST } = await import("@/app/api/ai/learning-coach/route");
 const { EnrollmentCourseNotFoundError, NotEnrolledError } = await import("@/server/learning/errors");
+const { MissingStudentIdentityError } = await import("@/server/identity/dev-identity");
 
 function request(body: unknown) {
   return new Request("http://localhost/api/ai/learning-coach", {
@@ -96,13 +98,28 @@ describe("POST /api/ai/learning-coach", () => {
     expect(response.status).toBe(503);
   });
 
-  it("returns 500 with no stack trace for an unexpected error", async () => {
+  it("returns 500 with no stack trace for an unexpected error, but logs it server-side", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     getLearningCoachAdvice.mockRejectedValue(new Error("something exploded with a secret path"));
     const response = await POST(request({ courseSlug: "javascript-fundamentals" }));
     const body = await response.json();
 
     expect(response.status).toBe(500);
     expect(JSON.stringify(body)).not.toContain("secret path");
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(String(consoleError.mock.calls[0][0])).toContain("secret path");
+
+    consoleError.mockRestore();
+  });
+
+  it("returns 401 instead of a 500 when no student identity can be resolved", async () => {
+    getStudentIdentity.mockRejectedValue(new MissingStudentIdentityError());
+    const response = await POST(request({ courseSlug: "javascript-fundamentals" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(getLearningCoachAdvice).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("development proxy");
   });
 
   it("returns 413 when the request body is too large", async () => {

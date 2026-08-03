@@ -8,7 +8,8 @@ const getStudentIdentity = vi.fn();
 vi.mock("@/server/tutor/tutor-service", () => ({
   getTutorAnswer: (...args: unknown[]) => getTutorAnswer(...args),
 }));
-vi.mock("@/server/identity/dev-identity", () => ({
+vi.mock("@/server/identity/dev-identity", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/identity/dev-identity")>()),
   getStudentIdentity: (...args: unknown[]) => getStudentIdentity(...args),
 }));
 
@@ -16,6 +17,8 @@ const { POST } = await import("@/app/api/ai/tutor/route");
 const { TutorCourseNotFoundError, TutorLessonNotFoundError, TutorNoContentError } = await import(
   "@/server/tutor/errors"
 );
+const { MissingStudentIdentityError } = await import("@/server/identity/dev-identity");
+const { InvalidSocialSessionError } = await import("@/server/identity/novatok-social-identity");
 
 function request(body: unknown) {
   return new Request("http://localhost/api/ai/tutor", {
@@ -103,13 +106,36 @@ describe("POST /api/ai/tutor", () => {
     expect(response.status).toBe(502);
   });
 
-  it("returns 500 with no stack trace for an unexpected error", async () => {
+  it("returns 500 with no stack trace for an unexpected error, but logs it server-side", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     getTutorAnswer.mockRejectedValue(new Error("something exploded with a secret path"));
     const response = await POST(request({ courseSlug: "javascript-fundamentals", question: "hi" }));
     const body = await response.json();
 
     expect(response.status).toBe(500);
     expect(JSON.stringify(body)).not.toContain("secret path");
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(String(consoleError.mock.calls[0][0])).toContain("secret path");
+
+    consoleError.mockRestore();
+  });
+
+  it("returns 401 instead of a 500 when the development identity cookie is missing", async () => {
+    getStudentIdentity.mockRejectedValue(new MissingStudentIdentityError());
+    const response = await POST(request({ courseSlug: "javascript-fundamentals", question: "hi" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(getTutorAnswer).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("development proxy");
+  });
+
+  it("returns 401 instead of a 500 when the NovaTok Social session is invalid or expired", async () => {
+    getStudentIdentity.mockRejectedValue(new InvalidSocialSessionError());
+    const response = await POST(request({ courseSlug: "javascript-fundamentals", question: "hi" }));
+
+    expect(response.status).toBe(401);
+    expect(getTutorAnswer).not.toHaveBeenCalled();
   });
 
   it("returns 404 when the lesson doesn't exist or belongs to another course", async () => {

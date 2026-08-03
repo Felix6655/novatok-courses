@@ -1,9 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 import { AIProviderConfigError, AIProviderUnavailableError } from "@/ai/errors";
 import { guardAIRequest } from "@/lib/ai-request-guard";
-import { badRequest, internalError, notFound, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, internalError, notFound, serviceUnavailable, unauthorized } from "@/lib/api-response";
 import { learningCoachRequestSchema } from "@/lib/validation/learning-coach";
-import { getStudentIdentity } from "@/server/identity/dev-identity";
+import { getStudentIdentity, MissingStudentIdentityError } from "@/server/identity/dev-identity";
+import { InvalidSocialSessionError } from "@/server/identity/novatok-social-identity";
 import { EnrollmentCourseNotFoundError, NotEnrolledError } from "@/server/learning/errors";
 import { getLearningCoachAdvice } from "@/server/learning/learning-coach";
 
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof MissingStudentIdentityError || error instanceof InvalidSocialSessionError) {
+      return unauthorized();
+    }
     if (error instanceof EnrollmentCourseNotFoundError) {
       return notFound(error.message);
     }
@@ -34,6 +38,7 @@ export async function POST(request: Request) {
     if (error instanceof AIProviderUnavailableError || error instanceof AIProviderConfigError) {
       return serviceUnavailable(error.message);
     }
+    console.error(error);
     return internalError();
   } finally {
     guard.release();

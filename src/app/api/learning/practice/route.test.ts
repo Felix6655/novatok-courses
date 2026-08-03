@@ -5,7 +5,8 @@ import { __resetAIRequestGuardStateForTests } from "@/lib/ai-request-guard";
 const getStudentIdentity = vi.fn();
 const generatePracticeQuestion = vi.fn();
 
-vi.mock("@/server/identity/dev-identity", () => ({
+vi.mock("@/server/identity/dev-identity", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/identity/dev-identity")>()),
   getStudentIdentity: (...args: unknown[]) => getStudentIdentity(...args),
 }));
 vi.mock("@/server/learning/practice", () => ({
@@ -18,6 +19,7 @@ const {
   LearningLessonNotFoundError,
   NotEnrolledError,
 } = await import("@/server/learning/errors");
+const { MissingStudentIdentityError } = await import("@/server/identity/dev-identity");
 
 function request(body: unknown) {
   return new Request("http://localhost/api/learning/practice", {
@@ -115,6 +117,36 @@ describe("POST /api/learning/practice", () => {
       request({ courseSlug: "javascript-fundamentals", lessonSlug: "variables-and-data-types" }),
     );
     expect(response.status).toBe(502);
+  });
+
+  it("returns 401 instead of a 500 when no student identity can be resolved", async () => {
+    getStudentIdentity.mockRejectedValue(new MissingStudentIdentityError());
+    const response = await POST(
+      request({ courseSlug: "javascript-fundamentals", lessonSlug: "variables-and-data-types" }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(generatePracticeQuestion).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("development proxy");
+  });
+
+  it("logs and returns 500 with no stack trace for an unexpected error", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    generatePracticeQuestion.mockRejectedValue(new Error("something exploded with a secret path"));
+
+    const response = await POST(
+      request({ courseSlug: "javascript-fundamentals", lessonSlug: "variables-and-data-types" }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe("Unexpected server error");
+    expect(JSON.stringify(body)).not.toContain("secret path");
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(String(consoleError.mock.calls[0][0])).toContain("secret path");
+
+    consoleError.mockRestore();
   });
 
   it("returns 413 when the request body is too large", async () => {
