@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Local editorial exports
 /translation-exports/
+
+# Local model inventory and benchmark samples
+/benchmark-artifacts/

@@ -23,7 +23,9 @@
     "translations:audit": "tsx scripts/translations-audit.ts",
     "translations:export": "tsx scripts/translations-export.ts",
     "translations:import": "tsx scripts/translations-import.ts",
-    "smoke:i18n": "tsx scripts/i18n-acceptance-smoke.ts"
+    "smoke:i18n": "tsx scripts/i18n-acceptance-smoke.ts",
+    "models:inventory": "tsx scripts/model-inventory.ts",
+    "models:benchmark": "tsx scripts/model-benchmark.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",

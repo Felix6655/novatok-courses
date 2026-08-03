@@ -1,6 +1,8 @@
 import { AIProviderConfigError } from "@/ai/errors";
 import type { AIProvider } from "@/ai/provider";
+import { getRoutedAIProvider, type AITask } from "@/ai/model-routing";
 import { OllamaProvider } from "@/ai/providers/ollama";
+import type { Locale } from "@/i18n/config";
 
 const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
 
@@ -10,7 +12,13 @@ const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
  * place in the codebase that knows which concrete provider is active —
  * everything else depends on AIProvider.
  */
-export function getAIProvider(env: Partial<NodeJS.ProcessEnv> = process.env): AIProvider {
+export function getAIProvider(
+  env: Partial<NodeJS.ProcessEnv> = process.env,
+  context?: { task: AITask; locale: Locale },
+): AIProvider {
+  if (context) {
+    return getRoutedAIProvider(context, env);
+  }
   const providerName = env.AI_PROVIDER?.trim() || "ollama";
 
   switch (providerName) {

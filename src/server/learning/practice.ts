@@ -1,4 +1,4 @@
-﻿import { InvalidModelOutputError } from "@/ai/errors";
+import { InvalidModelOutputError } from "@/ai/errors";
 import { getAIProvider } from "@/ai/get-ai-provider";
 import { parseJsonLoosely } from "@/ai/parse-json-loosely";
 import type { AIProvider, ChatMessage } from "@/ai/provider";
@@ -18,7 +18,10 @@ import {
   NotEnrolledError,
   PracticeNotFoundError,
 } from "@/server/learning/errors";
-import { storePendingPractice, takePendingPractice } from "@/server/learning/practice-store";
+import {
+  storePendingPractice,
+  takePendingPractice,
+} from "@/server/learning/practice-store";
 
 export interface GeneratedPractice {
   practiceId: string;
@@ -47,11 +50,11 @@ export interface PracticeDeps {
 }
 
 function truncate(text: string, maxLength: number): string {
-  return text.length > maxLength ? `${text.slice(0, maxLength)}â€¦` : text;
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
 }
 
 const GENERATE_SYSTEM_PROMPT = `You are generating one practice question for a student studying a specific lesson. The
-lesson content given is the only authoritative source of facts â€” never invent course content
+lesson content given is the only authoritative source of facts — never invent course content
 that isn't supported by it. Prefer MULTIPLE_CHOICE; use SHORT_ANSWER only when the concept
 genuinely doesn't fit a multiple-choice format.
 
@@ -66,15 +69,25 @@ Respond with ONLY a JSON object of this exact shape, no prose, no markdown fence
   "explanation": string
 }
 
-For MULTIPLE_CHOICE: "choices" must have 2-6 options and "correctChoiceIndex" must be the
-0-based index of the single correct one; "modelAnswer" must be null.
-For SHORT_ANSWER: "modelAnswer" must be a concise reference answer; "choices" and
-"correctChoiceIndex" must be null.
-"explanation" is a short, standalone explanation of why the correct answer is correct.`;
+For MULTIPLE_CHOICE: "choices" must have 2-6 options, each under 200 characters, and
+"correctChoiceIndex" must be the 0-based index of the single correct one; "modelAnswer" must be
+null.
+For SHORT_ANSWER: "modelAnswer" must be a concise reference answer under 400 characters; "choices"
+and "correctChoiceIndex" must be null.
+"explanation" is a short, standalone explanation of why the correct answer is correct: at most 3
+sentences and under 500 characters, in the response language.`;
 
-function buildGeneratePromptMessages(courseTitle: string, lessonTitle: string, lessonContent: string, locale: Locale = "en"): ChatMessage[] {
+function buildGeneratePromptMessages(
+  courseTitle: string,
+  lessonTitle: string,
+  lessonContent: string,
+  locale: Locale = "en",
+): ChatMessage[] {
   return [
-    { role: "system", content: `${GENERATE_SYSTEM_PROMPT}\n\n${LANGUAGE_INSTRUCTIONS[locale]}` },
+    {
+      role: "system",
+      content: `${GENERATE_SYSTEM_PROMPT}\n\n${LANGUAGE_INSTRUCTIONS[locale]}`,
+    },
     {
       role: "user",
       content:
@@ -88,7 +101,7 @@ function buildGeneratePromptMessages(courseTitle: string, lessonTitle: string, l
 /**
  * Generates one AI practice question grounded in a specific enrolled
  * lesson's real content, and stores its answer key server-side (never sent
- * to the client â€” see practice-store.ts) keyed by an opaque practiceId.
+ * to the client — see practice-store.ts) keyed by an opaque practiceId.
  */
 export async function generatePracticeQuestion(
   studentId: string,
@@ -111,14 +124,27 @@ export async function generatePracticeQuestion(
     throw new LearningLessonNotFoundError(courseSlug, lessonSlug);
   }
 
-  const provider = deps.provider ?? getAIProvider();
+  const provider =
+    deps.provider ??
+    getAIProvider(process.env, {
+      task: "practice",
+      locale: deps.locale ?? "en",
+    });
   const completion = await provider.generateCompletion({
-    messages: buildGeneratePromptMessages(course.title, lesson.title, lesson.content, deps.locale),
+    messages: buildGeneratePromptMessages(
+      course.title,
+      lesson.title,
+      lesson.content,
+      deps.locale,
+    ),
     temperature: 0.4,
   });
 
   const parsed = parseJsonLoosely(completion);
-  const validated = parsed === undefined ? undefined : practiceModelResponseSchema.safeParse(parsed);
+  const validated =
+    parsed === undefined
+      ? undefined
+      : practiceModelResponseSchema.safeParse(parsed);
 
   if (!validated || !validated.success) {
     throw new InvalidModelOutputError(
@@ -154,7 +180,7 @@ export async function generatePracticeQuestion(
 }
 
 const EVALUATE_SYSTEM_PROMPT = `You are evaluating a student's short-answer response against a reference answer, grounded
-in the lesson content given. Be lenient about phrasing â€” judge whether the student demonstrated
+in the lesson content given. Be lenient about phrasing — judge whether the student demonstrated
 the correct understanding, not whether they used the exact same words.
 
 Respond with ONLY a JSON object of this exact shape, no prose, no markdown fences:
@@ -164,7 +190,11 @@ Respond with ONLY a JSON object of this exact shape, no prose, no markdown fence
 "feedback" is one or two sentences, addressed to the student.`;
 
 async function evaluateShortAnswer(
-  pending: { question: string; modelAnswer: string | null; explanation: string },
+  pending: {
+    question: string;
+    modelAnswer: string | null;
+    explanation: string;
+  },
   studentAnswer: string,
   provider: AIProvider,
 ): Promise<{ correct: boolean; feedback: string }> {
@@ -181,10 +211,15 @@ async function evaluateShortAnswer(
     },
   ];
 
-  const completion = await provider.generateCompletion({ messages, temperature: 0.1 });
+  const completion = await provider.generateCompletion({
+    messages,
+    temperature: 0.1,
+  });
   const parsed = parseJsonLoosely(completion);
   const validated =
-    parsed === undefined ? undefined : practiceEvaluationModelResponseSchema.safeParse(parsed);
+    parsed === undefined
+      ? undefined
+      : practiceEvaluationModelResponseSchema.safeParse(parsed);
 
   if (!validated || !validated.success) {
     throw new InvalidModelOutputError(
@@ -199,7 +234,7 @@ async function evaluateShortAnswer(
 /**
  * Deterministically evaluates a MULTIPLE_CHOICE attempt by comparing the
  * submitted 0-based choice index to the answer key generated alongside the
- * question â€” the AI is never asked whether its own answer is correct.
+ * question — the AI is never asked whether its own answer is correct.
  * SHORT_ANSWER attempts use the AI only for the judgement call a string
  * comparison can't make, with a bounded, bordered response shape. Neither
  * path ever writes to StudentEnrollment or LessonProgress: practice results
@@ -223,12 +258,23 @@ export async function evaluatePracticeAttempt(
 
   if (pending.questionType === "MULTIPLE_CHOICE") {
     const chosenIndex = Number(studentAnswer);
-    correct = Number.isInteger(chosenIndex) && chosenIndex === pending.correctChoiceIndex;
+    correct =
+      Number.isInteger(chosenIndex) &&
+      chosenIndex === pending.correctChoiceIndex;
     feedback = null;
     correctAnswer = pending.choices?.[pending.correctChoiceIndex ?? -1] ?? "";
   } else {
-    const provider = deps.provider ?? getAIProvider();
-    const evaluation = await evaluateShortAnswer(pending, studentAnswer, provider);
+    const provider =
+      deps.provider ??
+      getAIProvider(process.env, {
+        task: "practice",
+        locale: deps.locale ?? "en",
+      });
+    const evaluation = await evaluateShortAnswer(
+      pending,
+      studentAnswer,
+      provider,
+    );
     correct = evaluation.correct;
     feedback = evaluation.feedback;
     correctAnswer = pending.modelAnswer ?? "";

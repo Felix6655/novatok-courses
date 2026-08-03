@@ -1,4 +1,4 @@
-﻿# Internationalization and Translation Editorial Workflow
+# Internationalization and Translation Editorial Workflow
 
 NovaTok Courses supports `en`, `es`, `pt`, `fr`, and `de`; English canonical content is the final fallback. Page URLs use `/{locale}/...`; APIs accept an optional validated `locale`. `novatok_locale` is a SameSite=Lax preference cookie. IDs, slugs, enrollment, progress, activities, and practice ownership always reference canonical rows.
 
@@ -35,6 +35,8 @@ No automatic draft translation command is included in Sprint 10. This was intent
 ## AI and quality acceptance
 
 `npm run smoke:i18n` exercises Advisor, Tutor, Learning Coach, and practice for every V1 locale using the existing local provider and real PostgreSQL. It validates schemas, canonical course/lesson grounding, and localized content availability. It writes a bounded, ignored `translation-exports/i18n-quality-report.json` for human review. The harness does not claim to prove fluency; a reviewer must assess correctness, awkward phrasing, language mixing, and launch suitability.
+
+Sprint 10 found that `llama3:latest` alone frequently answered in English for `es`/`pt`/`fr` and was inconsistent for `de` — a model-quality problem, not an i18n-architecture problem. Sprint 11 (`docs/ai-model-routing.md`) added configurable per-task/per-locale model routing behind the same `AIProvider` interface and resolved it by routing `es`/`pt`/`fr`/`de` to `qwen3.6:latest` (with `llama3:latest` as a bounded fallback), which `smoke:i18n` now confirms produces genuinely localized, grounded output for all five locales.
 
 `npm run smoke:auth` is the gated authenticated multilingual acceptance harness. It clearly skips if NovaTok Social origin and two credential pairs are absent. Once configured, it checks all five `/learn` variants, enrollment, lesson access, progress, Tutor, Coach, practice, cross-user ownership, and cleanup. Credentials must never be fabricated.
 

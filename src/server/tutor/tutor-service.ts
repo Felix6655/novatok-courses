@@ -1,12 +1,19 @@
-﻿import { getAIProvider } from "@/ai/get-ai-provider";
+import { getAIProvider } from "@/ai/get-ai-provider";
 import type { AIProvider } from "@/ai/provider";
-import type { TutorModelResponse, TutorRequest, TutorResponseMode } from "@/lib/validation/tutor";
+import type {
+  TutorModelResponse,
+  TutorRequest,
+  TutorResponseMode,
+} from "@/lib/validation/tutor";
 import { getCourseModulesWithLessons } from "@/server/course-content";
 import { getCourseBySlug } from "@/server/courses";
 import { recordLearningActivity } from "@/server/learning/activity";
 import { findEnrollment } from "@/server/learning/enrollment";
 import { getLearningSignals } from "@/server/learning/learning-signals";
-import { getPinnedLessonContext, getRelevantLessons } from "@/server/tutor/content-retrieval";
+import {
+  getPinnedLessonContext,
+  getRelevantLessons,
+} from "@/server/tutor/content-retrieval";
 import {
   TutorCourseNotFoundError,
   TutorLessonNotFoundError,
@@ -26,7 +33,7 @@ export interface TutorResult {
   courseTitle: string;
   question: string;
   responseMode: TutorResponseMode;
-  /** The lesson the question was pinned to, if any â€” echoes request.lessonSlug once verified. */
+  /** The lesson the question was pinned to, if any — echoes request.lessonSlug once verified. */
   pinnedLessonSlug: string | null;
   answer: string;
   grounded: boolean;
@@ -44,7 +51,7 @@ export interface TutorServiceDeps {
 function buildRedirectAnswer(courseTitle: string): string {
   return (
     `That's outside what's covered in ${courseTitle}. I can help with questions about this ` +
-    "course's material â€” try asking about one of its lessons, or ask what to study next."
+    "course's material — try asking about one of its lessons, or ask what to study next."
   );
 }
 
@@ -57,14 +64,14 @@ function buildRedirectAnswer(courseTitle: string): string {
  * result. Never calls the AI provider for a question that's already been
  * deterministically identified as out of scope.
  *
- * `studentId` is optional â€” the Tutor remains fully usable by a student who
+ * `studentId` is optional — the Tutor remains fully usable by a student who
  * isn't enrolled in the course (Sprint 3/4/5 behavior, unchanged). When
  * present, two things happen in addition: (1) if the student is enrolled,
  * a small bounded learning-state summary (see TutorLearningContext) is
  * added to the prompt so the Tutor can sensibly answer things like "am I
  * ready for the next lesson?"; (2) one TUTOR_QUESTION LearningActivity is
  * recorded regardless of enrollment, with bounded metadata only (the
- * response mode) â€” never the question text itself.
+ * response mode) — never the question text itself.
  */
 export async function getTutorAnswer(
   request: TutorRequest,
@@ -72,14 +79,26 @@ export async function getTutorAnswer(
   deps: TutorServiceDeps = {},
 ): Promise<TutorResult> {
   const canonicalCourse = await getCourseBySlug(request.courseSlug);
-  const localized = request.locale ? await import("@/server/localized-content") : null;
-  const course = request.locale ? (await localized!.getLocalizedCourseBySlug(request.courseSlug, request.locale) ?? canonicalCourse) : canonicalCourse;
+  const localized = request.locale
+    ? await import("@/server/localized-content")
+    : null;
+  const course = request.locale
+    ? ((await localized!.getLocalizedCourseBySlug(
+        request.courseSlug,
+        request.locale,
+      )) ?? canonicalCourse)
+    : canonicalCourse;
   if (!course) {
     throw new TutorCourseNotFoundError(request.courseSlug);
   }
 
-  const syllabus = request.locale ? await localized!.getLocalizedCourseContent(course.id, request.locale) : await getCourseModulesWithLessons(course.id);
-  const totalLessons = syllabus.reduce((sum, module) => sum + module.lessons.length, 0);
+  const syllabus = request.locale
+    ? await localized!.getLocalizedCourseContent(course.id, request.locale)
+    : await getCourseModulesWithLessons(course.id);
+  const totalLessons = syllabus.reduce(
+    (sum, module) => sum + module.lessons.length,
+    0,
+  );
   if (totalLessons === 0) {
     throw new TutorNoContentError(request.courseSlug);
   }
@@ -91,10 +110,13 @@ export async function getTutorAnswer(
   if (request.lessonSlug) {
     const pinned = await getPinnedLessonContext(course.id, request.lessonSlug);
     if (!pinned) {
-      throw new TutorLessonNotFoundError(request.courseSlug, request.lessonSlug);
+      throw new TutorLessonNotFoundError(
+        request.courseSlug,
+        request.lessonSlug,
+      );
     }
     // A student who explicitly opened a lesson and asked about it has,
-    // by construction, asked an in-scope question â€” skip the keyword
+    // by construction, asked an in-scope question — skip the keyword
     // out-of-scope check entirely for pinned-lesson requests.
     candidateLessons = [pinned.pinnedLesson, ...pinned.nearbyLessons];
     pinnedLessonId = pinned.pinnedLesson.id;
@@ -105,8 +127,14 @@ export async function getTutorAnswer(
   }
 
   if (request.locale) {
-    const localizedBySlug = new Map(syllabus.flatMap((module) => module.lessons).map((lesson) => [lesson.slug, lesson]));
-    candidateLessons = candidateLessons.map((lesson) => localizedBySlug.get(lesson.slug) ?? lesson);
+    const localizedBySlug = new Map(
+      syllabus
+        .flatMap((module) => module.lessons)
+        .map((lesson) => [lesson.slug, lesson]),
+    );
+    candidateLessons = candidateLessons.map(
+      (lesson) => localizedBySlug.get(lesson.slug) ?? lesson,
+    );
   }
 
   if (studentId) {
@@ -135,7 +163,12 @@ export async function getTutorAnswer(
     };
   }
 
-  const provider = deps.provider ?? getAIProvider();
+  const provider =
+    deps.provider ??
+    getAIProvider(process.env, {
+      task: "tutor",
+      locale: request.locale ?? "en",
+    });
 
   let learningContext: TutorLearningContext | null = null;
   if (studentId) {

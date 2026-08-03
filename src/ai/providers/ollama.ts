@@ -1,5 +1,9 @@
 import { AIProviderUnavailableError } from "@/ai/errors";
-import type { AIProvider, CompletionRequest } from "@/ai/provider";
+import type {
+  AIProvider,
+  AIRequestMetadata,
+  CompletionRequest,
+} from "@/ai/provider";
 
 export interface OllamaProviderConfig {
   baseUrl: string;
@@ -23,12 +27,25 @@ interface OllamaChatResponse {
  */
 export class OllamaProvider implements AIProvider {
   readonly name = "ollama";
+  readonly model: string;
+  lastRequestMetadata?: AIRequestMetadata;
 
-  constructor(private readonly config: OllamaProviderConfig) {}
+  constructor(private readonly config: OllamaProviderConfig) {
+    this.model = config.model;
+  }
 
-  async generateCompletion({ messages, temperature }: CompletionRequest): Promise<string> {
+  async generateCompletion({
+    messages,
+    temperature,
+    maxTokens,
+  }: CompletionRequest): Promise<string> {
+    const started = Date.now();
     const fetchImpl = this.config.fetchImpl ?? fetch;
     const timeoutMs = this.config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    const options = {
+      ...(temperature !== undefined ? { temperature } : {}),
+      ...(maxTokens !== undefined ? { num_predict: maxTokens } : {}),
+    };
 
     let response: Response;
     try {
@@ -39,7 +56,12 @@ export class OllamaProvider implements AIProvider {
           model: this.config.model,
           messages,
           stream: false,
-          ...(temperature !== undefined ? { options: { temperature } } : {}),
+          // Reasoning models (e.g. qwen3.6) otherwise spend the whole
+          // response on hidden "thinking" content and return empty/very
+          // slow answers for the short structured completions this app
+          // needs; non-reasoning models ignore this field.
+          think: false,
+          ...(Object.keys(options).length > 0 ? { options } : {}),
         }),
         signal: AbortSignal.timeout(timeoutMs),
       });
@@ -63,7 +85,11 @@ export class OllamaProvider implements AIProvider {
     try {
       data = (await response.json()) as OllamaChatResponse;
     } catch (error) {
-      throw new AIProviderUnavailableError(this.name, "Ollama returned a non-JSON response", error);
+      throw new AIProviderUnavailableError(
+        this.name,
+        "Ollama returned a non-JSON response",
+        error,
+      );
     }
 
     const content = data.message?.content;
@@ -74,6 +100,11 @@ export class OllamaProvider implements AIProvider {
       );
     }
 
+    this.lastRequestMetadata = {
+      provider: this.name,
+      model: this.model,
+      latencyMs: Date.now() - started,
+    };
     return content;
   }
 }
