@@ -10,8 +10,8 @@ import { courseSeeds } from "@/seed-data/courses";
  * idempotency end to end.
  */
 describe("category seed data", () => {
-  it("defines exactly 15 categories", () => {
-    expect(categorySeeds).toHaveLength(15);
+  it("defines exactly 16 categories", () => {
+    expect(categorySeeds).toHaveLength(16);
   });
 
   it("has unique slugs suitable as an upsert key", () => {

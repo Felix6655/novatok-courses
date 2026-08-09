@@ -17,7 +17,7 @@ import type { Locale } from "@/i18n/config";
 
 export const metadata: Metadata = {
   title: "Courses | NovaTok Courses",
-  description: "Browse the NovaTok Courses catalog across 15 categories.",
+  description: "Browse the NovaTok Courses catalog across 16 categories.",
 };
 
 interface CoursesPageProps {

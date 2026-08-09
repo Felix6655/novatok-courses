@@ -25,26 +25,38 @@ and deploy lifecycle.
 - The AI Course Advisor (Sprint 2, `src/ai/`, `src/server/advisor/`), AI
   Tutor (Sprint 3–4, `src/server/tutor/`, `CourseModule`/`Lesson` models),
   AI Learning Coach (Sprint 5, `src/server/learning/learning-coach.ts`),
-  and Sprint 6's learning-intelligence layer (practice questions, review
+  Sprint 6's learning-intelligence layer (practice questions, review
   recommendations, `LearningActivity`, `src/server/learning/practice.ts`,
-  `learning-signals.ts`, `review-recommendations.ts`) were explicitly
+  `learning-signals.ts`, `review-recommendations.ts`), and the Creator
+  Academy phase (`creator-economy` category, 12 courses,
+  `src/data/learning-paths.ts` + `src/server/learning-paths.ts`, and the
+  Creator Coach AI feature in `src/server/creator-coach/`) were explicitly
   requested and are in scope. Keep the AI layer provider-agnostic
   (`src/ai/provider.ts`); business logic must depend only on that
   interface, never directly on an Ollama/cloud SDK — every AI feature
   shares the same provider/adapter code, do not fork a second AI
   architecture. No paid cloud AI API is called. Recommendations, Tutor
-  answers, and Learning Coach explanations must stay grounded in real
-  PostgreSQL rows — never display a course/lesson slug the retrieval query
-  didn't actually return; for the Learning Coach specifically, the next
-  lesson and any review candidates are decided entirely by
-  `getLearningSignals()`/`getReviewCandidates()` before the AI is ever
-  called, and the model's response schema has no lesson/course identifier
-  field at all. Practice-question correctness for multiple-choice is
-  always evaluated deterministically server-side against a stored answer
-  key — never by asking the AI whether its own answer is correct — and
-  practice results never modify `LessonProgress`/`StudentEnrollment`,
-  only `LearningActivity`. See docs/ai-course-advisor.md, docs/ai-tutor.md,
-  and docs/learning-progress.md.
+  answers, Learning Coach explanations, and Creator Coach plans must stay
+  grounded in real PostgreSQL rows — never display a course/lesson slug
+  the retrieval query didn't actually return; for the Learning Coach
+  specifically, the next lesson and any review candidates are decided
+  entirely by `getLearningSignals()`/`getReviewCandidates()` before the AI
+  is ever called, and the model's response schema has no lesson/course
+  identifier field at all. Practice-question correctness for
+  multiple-choice is always evaluated deterministically server-side
+  against a stored answer key — never by asking the AI whether its own
+  answer is correct — and practice results never modify
+  `LessonProgress`/`StudentEnrollment`, only `LearningActivity`. Learning
+  Paths are curated static config over real `Course` rows, deliberately
+  not a Prisma model — do not add path-progress schema speculatively; add
+  it only when a concrete feature needs it. Creator Coach is deliberately
+  stateless (no student identity/enrollment), like the Course Advisor —
+  it does not read or write `src/server/learning/*` state. NovaTok
+  Social creator-signal integration for Creator Coach is explicitly not
+  implemented — see docs/creator-coach.md's "Future NovaTok Social
+  integration" section before adding it. See docs/ai-course-advisor.md,
+  docs/ai-tutor.md, docs/learning-progress.md, docs/creator-academy.md,
+  and docs/creator-coach.md.
 - Student identity is resolved only through `src/server/identity/dev-identity.ts`:
   production delegates to NovaTok Social's authoritative server session and
   non-production may use the explicit dev cookie provisioned by `src/proxy.ts`.

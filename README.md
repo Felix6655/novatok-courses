@@ -91,10 +91,11 @@ and [docs/production-hardening.md](./docs/production-hardening.md).
 
 5. **Seed the database**
 
-   Loads 15 categories, 50 realistic courses, and lesson content (40
-   modules / 77 lessons) for 20 of those courses. The seed upserts by
-   slug/displayOrder, so running it repeatedly is safe and never creates
-   duplicates:
+   Loads 16 categories, 62 realistic courses, and lesson content (69
+   modules / 137 lessons) for 32 of those courses — including the full
+   Creator Economy & Social Media curriculum (see
+   docs/creator-academy.md). The seed upserts by slug/displayOrder, so
+   running it repeatedly is safe and never creates duplicates:
 
    ```bash
    npm run db:seed

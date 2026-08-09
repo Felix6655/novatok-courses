@@ -3,9 +3,9 @@ import { courseContentSeeds } from "@/seed-data/course-content";
 import { courseSeeds } from "@/seed-data/courses";
 
 describe("course content seed data", () => {
-  it("seeds a representative 18-22 Tutor-ready courses", () => {
+  it("seeds a representative 18-34 Tutor-ready courses (expanded for Creator Economy & Social Media)", () => {
     expect(courseContentSeeds.length).toBeGreaterThanOrEqual(18);
-    expect(courseContentSeeds.length).toBeLessThanOrEqual(22);
+    expect(courseContentSeeds.length).toBeLessThanOrEqual(34);
   });
 
   it("spans multiple categories, not just one or two", () => {

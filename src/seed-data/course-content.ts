@@ -20,11 +20,15 @@ export interface CourseContentSeed {
 
 /**
  * Real learning content for a representative subset of published courses
- * (20 of ~50, spanning 11 categories and BEGINNER/INTERMEDIATE/ADVANCED
+ * (32 of ~62, spanning 12 categories and BEGINNER/INTERMEDIATE/ADVANCED
  * levels — most categories now have at least two levels covered) so the
  * AI Tutor, practice generation, and Learning Coach have something
  * substantive to ground answers in. Not every catalog course has content
  * yet — this is a useful working set, not a full content library.
+ *
+ * All 12 Creator Economy & Social Media courses have full content (60
+ * lessons), since Creator Coach's grounding depends on real lesson content
+ * existing, not just catalog metadata — see docs/creator-academy.md.
  */
 export const courseContentSeeds: CourseContentSeed[] = [
   {
@@ -1840,6 +1844,1351 @@ export const courseContentSeeds: CourseContentSeed[] = [
               "that a snapshot of one company's financial statements can't capture on its own, which " +
               "is why long-term fundamental analysis usually looks well beyond a single quarter's " +
               "numbers.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+
+  // Creator Economy & Social Media
+  {
+    courseSlug: "social-media-foundations-for-creators",
+    modules: [
+      {
+        title: "Finding Your Niche and Audience",
+        description: "Choosing a niche you can sustain and understanding who you're actually talking to.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "choosing-a-niche-that-compounds",
+            title: "Choosing a Niche That Compounds",
+            summary: "How to pick a niche specific enough to grow in and broad enough to sustain.",
+            content:
+              "A niche that's too broad (\"lifestyle\") gives the algorithm nothing specific to match you " +
+              "against, and a niche that's too narrow runs out of things to say within a few months. The " +
+              "sweet spot is a topic specific enough that a clear group of people would recognize " +
+              "themselves in it, but broad enough that you could post about it every week for a year " +
+              "without repeating yourself.\n\n" +
+              "A useful test: can you list 20 different content ideas in this niche in five minutes? If " +
+              "you're stuck after three, the niche is probably too narrow. Can a stranger describe who " +
+              "your content is for in one sentence after watching two posts? If not, it's probably too " +
+              "broad.\n\n" +
+              "Niches also compound when they connect to something you can eventually sell — a skill, a " +
+              "product, or a service — even if monetization isn't the first goal. Picking a niche with no " +
+              "plausible future business model makes the growth-to-income path much harder later.",
+            displayOrder: 1,
+          },
+          {
+            slug: "understanding-your-audience",
+            title: "Understanding Your Audience",
+            summary: "Researching who you're actually trying to reach instead of guessing.",
+            content:
+              "Before you post, write down who specifically you're making content for: their rough age " +
+              "range, what problem or interest brings them to your niche, and what they're already " +
+              "watching. \"Everyone\" is not an audience — content made for everyone tends to resonate " +
+              "with no one in particular.\n\n" +
+              "The fastest real research is studying accounts your future audience already follows: read " +
+              "the comments, not just the captions. Comments show you the actual language people use, " +
+              "what confuses them, and what they wish existed. That language becomes your hooks and " +
+              "captions later.\n\n" +
+              "Revisit this profile every few months. As your content performs, your real audience will " +
+              "reveal itself through analytics, and it may differ from who you originally imagined — " +
+              "that's normal, and it's more useful to serve the audience you actually have than the one " +
+              "you pictured on day one.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Creator Identity and Positioning",
+        description: "Deciding what you stand for and where you'll show up.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "positioning-and-creator-identity",
+            title: "Positioning and Creator Identity",
+            summary: "Writing a one-paragraph positioning statement that guides every content decision.",
+            content:
+              "Positioning answers one question: why should someone follow you specifically, instead of " +
+              "the dozens of other accounts in your niche? A positioning statement is a short, honest " +
+              "answer: \"I help [specific audience] do [specific outcome] through [your specific angle or " +
+              "format].\"\n\n" +
+              "Your angle can come from expertise, personality, format, or a genuine point of view others " +
+              "in the niche don't share. It doesn't need to be original in the abstract — most niches have " +
+              "been covered before — it needs to be specifically yours, delivered in a way only you would " +
+              "deliver it.\n\n" +
+              "Write your positioning statement down and test every piece of content against it: does this " +
+              "post reinforce why someone should follow me, or does it dilute it? Occasional off-topic " +
+              "posts are fine; a feed with no throughline confuses both viewers and the algorithm.",
+            displayOrder: 1,
+          },
+          {
+            slug: "choosing-the-right-platforms",
+            title: "Choosing the Right Platforms",
+            summary: "Picking where to start based on your format and audience, not just popularity.",
+            content:
+              "Don't start on every platform at once. Pick one primary platform based on where your " +
+              "specific audience already spends time and which content format suits you: short-form video " +
+              "(TikTok, Reels, YouTube Shorts) if you're comfortable on camera and can produce quickly, " +
+              "long-form video (YouTube) if you can go deeper on a topic, visual/carousel content " +
+              "(Instagram, Pinterest) if your niche is highly visual, or text/authority content (LinkedIn, " +
+              "X) if your niche is professional or opinion-driven.\n\n" +
+              "Master one platform's format and posting rhythm before repurposing to others — spreading " +
+              "thin across five platforms from day one usually produces mediocre content everywhere " +
+              "instead of good content somewhere.\n\n" +
+              "Once your primary platform has real traction, repurposing to a second platform costs far " +
+              "less effort than creating original content did the first time, because the ideas and " +
+              "hooks that already worked don't need to be reinvented.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Building Your Foundation",
+        description: "Content pillars and a profile that converts a viewer into a follower.",
+        displayOrder: 3,
+        lessons: [
+          {
+            slug: "content-pillars",
+            title: "Content Pillars",
+            summary: "Defining 3-5 recurring content themes so you always know what to post.",
+            content:
+              "Content pillars are the 3-5 recurring themes your content rotates through, so you never " +
+              "start from a blank page. For example, a home-cooking creator's pillars might be: quick " +
+              "weeknight recipes, kitchen tool reviews, cooking myths debunked, and reader-submitted " +
+              "recipe rescues.\n\n" +
+              "Good pillars share three qualities: each one alone could sustain months of ideas, each one " +
+              "clearly reinforces your positioning, and together they give your audience variety without " +
+              "losing the throughline. If a pillar runs dry after a few posts, it's really a single idea, " +
+              "not a pillar.\n\n" +
+              "Revisit your pillars quarterly using performance data — which pillar consistently gets the " +
+              "most watch time or saves? Lean into what's working rather than treating all pillars as " +
+              "permanently equal.",
+            displayOrder: 1,
+          },
+          {
+            slug: "profile-optimization",
+            title: "Profile Optimization",
+            summary: "Turning a profile visit into a follow with a clear bio, pinned content, and consistent visuals.",
+            content:
+              "A viewer decides whether to follow you in the few seconds they spend on your profile after " +
+              "watching one piece of content. Your bio should answer, in one glance: who you help and what " +
+              "they'll get by following. Avoid vague inspirational phrases that could apply to any " +
+              "account.\n\n" +
+              "Pin or feature your best 1-3 pieces of content — the ones that best represent your " +
+              "positioning and pillars — so a new visitor immediately understands what to expect, instead " +
+              "of scrolling through your earliest, roughest posts.\n\n" +
+              "Keep your profile photo, name, and visual style consistent across platforms so people who " +
+              "find you on one recognize you on another. Small inconsistencies (different name, unrelated " +
+              "photo) quietly cost you cross-platform recognition you'd otherwise get for free.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "growing-your-audience-from-zero",
+    modules: [
+      {
+        title: "Organic Growth Fundamentals",
+        description: "Starting from zero and understanding how recommendation systems actually work.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "growing-from-zero",
+            title: "Growing From Zero",
+            summary: "What actually matters in the first weeks with no existing audience.",
+            content:
+              "With zero followers, your existing audience isn't what gets you seen — the recommendation " +
+              "system is. Every major platform will test a new post in front of a small sample of people " +
+              "who don't already follow you, then expand distribution based on how that sample responds. " +
+              "This means a brand-new account can genuinely outperform an established one on a single " +
+              "post if the content itself performs well.\n\n" +
+              "In the first weeks, prioritize posting consistently over posting perfectly. You need enough " +
+              "data points to learn what resonates, and the algorithm needs enough signal about your " +
+              "content to know who to show it to. Five mediocre-but-shipped posts teach you more than one " +
+              "post agonized over for two weeks.\n\n" +
+              "Expect most early posts to underperform — that's normal, not a sign to quit. Watch for any " +
+              "single post that clearly outperforms your average; that's the signal worth studying and " +
+              "repeating, not the average itself.",
+            displayOrder: 1,
+          },
+          {
+            slug: "how-recommendation-algorithms-actually-work",
+            title: "How Recommendation Algorithms Actually Work",
+            summary: "The behavior signals platforms use to decide what to show more people.",
+            content:
+              "Despite platform-to-platform differences, recommendation systems generally optimize for the " +
+              "same underlying goal: keep people on the app by showing them content they'll actually " +
+              "engage with. They do this by testing content with small audience samples and measuring " +
+              "behavior signals — watch time and completion rate, re-watches, shares, comments, saves, " +
+              "and whether someone visits your profile afterward.\n\n" +
+              "Completion rate and watch time tend to carry the most weight because they most directly " +
+              "measure genuine interest rather than a quick reflexive tap. A post that holds attention to " +
+              "the end, even with fewer likes, often outperforms a post with more likes but a low " +
+              "completion rate.\n\n" +
+              "None of this is a secret formula to game — it's closer to a straightforward incentive: make " +
+              "something people genuinely want to finish watching and act on, and distribution tends to " +
+              "follow. Chasing gimmicks that spike one signal while tanking another (e.g. clickbait that " +
+              "kills completion rate) usually backfires within a few posts.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Keeping and Engaging Viewers",
+        description: "Retention, watch time, and turning viewers into an actual community.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "retention-and-watch-time",
+            title: "Retention and Watch Time",
+            summary: "Where viewers drop off and how to structure content so they don't.",
+            content:
+              "Retention graphs (available in most platforms' analytics) show exactly where viewers stop " +
+              "watching. A steep early drop usually means the hook didn't earn attention; a steady decline " +
+              "throughout usually means the middle is slower than the opening promised; a late spike in " +
+              "drop-off near the end can mean the payoff didn't match expectations.\n\n" +
+              "A simple structure that holds attention: open with the payoff or a specific claim in the " +
+              "first two seconds, deliver information at a pace that doesn't waste a second early on, and " +
+              "resolve the opening promise by the end. Cutting dead air and restating things you already " +
+              "said usually improves retention more than any single editing trick.\n\n" +
+              "Review your retention graph on every post, not just your best ones. Patterns across several " +
+              "underperforming posts (e.g. consistently losing people at the 5-second mark) are more " +
+              "useful diagnostic signal than any single post's result.",
+            displayOrder: 1,
+          },
+          {
+            slug: "engagement-and-community-building",
+            title: "Engagement and Community Building",
+            summary: "Turning passive viewers into an actual community that shows up repeatedly.",
+            content:
+              "Engagement (comments, replies, shares, saves) matters for two separate reasons: it feeds " +
+              "the algorithm's distribution signal, and it builds an actual relationship with the people " +
+              "watching. Both matter, but only one of them survives an algorithm change — a real " +
+              "community keeps showing up even during a slow growth month.\n\n" +
+              "Reply to comments, especially early ones on a new post — comment replies often generate " +
+              "more engagement than the original comment, and they signal to both the algorithm and other " +
+              "viewers that there's a real person here. Ask a specific question in your caption or content " +
+              "occasionally rather than a generic \"comment below.\"\n\n" +
+              "Community shows up over months, not days: recurring viewers who comment repeatedly, request " +
+              "topics, or reference past posts. Treat those people as your actual core audience — they're " +
+              "disproportionately likely to become customers, collaborators, or advocates later.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Compounding Growth",
+        description: "Social SEO, trends, collaborations, and fixing content that isn't growing.",
+        displayOrder: 3,
+        lessons: [
+          {
+            slug: "social-seo-and-hashtags",
+            title: "Social SEO and Hashtags",
+            summary: "Making your content discoverable through search, not just the recommendation feed.",
+            content:
+              "Increasingly, people search social platforms directly the way they'd search a web search " +
+              "engine — for reviews, how-tos, and recommendations. Social SEO means using the specific " +
+              "words your audience would actually search for in your on-screen text, captions, and spoken " +
+              "audio, not just clever wording.\n\n" +
+              "Hashtags matter far less than they did years ago on most platforms, but a small number of " +
+              "specific, relevant hashtags (rather than broad, oversaturated ones) can still help " +
+              "categorize your content correctly. A mix of one broad and two or three specific, niche " +
+              "hashtags generally outperforms ten generic ones.\n\n" +
+              "Your video's spoken words and on-screen captions are increasingly read and indexed by " +
+              "platforms, not just your written caption. Say the specific thing people would search for " +
+              "out loud, early in the content, rather than only implying it.",
+            displayOrder: 1,
+          },
+          {
+            slug: "trends-collabs-and-diagnosing-stalled-growth",
+            title: "Trends, Collaborations, and Diagnosing Stalled Growth",
+            summary: "Using trends and collaborations well, and a checklist for content that isn't growing.",
+            content:
+              "Trends work best when adapted to your niche and positioning, not used as-is — a trending " +
+              "sound or format applied with your specific point of view performs better and better builds " +
+              "your identity than a generic copy of what everyone else is posting. Skip trends that don't " +
+              "connect naturally to your content pillars.\n\n" +
+              "Collaborations expose you to another creator's audience, but only work well when the " +
+              "audiences genuinely overlap in interest and are roughly similar in size — a huge mismatch " +
+              "in following usually benefits only the smaller account, so bigger creators tend to say yes " +
+              "less often to lopsided asks.\n\n" +
+              "When growth stalls, work through a checklist in order: is the hook earning attention in the " +
+              "first two seconds (check retention graph)? Is the content matching what your recent " +
+              "best-performing posts had in common? Has your posting consistency actually stayed steady, " +
+              "or quietly slipped? Most stalls trace back to one of these three, not a mysterious " +
+              "algorithm change.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "content-creation-for-creators",
+    modules: [
+      {
+        title: "Ideas and Hooks",
+        description: "Never running out of ideas, and earning the first three seconds.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "generating-content-ideas-that-dont-run-out",
+            title: "Generating Content Ideas That Don't Run Out",
+            summary: "A repeatable method for content ideas instead of waiting for inspiration.",
+            content:
+              "Relying on inspiration runs out fast. A repeatable idea system works better: keep a running " +
+              "note of every question your audience asks in comments and DMs, every mistake or " +
+              "misconception you notice in your niche, and every strong opinion you have that others in " +
+              "your niche don't say out loud. Each entry is a content idea waiting to be made.\n\n" +
+              "A simple template multiplies ideas fast: take one content pillar and run it through several " +
+              "formats — a myth-busting version, a beginner-mistakes version, a before/after version, a " +
+              "\"things I wish I knew\" version. One pillar can realistically produce dozens of distinct " +
+              "pieces of content this way.\n\n" +
+              "Batch idea generation separately from filming: spend one sitting per week just writing down " +
+              "ideas with no pressure to use them immediately, so filming days start with a ready list " +
+              "instead of a blank page.",
+            displayOrder: 1,
+          },
+          {
+            slug: "hooks-that-stop-the-scroll",
+            title: "Hooks That Stop the Scroll",
+            summary: "Writing the first line or shot that earns someone's attention.",
+            content:
+              "A hook's only job is to earn the next three seconds — it doesn't need to explain everything, " +
+              "just make stopping feel worth it. Strong hook patterns include a specific, surprising claim " +
+              "(\"I stopped doing X and my results doubled\"), a direct callout of your exact audience " +
+              "(\"if you're a new [audience], watch this before you...\"), or starting mid-action instead " +
+              "of with a slow setup.\n\n" +
+              "Avoid vague hooks that could open any video in your niche (\"let's talk about...\"). " +
+              "Specificity is what makes someone feel this particular video is for them, right now, more " +
+              "than any other video they could scroll to instead.\n\n" +
+              "Write 3-5 different hook options for the same piece of content before filming, and pick the " +
+              "one that's most specific and most surprising. The gap between a mediocre hook and a strong " +
+              "one is often the single biggest difference between two videos with identical content " +
+              "afterward.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Production Basics",
+        description: "Storytelling, scripting, and filming well with just a phone.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "storytelling-and-scripting",
+            title: "Storytelling and Scripting",
+            summary: "Structuring a short piece of content so it holds together and pays off.",
+            content:
+              "Even a 30-second video benefits from basic story structure: a hook that sets up a question " +
+              "or promise, a short middle that delivers value or builds tension, and a resolution that " +
+              "pays off the opening. Content without this structure tends to feel like a list of facts " +
+              "rather than something worth watching to the end.\n\n" +
+              "You don't need a word-for-word script for most short-form content — a bullet-point outline " +
+              "of the 3-5 beats you need to hit keeps delivery natural while preventing rambling or " +
+              "forgetting the point. Save full scripts for content where exact wording matters, like a " +
+              "tightly timed comparison or a claim that needs precise phrasing.\n\n" +
+              "Cut anything that doesn't serve the hook's promise. A common mistake is including " +
+              "interesting-but-tangential information that dilutes the core point — tangents are better " +
+              "saved for a separate piece of content than crammed into one that's trying to do too much.",
+            displayOrder: 1,
+          },
+          {
+            slug: "filming-lighting-and-audio-on-a-phone",
+            title: "Filming, Lighting, and Audio on a Phone",
+            summary: "Getting clear video and audio without buying expensive equipment.",
+            content:
+              "A modern phone camera is good enough for professional-looking content; lighting and audio " +
+              "make the biggest visible difference, not camera quality. Face a window or a simple " +
+              "affordable ring light rather than having a light source behind you, which silhouettes your " +
+              "face and is the single most common beginner mistake.\n\n" +
+              "Audio quality affects retention more than most creators expect — viewers tolerate mediocre " +
+              "video far more than they tolerate audio they have to strain to understand. A basic clip-on " +
+              "or lapel microphone costing under $30 is usually the single best equipment upgrade a new " +
+              "creator can make.\n\n" +
+              "Keep the camera at eye level rather than shooting up or down, use a simple tripod or stand " +
+              "instead of a shaky handheld shot for talking-head content, and film in a quiet space with " +
+              "minimal background noise or echo — a closet full of clothes, for example, absorbs echo " +
+              "surprisingly well.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Finishing and Scaling Content",
+        description: "Editing, captions, repurposing, and a workflow you can actually sustain.",
+        displayOrder: 3,
+        lessons: [
+          {
+            slug: "editing-thumbnails-and-captions",
+            title: "Editing, Thumbnails, and Captions",
+            summary: "Finishing a piece of content so it performs, not just looks polished.",
+            content:
+              "Edit for pace before you edit for polish: cut dead air, filler words, and any pause longer " +
+              "than needed, since pacing affects retention more than visual effects or transitions do. Add " +
+              "captions to every video — a large share of viewers watch with sound off, and captions also " +
+              "help with social SEO discoverability.\n\n" +
+              "For long-form content, a thumbnail's job is to earn a click by being specific and legible at " +
+              "a small size — a clear, close-up expression with a few bold words usually outperforms a " +
+              "busy, text-heavy design. Test a few options if the platform allows it rather than guessing.\n\n" +
+              "Written captions should extend the hook, not just describe the video — a caption that asks " +
+              "a question or adds a detail not shown on screen gives people an extra reason to comment or " +
+              "read further, both of which help distribution.",
+            displayOrder: 1,
+          },
+          {
+            slug: "repurposing-and-an-efficient-content-workflow",
+            title: "Repurposing and an Efficient Content Workflow",
+            summary: "Turning one piece of content into several, and a weekly system that doesn't burn you out.",
+            content:
+              "One well-made piece of content can become several: a long-form video can be cut into 3-5 " +
+              "short clips, a short video's key point can become a carousel or a text post, and a strong " +
+              "hook that worked once can be reused with new supporting content later. Repurposing is not " +
+              "cheating — it's using effort you already spent instead of starting from zero every time.\n\n" +
+              "A sustainable weekly workflow separates the stages: one session for idea generation, one " +
+              "batch-filming session covering several pieces of content at once, and separate time for " +
+              "editing and posting. Batching filming in particular reduces the setup/teardown overhead that " +
+              "eats time when filming one video per day.\n\n" +
+              "Track roughly how long each stage takes you and look for the actual bottleneck — many " +
+              "creators assume filming is the slow part when editing or idea generation is really where " +
+              "their time disappears. Fixing the real bottleneck does more for sustainability than trying " +
+              "to speed up every stage equally.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "platform-growth-playbooks",
+    modules: [
+      {
+        title: "Short-Form Video Platforms",
+        description: "TikTok, Instagram Reels, and YouTube Shorts — what's shared and what differs.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "tiktok-growth-seo-and-shop",
+            title: "TikTok Growth, SEO, and Shop",
+            summary: "TikTok-specific growth mechanics, search behavior, LIVE, and TikTok Shop.",
+            content:
+              "TikTok's recommendation system leans heavily on completion rate and re-watches, and it's " +
+              "willing to show a new account's video to a large audience fast if early signals are strong " +
+              "— growth can be far less linear here than on platforms with more gradual distribution.\n\n" +
+              "TikTok is also increasingly used as a search engine for reviews, tutorials, and " +
+              "recommendations, so treating your captions and spoken words as searchable text (TikTok SEO) " +
+              "meaningfully affects long-term discoverability, not just the algorithm feed.\n\n" +
+              "TikTok LIVE and TikTok Shop are platform-native ways to interact and sell directly without " +
+              "sending viewers elsewhere — LIVE rewards consistency and real-time engagement, while Shop " +
+              "and creator affiliate programs let you earn from products without holding inventory " +
+              "yourself, covered in depth in the Social Commerce course.",
+            displayOrder: 1,
+          },
+          {
+            slug: "instagram-reels-stories-and-youtube-shorts",
+            title: "Instagram Reels, Stories, and YouTube Shorts",
+            summary: "How Reels, Stories, and Shorts differ from TikTok and from each other.",
+            content:
+              "Instagram Reels rewards similar completion-rate signals to TikTok but tends to favor " +
+              "content that also performs well when shared to Stories or sent in DMs — shareability is a " +
+              "stronger factor here than on TikTok. Instagram Stories, meanwhile, is a separate " +
+              "lower-pressure surface best used for behind-the-scenes content, polls, and direct " +
+              "audience interaction rather than polished content.\n\n" +
+              "YouTube Shorts benefits from YouTube's broader ecosystem: a strong Short can drive " +
+              "subscribers who then watch your long-form content, something TikTok and Reels don't offer " +
+              "in the same way. Shorts also tend to have a longer discovery tail than TikTok videos, " +
+              "surfacing gradually over weeks rather than mostly in the first 48 hours.\n\n" +
+              "Because the three platforms reward slightly different signals, a video's exact hook and " +
+              "pacing sometimes needs light adjustment when repurposing between them rather than a direct " +
+              "one-to-one repost, though starting from the same core content is still far more efficient " +
+              "than creating each from scratch.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Community and Visual Platforms",
+        description: "Facebook, YouTube long-form, and Pinterest for community and evergreen discovery.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "facebook-pages-groups-and-reels",
+            title: "Facebook Pages, Groups, and Reels",
+            summary: "Facebook's community tools and where creator monetization fits.",
+            content:
+              "Facebook's audience skews older and more local than most short-form-first platforms, which " +
+              "makes it a strong fit for community-building and local business content specifically. " +
+              "Facebook Groups, in particular, offer community depth that few other platforms match — a " +
+              "well-run Group can become a durable owned audience less exposed to any single algorithm " +
+              "change.\n\n" +
+              "Facebook Pages support Reels using much of the same short-form playbook as Instagram and " +
+              "TikTok, so repurposing short-form content here is usually straightforward rather than " +
+              "requiring a separate strategy.\n\n" +
+              "Facebook Marketplace and business-page tools are worth understanding even for a primarily " +
+              "content-focused creator, since many small businesses and local service providers reach " +
+              "customers here specifically — a subject covered further in the Small Business Social Media " +
+              "course.",
+            displayOrder: 1,
+          },
+          {
+            slug: "pinterest-and-visual-search",
+            title: "Pinterest and Visual Search",
+            summary: "Why Pinterest behaves like a search engine, not a social feed.",
+            content:
+              "Pinterest is fundamentally a visual search and discovery tool, not a social feed — people " +
+              "come to Pinterest planning something (a recipe, an outfit, a home project) rather than " +
+              "browsing for entertainment. This changes the whole strategy: content needs a clear, " +
+              "keyword-rich title and description, since Pinterest's search behaves much like a web " +
+              "search engine.\n\n" +
+              "Pins have unusually long shelf lives compared to a short-form video's few days of " +
+              "relevance — a well-made Pin can keep driving traffic for months or years, making Pinterest " +
+              "one of the best platforms for evergreen content and steady referral traffic to a website, " +
+              "shop, or blog.\n\n" +
+              "Because Pinterest users are often close to a purchase decision already, it's also a strong " +
+              "platform for affiliate links and product content when done within the platform's " +
+              "guidelines — vertical images with clear, legible text overlays consistently outperform " +
+              "generic photos.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Authority and Text Platforms",
+        description: "LinkedIn, X/Twitter, and Threads for professional and conversational authority.",
+        displayOrder: 3,
+        lessons: [
+          {
+            slug: "linkedin-personal-branding-and-b2b-content",
+            title: "LinkedIn Personal Branding and B2B Content",
+            summary: "Building professional authority and generating leads on LinkedIn.",
+            content:
+              "LinkedIn rewards a different kind of content than entertainment-first platforms: " +
+              "professional insight, thought leadership, and specific expertise perform better than " +
+              "polished production value. A well-argued personal opinion or a concrete case study " +
+              "typically outperforms generic career advice everyone has already heard.\n\n" +
+              "For B2B-facing creators, LinkedIn's real strength is lead generation through credibility: " +
+              "consistent, specific posting builds enough trust that inbound conversations happen " +
+              "naturally, often converting better than cold outreach because the prospect already knows " +
+              "your thinking before you speak with them.\n\n" +
+              "Comment sections on LinkedIn carry unusual weight — thoughtful commenting on other " +
+              "creators' and prospects' posts is itself a visibility strategy, not just a courtesy, and " +
+              "often drives as much profile traffic as your own posts do when you're starting out.",
+            displayOrder: 1,
+          },
+          {
+            slug: "x-twitter-and-threads-for-audience-and-authority",
+            title: "X/Twitter and Threads for Audience and Authority",
+            summary: "Building authority through writing, threads, and networking.",
+            content:
+              "X/Twitter rewards clear, specific writing and a consistent point of view over polish — " +
+              "threads that build an argument step by step, or a single sharp observation, tend to " +
+              "outperform generic updates. Networking directly with other accounts in your niche through " +
+              "replies is a meaningfully bigger growth lever here than on most other platforms.\n\n" +
+              "Threads (the app) shares Instagram's identity but favors more conversational, in-the-moment " +
+              "text content over polished posts — it rewards showing up consistently in a lower-pressure " +
+              "way rather than treating every post as a finished piece of content.\n\n" +
+              "Both platforms benefit from cross-pollinating with Instagram: audiences you build on Threads " +
+              "often overlap heavily with an existing Instagram following, making it one of the lower-cost " +
+              "platforms to test if you already have traction on Instagram specifically.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "creator-sales-and-conversion",
+    modules: [
+      {
+        title: "Selling Without Feeling Like an Ad",
+        description: "Product storytelling, demonstration, calls to action, and social proof.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "product-storytelling-and-demonstration",
+            title: "Product Storytelling and Demonstration",
+            summary: "Showing a product in use instead of just describing its features.",
+            content:
+              "The content that sells best usually doesn't look like a traditional ad — it looks like the " +
+              "rest of your content, with the product woven into a real moment or problem. Showing a " +
+              "product solving a specific, relatable problem earns more trust than listing its features, " +
+              "because the viewer can picture themselves using it.\n\n" +
+              "A simple structure works well: state the problem you or someone you know had, show the " +
+              "product actually being used to solve it, and share the honest result — including a minor " +
+              "limitation if there is one. A single honest caveat often increases trust and conversion " +
+              "more than a flawless pitch does.\n\n" +
+              "Demonstrations that show your own genuine reaction (surprise, relief, satisfaction) tend to " +
+              "outperform ones that only show the product's function, because the viewer is responding to " +
+              "your authentic reaction as much as to the product itself.",
+            displayOrder: 1,
+          },
+          {
+            slug: "calls-to-action-and-social-proof",
+            title: "Calls to Action and Social Proof",
+            summary: "Asking for the next step clearly, and using proof credibly.",
+            content:
+              "A call to action should be specific and low-friction: \"link in bio to grab one\" works " +
+              "better than a vague \"check it out.\" State exactly what happens next and make that step as " +
+              "easy as possible — every additional step between interest and action loses a share of " +
+              "people.\n\n" +
+              "Social proof (reviews, results, other customers) works best when it's specific and " +
+              "verifiable rather than vague — \"this helped me sleep better within a week\" is more " +
+              "credible than \"everyone loves this.\" Real customer messages or comments, screenshotted " +
+              "with permission, often outperform polished testimonials because they read as unprompted.\n\n" +
+              "Avoid overusing urgency or scarcity language that isn't true — claiming a sale ends " +
+              "\"tonight only\" repeatedly erodes trust once your audience notices it isn't real, which " +
+              "costs more long-term credibility than the short-term conversion bump is worth.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Turning Followers Into Customers",
+        description: "Landing pages, funnels, lead magnets, and email capture.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "landing-pages-and-funnels",
+            title: "Landing Pages and Funnels",
+            summary: "A simple path from content to purchase without over-engineering it.",
+            content:
+              "A funnel is just the path someone takes from seeing your content to becoming a customer. " +
+              "For most creators starting out, a simple funnel — content, then a single clear landing " +
+              "page, then checkout or booking — outperforms an elaborate multi-step funnel that's harder " +
+              "to build and maintain.\n\n" +
+              "A landing page should match the promise made in the content that sent someone there: " +
+              "mismatched messaging (a playful video linking to a dry, generic page) causes people to " +
+              "bounce even when they were genuinely interested a moment earlier. Keep the page focused on " +
+              "one offer and one action, not a menu of options.\n\n" +
+              "Track where people actually drop off in your funnel, not just your final conversion rate — " +
+              "a low click-through from content, versus a low conversion once on the page, point to " +
+              "completely different fixes.",
+            displayOrder: 1,
+          },
+          {
+            slug: "lead-magnets-and-email-capture",
+            title: "Lead Magnets and Email Capture",
+            summary: "Building an owned audience you don't lose to an algorithm change.",
+            content:
+              "A lead magnet is something valuable you give away in exchange for an email address — a " +
+              "checklist, template, or short guide directly related to your niche. It solves the biggest " +
+              "risk of relying only on social platforms: your follower count belongs to the platform, but " +
+              "an email list belongs to you.\n\n" +
+              "The best lead magnets solve one specific, immediate problem well rather than trying to " +
+              "cover everything — a narrow, genuinely useful resource converts better than a broad one " +
+              "that feels like a watered-down course.\n\n" +
+              "Once someone joins your list, occasional genuinely useful emails (not just promotions) keep " +
+              "the relationship warm. An email list that only ever sells something tends to see rising " +
+              "unsubscribe rates and falling open rates over time.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "social-commerce-and-live-selling",
+    modules: [
+      {
+        title: "Shoppable Content",
+        description: "TikTok Shop, affiliate products, product research, and UGC/reviews.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "tiktok-shop-and-affiliate-products",
+            title: "TikTok Shop and Affiliate Products",
+            summary: "Selling directly through platform-native commerce and affiliate programs.",
+            content:
+              "TikTok Shop and similar platform-native commerce features let viewers purchase without " +
+              "leaving the app, which meaningfully reduces the friction that a traditional link-out funnel " +
+              "carries. This convenience is a large part of why platform-native shopping tends to convert " +
+              "better than sending traffic to an external store.\n\n" +
+              "As a creator affiliate, you earn a commission promoting products you don't manufacture or " +
+              "hold inventory for, which is a lower-risk way to start selling than launching your own " +
+              "product. The tradeoff is lower margin per sale and less control over product quality and " +
+              "fulfillment, both of which reflect on you if something goes wrong.\n\n" +
+              "Look for affiliate or seller collaborations with clear commission structures and a product " +
+              "you'd genuinely recommend without the commission — promoting something you don't believe in " +
+              "shows in the content's quality and tends to convert poorly regardless of the commission " +
+              "rate.",
+            displayOrder: 1,
+          },
+          {
+            slug: "product-research-and-ugc-reviews",
+            title: "Product Research and UGC/Reviews",
+            summary: "Choosing products worth promoting and creating review content that converts.",
+            content:
+              "Before promoting a product, check its actual review history, return rate if available, and " +
+              "whether it fits your audience's real needs and budget — promoting a mismatched or " +
+              "low-quality product damages the trust you've built, which is worth more than any single " +
+              "commission.\n\n" +
+              "UGC-style content (user-generated-content style, even when made by a creator rather than a " +
+              "genuine customer) tends to outperform polished ad-style content because it reads as an " +
+              "honest, unscripted opinion. A review that includes a genuine downside alongside the upside " +
+              "reads as more credible than an unqualified endorsement.\n\n" +
+              "Test a product yourself before reviewing it publicly whenever possible. First-hand, specific " +
+              "detail (\"the strap loosened after two weeks of running\") is far more convincing and far " +
+              "more resistant to viewer skepticism than a generic positive description.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Live Selling and Scaling",
+        description: "Running a live selling session and reading analytics to scale winners.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "running-a-live-selling-session",
+            title: "Running a Live Selling Session",
+            summary: "A structure for live selling that keeps viewers watching and buying.",
+            content:
+              "A live selling session benefits from a loose but real structure: an opening hook explaining " +
+              "what's coming, rotating through a handful of products with a genuine demonstration of each, " +
+              "and periodic direct calls to action rather than one pitch at the very end. Viewers join and " +
+              "leave throughout, so key information needs to repeat, not just appear once.\n\n" +
+              "Respond to live comments and questions by name when possible — real-time interaction is " +
+              "what differentiates live selling from a pre-recorded video, and it's a major reason live " +
+              "sessions often convert better than static content for the same products.\n\n" +
+              "Keep energy and pacing up throughout rather than saving all enthusiasm for a single big " +
+              "product — a session that drags in the middle loses viewers before they ever see your " +
+              "strongest offer.",
+            displayOrder: 1,
+          },
+          {
+            slug: "conversion-analytics-and-scaling-winners",
+            title: "Conversion Analytics and Scaling Winners",
+            summary: "Reading commerce analytics to know which content and products to double down on.",
+            content:
+              "Track conversion rate (purchases divided by clicks or views), not just total sales, so you " +
+              "can tell whether a bigger result came from more attention or genuinely better selling. A " +
+              "smaller video with a higher conversion rate often has a more replicable, more valuable " +
+              "lesson in it than a viral video with mediocre conversion.\n\n" +
+              "When a specific product or content format converts noticeably above your average, treat " +
+              "that as a signal to make more content in that same format or category before moving on to " +
+              "the next idea — scaling a proven winner is usually more efficient than constantly testing " +
+              "new, unproven ideas.\n\n" +
+              "Revisit underperforming products honestly: sometimes the content was the problem, and " +
+              "sometimes the product itself simply isn't a fit for your audience. Continuing to promote a " +
+              "product that consistently underperforms, out of sunk-cost effort, rarely turns around on " +
+              "its own.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "creator-business-and-monetization",
+    modules: [
+      {
+        title: "Income Streams",
+        description: "Affiliate marketing, sponsorships, and brand deals as creator income.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "affiliate-marketing",
+            title: "Affiliate Marketing",
+            summary: "Earning commission promoting products without holding inventory.",
+            content:
+              "Affiliate marketing pays a commission when someone purchases through your unique link or " +
+              "code, without you needing to manufacture, stock, or ship anything. It's usually the lowest " +
+              "barrier-to-entry income stream for a new creator, since most programs only require an " +
+              "audience of any size to get started.\n\n" +
+              "Commission rates and cookie windows (how long after a click a purchase still counts) vary " +
+              "widely between programs — a lower commission rate with strong audience trust and fit " +
+              "often earns more overall than a higher rate promoted to a mismatched audience.\n\n" +
+              "Disclose affiliate relationships clearly, both because it's typically required and because " +
+              "transparency tends to preserve trust better than hiding it — audiences generally accept " +
+              "affiliate content well when it's honest and relevant to their interests.",
+            displayOrder: 1,
+          },
+          {
+            slug: "sponsorships-and-brand-deals",
+            title: "Sponsorships and Brand Deals",
+            summary: "Getting paid directly by brands for dedicated content.",
+            content:
+              "A sponsorship is a direct payment from a brand for content featuring their product or " +
+              "message, independent of whether it drives a sale. Rates are typically based on audience " +
+              "size, engagement rate, niche relevance, and past sponsored-content performance rather than " +
+              "follower count alone.\n\n" +
+              "Brands increasingly value creators whose audience closely matches their target customer " +
+              "over creators with simply the largest following — a smaller, highly engaged, niche-relevant " +
+              "audience can command comparable or better rates than a larger, more generic one.\n\n" +
+              "Maintain creative control where possible: sponsored content that still sounds like you, " +
+              "rather than reading a brand's script verbatim, both performs better for the brand and " +
+              "protects your credibility with your audience — a reputation worth protecting for future " +
+              "deals.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Products and Services",
+        description: "UGC services, digital products, courses, memberships, and coaching.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "ugc-services-and-digital-products",
+            title: "UGC Services and Digital Products",
+            summary: "Selling content-creation skills directly, and packaging expertise into a product.",
+            content:
+              "UGC (user-generated-content) services mean creating authentic-style content for brands to " +
+              "use in their own ads or feeds, without necessarily posting it on your own account. This is " +
+              "a service business built on your production skills rather than your audience size, which " +
+              "makes it accessible even to creators with a small following but strong content skills.\n\n" +
+              "A digital product packages knowledge you already have — a template, guide, preset pack, or " +
+              "similar — into something sold repeatedly with no per-unit production cost after the initial " +
+              "work. This makes digital products attractive for income that doesn't scale linearly with " +
+              "your time.\n\n" +
+              "Start with a narrow, specific digital product solving one real problem your audience already " +
+              "asks you about, rather than a broad product trying to cover everything you know — narrow " +
+              "products are both faster to create and easier to sell with confidence.",
+            displayOrder: 1,
+          },
+          {
+            slug: "courses-memberships-and-coaching",
+            title: "Courses, Memberships, and Coaching",
+            summary: "Higher-touch offers that trade more of your time for higher per-customer revenue.",
+            content:
+              "A course teaches a specific transformation over a structured period, typically priced " +
+              "higher than a simple digital product because of the depth and structure involved. It's " +
+              "usually worth building only once you've validated real demand — through smaller digital " +
+              "products or direct audience requests — rather than as a first offer.\n\n" +
+              "A membership provides ongoing value (community, resources, updates) for a recurring fee, " +
+              "trading a lower individual price for repeatable, more predictable revenue over time — but " +
+              "it also requires ongoing effort to keep members engaged and retained.\n\n" +
+              "Coaching or consulting trades your direct time for the highest per-hour revenue of these " +
+              "options, but it doesn't scale beyond your available hours the way a digital product or " +
+              "course can. Many creators use coaching as an early, flexible income stream, then shift " +
+              "toward products as demand grows past what their time alone can serve.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Running It Like a Business",
+        description: "Pricing, media kits, negotiating, and diversifying income.",
+        displayOrder: 3,
+        lessons: [
+          {
+            slug: "pricing-and-media-kits",
+            title: "Pricing and Media Kits",
+            summary: "Setting defensible rates and presenting your audience professionally.",
+            content:
+              "Pricing for sponsorships and services is typically driven by engagement rate and audience " +
+              "fit more than raw follower count — a smaller, highly engaged audience in a valuable niche " +
+              "can reasonably charge more than a larger, less-engaged general audience.\n\n" +
+              "A media kit is a short, professional document summarizing your audience size, engagement " +
+              "rate, niche, past brand work, and rates. Having one ready — even a simple one-page version " +
+              "— makes you look prepared and speeds up deals, since brands often ask for the same " +
+              "information repeatedly.\n\n" +
+              "Revisit your rates periodically as your audience and results grow, rather than leaving them " +
+              "static for years. Undercharging is a common early-creator mistake that's hard to correct " +
+              "later once a brand is used to a lower rate from you specifically.",
+            displayOrder: 1,
+          },
+          {
+            slug: "negotiating-deals-and-diversifying-income",
+            title: "Negotiating Deals and Diversifying Income",
+            summary: "Advocating for fair terms and avoiding dependence on one income source.",
+            content:
+              "Negotiating a brand deal usually means clarifying deliverables (exact number and type of " +
+              "posts), usage rights (can the brand reuse your content in their own ads, and for how long), " +
+              "and payment terms before agreeing to anything. It's reasonable to counter an initial offer " +
+              "— brands often expect some negotiation and build room for it into a first offer.\n\n" +
+              "Relying on a single income stream, whether one platform's ad revenue, one brand relationship, " +
+              "or one affiliate program, leaves a creator exposed to a single algorithm change, policy " +
+              "update, or lost contract. Deliberately building at least two or three income streams reduces " +
+              "that fragility significantly.\n\n" +
+              "Review your income mix periodically and notice concentration risk — if one source suddenly " +
+              "represents the large majority of your income, that's worth addressing before it becomes a " +
+              "problem, not after a platform or partner change forces the issue.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "personal-brand-for-creators",
+    modules: [
+      {
+        title: "Positioning and Credibility",
+        description: "What makes a creator credible and memorable, on purpose.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "positioning-credibility-and-authority",
+            title: "Positioning, Credibility, and Authority",
+            summary: "Building a reputation for genuinely knowing your subject.",
+            content:
+              "Credibility is built through consistent, specific demonstration of knowledge over time — " +
+              "not a single impressive claim. Showing your work, explaining your reasoning, and " +
+              "occasionally being specific about a mistake you made and corrected all build more lasting " +
+              "authority than only presenting polished wins.\n\n" +
+              "Authority compounds when you consistently occupy the same specific territory rather than " +
+              "jumping between unrelated topics — an audience needs to see you speak on the same subject " +
+              "repeatedly before they fully trust you as the person to go to for it.\n\n" +
+              "Avoid claiming expertise you don't have. Being transparent about what you do and don't know " +
+              "— and bringing in others for the parts outside your expertise — builds more durable trust " +
+              "than presenting yourself as an authority on everything in your broader space.",
+            displayOrder: 1,
+          },
+          {
+            slug: "visual-identity-and-creator-voice",
+            title: "Visual Identity and Creator Voice",
+            summary: "The consistent look and tone that makes you recognizable at a glance.",
+            content:
+              "A simple, consistent visual identity — a color palette, font choice, and general editing " +
+              "style — helps your content get recognized even before someone reads the caption, especially " +
+              "as it's reshared or clipped by others. This doesn't require professional design, just " +
+              "consistency over time.\n\n" +
+              "Your creator voice is the consistent tone and personality that comes through regardless of " +
+              "topic — direct, warm, funny, blunt, whatever genuinely fits you. Voice is what makes similar " +
+              "content ideas feel distinctly \"yours\" compared to other creators covering the same " +
+              "subject.\n\n" +
+              "Avoid copying another creator's voice or aesthetic too closely. It's fine to be inspired by " +
+              "what works, but an audience can usually sense when a voice isn't genuine, and it makes you " +
+              "harder to tell apart from the person you're emulating.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Trust and Recognition",
+        description: "Protecting your reputation and becoming the name people think of first.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "reputation-and-trust",
+            title: "Reputation and Trust",
+            summary: "Protecting the trust that makes everything else easier over time.",
+            content:
+              "Trust is the asset underneath every other creator-economy outcome — sales, brand deals, " +
+              "collaborations, and referrals all move faster and easier with an audience that trusts you. " +
+              "It's also slow to build and fast to lose, which makes protecting it worth more than any " +
+              "single short-term gain.\n\n" +
+              "Handle mistakes directly and quickly rather than ignoring them — a prompt, honest " +
+              "acknowledgment of an error (a bad recommendation, an inaccurate claim) tends to preserve " +
+              "trust better than silence, which audiences often read as either not noticing or not caring.\n\n" +
+              "Be consistent between what you say and what you do publicly. Promoting something you " +
+              "privately wouldn't use, or contradicting your own stated values for a payout, is one of the " +
+              "fastest ways to damage a personal brand that took years to build.",
+            displayOrder: 1,
+          },
+          {
+            slug: "becoming-recognizable-in-your-niche",
+            title: "Becoming Recognizable in Your Niche",
+            summary: "Moving from one of many accounts to the name people mention first.",
+            content:
+              "Being recognizable in a niche usually comes from being the clear, consistent answer to a " +
+              "specific question — \"who's good for X\" — rather than from being broadly popular. " +
+              "Narrowing what you're known for, even if it feels limiting, is often what makes you " +
+              "memorable in the first place.\n\n" +
+              "Showing up consistently in the same places your niche already gathers — commenting " +
+              "thoughtfully on related accounts, participating in niche conversations, occasionally " +
+              "collaborating — builds recognition faster than posting alone in isolation and hoping to be " +
+              "discovered.\n\n" +
+              "Recognition compounds slowly and then noticeably: expect a long period where growth in " +
+              "reputation feels invisible, followed by a point where people start referencing you " +
+              "unprompted in conversations and comments. That shift is a strong signal your personal " +
+              "brand has taken hold.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "creator-mindset-and-sustainable-habits",
+    modules: [
+      {
+        title: "Showing Up",
+        description: "Confidence on camera and the discipline to post consistently.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "confidence-and-speaking-on-camera",
+            title: "Confidence and Speaking on Camera",
+            summary: "Practical techniques for feeling less awkward on camera over time.",
+            content:
+              "Feeling awkward on camera at first is close to universal, not a sign you're not cut out for " +
+              "this. Confidence on camera is a skill built through repetition, not a trait some people have " +
+              "and others don't — the twentieth video reliably feels easier than the first, regardless of " +
+              "how the first one went.\n\n" +
+              "A few concrete techniques help: talk to a specific imagined person (a friend, a past version " +
+              "of yourself) rather than an abstract audience, film several short takes instead of trying " +
+              "to get one perfect take, and watch your own content back specifically to normalize hearing " +
+              "and seeing yourself, which many people find uncomfortable at first regardless of how the " +
+              "content performs.\n\n" +
+              "Your first videos are very unlikely to represent your ceiling. Most creators look back on " +
+              "early content with some embarrassment — that's a sign of growth, not evidence you started " +
+              "poorly in some unusual way.",
+            displayOrder: 1,
+          },
+          {
+            slug: "discipline-and-consistency",
+            title: "Discipline and Consistency",
+            summary: "Building a posting habit that survives a busy or unmotivated week.",
+            content:
+              "Consistency beats intensity for almost every creator outcome — steady, moderate output over " +
+              "months compounds more reliably than sporadic bursts of high effort followed by long gaps. " +
+              "Platforms and audiences both respond better to a predictable rhythm than to occasional " +
+              "spikes.\n\n" +
+              "Design your posting schedule around your actual capacity, not an aspirational one. A " +
+              "realistic schedule of two posts a week that you sustain for a year outperforms a five-post " +
+              "weekly schedule you abandon after three weeks of burnout.\n\n" +
+              "Separate motivation from discipline: motivation is unreliable and won't show up every day, " +
+              "but a simple system — a set posting day, a pre-written content backlog, a batch-filming " +
+              "routine — keeps output steady even on days motivation doesn't show up.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Staying In It",
+        description: "Protecting creativity, handling criticism, and avoiding burnout.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "creativity-and-productivity",
+            title: "Creativity and Productivity",
+            summary: "Protecting creative energy while still shipping content reliably.",
+            content:
+              "Creativity and productivity can work against each other if you let every piece of content " +
+              "demand a fully original idea — reusing proven formats with fresh specifics is not a " +
+              "creative failure, it's how most sustainable creators actually operate.\n\n" +
+              "Give yourself dedicated time for open-ended idea exploration, separate from the pressure of " +
+              "an immediate deadline. Ideas generated under deadline pressure alone tend to be more " +
+              "derivative than ones given room to develop without immediate output pressure.\n\n" +
+              "Protect a small amount of consumption time — watching, reading, or experiencing things " +
+              "unrelated to your immediate content needs. Constantly producing without any input eventually " +
+              "runs the well dry, even for naturally creative people.",
+            displayOrder: 1,
+          },
+          {
+            slug: "handling-criticism-and-avoiding-burnout",
+            title: "Handling Criticism and Avoiding Burnout",
+            summary: "Processing public feedback and recognizing burnout before it forces a break.",
+            content:
+              "Public criticism, including some that's unfair or in bad faith, is close to unavoidable once " +
+              "content reaches any real audience size. A useful filter: does this specific feedback come " +
+              "from someone in your actual target audience, and does it point to something genuinely " +
+              "fixable? If not, it's more noise than signal, however loud it feels in the moment.\n\n" +
+              "Avoid responding to harsh feedback in the heat of the moment — a short pause before replying " +
+              "(or choosing not to reply at all) usually produces a better outcome than an immediate " +
+              "defensive response, which can extend a conflict that would otherwise fade on its own.\n\n" +
+              "Watch for early burnout signs specifically: dreading filming days you used to enjoy, " +
+              "resenting your own audience, or producing content purely from obligation with no interest " +
+              "left. Addressing this early — a short planned break, a lighter posting schedule for a few " +
+              "weeks — tends to be far less costly than pushing through until a forced, longer stop.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "ai-tools-for-creators",
+    modules: [
+      {
+        title: "AI for Ideas and Content",
+        description: "Using AI for ideation, research, scripts, captions, images, video, and audio.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "ideation-research-and-scripts",
+            title: "Ideation, Research, and Scripts",
+            summary: "Using AI assistants to speed up the front end of content creation.",
+            content:
+              "AI chat assistants are well suited to generating a large volume of content-idea variations " +
+              "quickly from a topic or content pillar, which you then filter for what's genuinely relevant " +
+              "to your audience — treat AI output as a starting list to edit, not a finished plan to post " +
+              "as-is.\n\n" +
+              "For research, AI tools can summarize background on a topic quickly, but claims should still " +
+              "be verified against a real source before you state them publicly — AI tools can produce " +
+              "confident-sounding but inaccurate information, and a factual error in your content costs " +
+              "you credibility regardless of where the error came from.\n\n" +
+              "For scripts, AI-generated first drafts save time on structure and pacing, but a script " +
+              "rewritten in your own voice and specific examples performs meaningfully better than one " +
+              "posted close to verbatim — audiences can often sense generic, unedited AI phrasing.",
+            displayOrder: 1,
+          },
+          {
+            slug: "captions-images-and-video-with-ai",
+            title: "Captions, Images, and Video With AI",
+            summary: "Where AI genuinely helps with visual and written content, and where it falls short.",
+            content:
+              "AI caption tools work well for a fast first draft, especially for platforms that reward " +
+              "keyword-rich, searchable captions — but the same edit-don't-post-as-is principle applies, " +
+              "since generic AI captions rarely match your specific voice without a pass of editing.\n\n" +
+              "AI image generation is useful for thumbnails, graphics, and supporting visuals, particularly " +
+              "when you don't have design skills or a budget for one, but disclose AI-generated imagery " +
+              "where relevant and be cautious using it for anything that could mislead viewers about a " +
+              "real product or result.\n\n" +
+              "AI video tools remain more limited for realistic talking-head content, but they're " +
+              "genuinely useful for supporting b-roll, simple animations, and editing assistance like " +
+              "auto-captioning or removing filler words — treat them as tools within your editing " +
+              "workflow rather than a replacement for filming yourself.",
+            displayOrder: 2,
+          },
+          {
+            slug: "music-audio-translation-and-dubbing",
+            title: "Music, Audio, Translation, and Dubbing",
+            summary: "Using AI for royalty-free audio and reaching audiences in other languages.",
+            content:
+              "AI music and sound-effect tools can generate royalty-free background audio, which avoids " +
+              "copyright strikes that come from using popular commercial music without a license — useful " +
+              "for platforms or formats where a specific trending sound isn't required.\n\n" +
+              "AI translation tools make it realistic for a solo creator to localize captions and " +
+              "descriptions into other languages, opening up audience reach that would otherwise require " +
+              "hiring a translator for every piece of content.\n\n" +
+              "AI dubbing tools can generate a version of your video with your voice speaking another " +
+              "language, which is a meaningfully bigger reach opportunity than subtitles alone, though " +
+              "quality varies and it's worth spot-checking output with a native speaker before publishing " +
+              "broadly, especially for anything culturally sensitive.",
+            displayOrder: 3,
+          },
+        ],
+      },
+      {
+        title: "AI for Workflow",
+        description: "Repurposing, analytics, calendars, and building a real AI workflow.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "repurposing-content-with-ai",
+            title: "Repurposing Content With AI",
+            summary: "Using AI to turn one piece of content into several formats faster.",
+            content:
+              "AI tools can help transcribe a video, identify the strongest clips or quotes, and draft " +
+              "adapted captions for a different platform — turning a single long-form piece of content into " +
+              "several short-form pieces with far less manual effort than doing it entirely by hand.\n\n" +
+              "This works best when you still review and adjust the output for each platform's specific " +
+              "norms — a caption or hook style that works on one platform doesn't always translate directly " +
+              "to another, even when the underlying content is identical.\n\n" +
+              "Repurposing at scale with AI assistance is one of the highest-leverage uses of these tools " +
+              "for a solo creator, since it multiplies the output from content you already put real effort " +
+              "into filming, rather than replacing that original effort.",
+            displayOrder: 1,
+          },
+          {
+            slug: "analytics-calendars-and-product-marketing",
+            title: "Analytics, Calendars, and Product Marketing",
+            summary: "Using AI to summarize performance data and plan ahead.",
+            content:
+              "AI tools can help summarize and spot patterns in analytics exports faster than manually " +
+              "reviewing every number, which is useful for identifying trends across many posts — but " +
+              "verify any conclusion against the underlying numbers before acting on it, since " +
+              "summarization can miss context that matters.\n\n" +
+              "For content calendars, AI assistants can help draft a month of planned topics from your " +
+              "content pillars, which is faster than planning from scratch, though the plan still benefits " +
+              "from your own judgment about timing, trends, and what's currently resonating.\n\n" +
+              "For product marketing, AI tools can draft product descriptions, ad copy variations, or email " +
+              "sequences quickly — useful as a first draft for testing multiple angles, with your own " +
+              "editing and brand voice applied before anything goes out publicly.",
+            displayOrder: 2,
+          },
+          {
+            slug: "building-an-ai-workflow",
+            title: "Building an AI Workflow",
+            summary: "Combining individual AI tools into one repeatable content process.",
+            content:
+              "Individual AI tools save the most time when they're chained into a repeatable workflow " +
+              "rather than used ad hoc: idea generation, then a script draft, then a repurposing pass, " +
+              "then a captions pass, each with a defined step and a defined amount of your own editing.\n\n" +
+              "Document your workflow once it's working — which tool for which step, and what you " +
+              "personally always edit rather than accept as-is — so it's repeatable on a bad week without " +
+              "reinventing the process each time.\n\n" +
+              "Revisit your AI workflow periodically as tools change quickly. A step that was manual six " +
+              "months ago may now have a good AI-assisted option, and a tool you relied on may have been " +
+              "replaced by something better — treat the workflow as something to maintain, not something " +
+              "you set up once and never revisit.",
+            displayOrder: 3,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "creator-analytics-and-data-driven-growth",
+    modules: [
+      {
+        title: "Understanding Your Numbers",
+        description: "What impressions, reach, views, retention, and engagement actually measure.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "impressions-reach-and-views",
+            title: "Impressions, Reach, and Views",
+            summary: "The difference between how often content was shown and how many people saw it.",
+            content:
+              "Impressions count every time your content was displayed, including multiple times to the " +
+              "same person, while reach counts unique people who saw it at least once. A large gap between " +
+              "impressions and reach usually means the same smaller group is seeing your content " +
+              "repeatedly, rather than genuinely new distribution.\n\n" +
+              "\"Views\" is defined differently across platforms — some count a view after a fraction of a " +
+              "second, others require several seconds of watch time — so comparing raw view counts across " +
+              "platforms directly is usually misleading without accounting for each platform's specific " +
+              "definition.\n\n" +
+              "None of these three numbers alone tells you whether content is actually working. They're " +
+              "most useful as a baseline to compare against retention and engagement, which get closer to " +
+              "measuring genuine interest rather than exposure.",
+            displayOrder: 1,
+          },
+          {
+            slug: "retention-watch-time-and-engagement",
+            title: "Retention, Watch Time, and Engagement",
+            summary: "The metrics that most directly reflect genuine viewer interest.",
+            content:
+              "Retention (what percentage of viewers stayed to a given point) and watch time (total minutes " +
+              "watched, or average duration per view) more directly reflect genuine interest than raw view " +
+              "counts, because they require active attention rather than a passive scroll-past.\n\n" +
+              "Engagement (likes, comments, shares, saves) matters both as a distribution signal to the " +
+              "algorithm and as a rough indicator of emotional response — but different engagement types " +
+              "mean different things: a save usually signals \"useful, I want this later,\" while a share " +
+              "usually signals \"this represents me\" strongly enough to send to someone else.\n\n" +
+              "Look at these metrics together rather than any single one in isolation. High views with low " +
+              "retention suggests a strong hook but a weak middle or payoff; low views with strong retention " +
+              "suggests distribution, not content quality, is the current bottleneck.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "Acting on Data",
+        description: "CTR, conversion, revenue per content, and telling real winners from noise.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "ctr-conversion-and-revenue-per-content",
+            title: "CTR, Conversion, and Revenue per Content",
+            summary: "Connecting engagement metrics to actual business outcomes.",
+            content:
+              "Click-through rate (CTR) measures how often people who saw a link or call to action actually " +
+              "clicked it, while conversion rate measures how many of those clicks became a genuine outcome " +
+              "— a sale, sign-up, or booking. A content piece can have strong CTR and weak conversion, which " +
+              "usually points to a mismatch between what the content promised and what the landing page or " +
+              "offer delivered.\n\n" +
+              "Estimating revenue per piece of content — total revenue attributable to a post divided by " +
+              "its reach or views — helps compare content types on a more meaningful basis than views alone, " +
+              "since a smaller, highly-converting post can outperform a bigger but less relevant one " +
+              "financially.\n\n" +
+              "Track these numbers over enough content to see a pattern, not just from one post. A single " +
+              "high-converting post might be a fluke; a pattern across ten similar posts is a real, " +
+              "actionable signal worth building a strategy around.",
+            displayOrder: 1,
+          },
+          {
+            slug: "experimentation-and-understanding-winners-and-losers",
+            title: "Experimentation and Understanding Winners and Losers",
+            summary: "Running simple tests to tell a real winner from normal variation.",
+            content:
+              "Performance naturally varies between posts even with identical quality and strategy, so a " +
+              "single strong or weak result isn't automatically meaningful. Change one variable at a time " +
+              "(the hook, the format, the posting time) across several similar posts to get a signal you " +
+              "can actually trust, rather than reacting to any single data point.\n\n" +
+              "When you find a genuine winner — a format, hook style, or topic that consistently " +
+              "outperforms your average across several posts — study specifically what made it different " +
+              "from your typical content, and deliberately repeat that element rather than assuming the " +
+              "success was random.\n\n" +
+              "Equally, review consistent losers honestly: a format that reliably underperforms across " +
+              "several attempts is a pattern worth dropping, even if you personally enjoy making that kind " +
+              "of content. Data-driven growth means occasionally retiring things that don't work, not just " +
+              "adding new things that do.",
+            displayOrder: 2,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    courseSlug: "small-business-social-media-playbook",
+    modules: [
+      {
+        title: "Social Media by Business Type",
+        description: "Adapting creator-economy tactics to local, service, and ecommerce businesses.",
+        displayOrder: 1,
+        lessons: [
+          {
+            slug: "local-and-service-businesses",
+            title: "Local and Service Businesses",
+            summary: "Social media tactics for restaurants, real estate, beauty, fitness, and other local services.",
+            content:
+              "Local and service businesses — restaurants, real estate, beauty, fitness, and similar — " +
+              "benefit most from social content that shows real work and real results in your specific " +
+              "area: a finished haircut, a listed property walkthrough, a client's actual transformation, " +
+              "rather than generic stock-style content that could belong to any similar business anywhere.\n\n" +
+              "Location tagging, local hashtags, and content that references your specific neighborhood or " +
+              "city help you show up for people actually nearby, which matters far more for a local " +
+              "business than broad national reach that can't convert into an in-person customer.\n\n" +
+              "Behind-the-scenes content — the process, the space, the people doing the work — tends to " +
+              "build trust faster for local service businesses than polished marketing content, because it " +
+              "shows the real experience a customer can expect when they show up.",
+            displayOrder: 1,
+          },
+          {
+            slug: "ecommerce-and-product-based-businesses",
+            title: "Ecommerce and Product-Based Businesses",
+            summary: "Social tactics for businesses selling physical or digital products directly.",
+            content:
+              "Ecommerce and product-based businesses can borrow directly from creator-economy content " +
+              "tactics — product demonstrations, UGC-style reviews, and platform-native shopping features " +
+              "— often more effectively than traditional product photography and ad copy alone.\n\n" +
+              "Customers increasingly expect to see a product in genuine use before purchasing, especially " +
+              "for anything with a learning curve or a fit/sizing question. Content that anticipates and " +
+              "answers common pre-purchase questions directly reduces both hesitation and return-driven " +
+              "customer support requests.\n\n" +
+              "For creators selling their own products or services rather than running a traditional " +
+              "storefront, the same principles from the Creator Business and Social Commerce courses apply " +
+              "directly — the audience-to-customer path doesn't fundamentally change just because the " +
+              "seller is a business rather than an individual creator.",
+            displayOrder: 2,
+          },
+        ],
+      },
+      {
+        title: "From Attention to Customers",
+        description: "Turning consistent social media presence into real leads.",
+        displayOrder: 2,
+        lessons: [
+          {
+            slug: "restaurants-real-estate-beauty-and-fitness",
+            title: "Restaurants, Real Estate, Beauty, and Fitness",
+            summary: "Specific content angles that work well for these common small-business categories.",
+            content:
+              "Restaurants tend to perform well with short, appetite-driven content — the dish being made " +
+              "or plated — alongside occasional behind-the-scenes kitchen or staff content that builds " +
+              "personality beyond just the food itself.\n\n" +
+              "Real estate benefits from property walkthroughs with a clear hook (price, standout feature, " +
+              "or neighborhood) in the first few seconds, plus local-market education content that " +
+              "positions the agent as a knowledgeable resource, not just a listing poster.\n\n" +
+              "Beauty and fitness businesses both perform well with transformation and process content — " +
+              "showing technique, real client results with permission, and answering the specific questions " +
+              "prospective clients already have before they book, which reduces the hesitation that " +
+              "prevents a first booking.",
+            displayOrder: 1,
+          },
+          {
+            slug: "turning-social-attention-into-leads-and-customers",
+            title: "Turning Social Attention Into Leads and Customers",
+            summary: "Building a simple, repeatable system from posting to booked customer.",
+            content:
+              "Attention alone doesn't pay the bills — a small business needs a clear next step for an " +
+              "interested viewer: a booking link, a phone number, a simple contact form, or a DM prompt. " +
+              "Make that next step obvious in every piece of content, not just occasionally.\n\n" +
+              "Respond quickly to comments and messages from genuinely interested prospects — for local and " +
+              "service businesses especially, response speed is often a real competitive advantage, since " +
+              "many prospective customers will simply message the next business that replies faster.\n\n" +
+              "Track roughly how many leads or bookings come from social media specifically, even with a " +
+              "simple manual method like asking new customers how they found you. Without this, it's " +
+              "difficult to know whether the time spent on content is actually translating into the " +
+              "business outcome that justifies it.",
             displayOrder: 2,
           },
         ],

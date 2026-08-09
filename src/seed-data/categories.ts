@@ -143,4 +143,13 @@ export const categorySeeds: CategorySeed[] = [
     displayOrder: 15,
     active: true,
   },
+  {
+    name: "Creator Economy & Social Media",
+    slug: "creator-economy",
+    description:
+      "Audience growth, content creation, platform strategy, social commerce, and monetization for creators, influencers, affiliates, and small businesses building on social media — distinct from Digital Marketing's business-marketer lens.",
+    icon: "video",
+    displayOrder: 16,
+    active: true,
+  },
 ];

@@ -8,7 +8,7 @@ import type {
 import { AIProviderConfigError, AIProviderUnavailableError } from "@/ai/errors";
 import { OllamaProvider } from "@/ai/providers/ollama";
 import { OpenAICompatibleProvider } from "@/ai/providers/openai-compatible";
-export const AI_TASKS = ["advisor", "tutor", "coach", "practice"] as const;
+export const AI_TASKS = ["advisor", "tutor", "coach", "practice", "creator-coach"] as const;
 export type AITask = (typeof AI_TASKS)[number];
 const specSchema = z
   .string()

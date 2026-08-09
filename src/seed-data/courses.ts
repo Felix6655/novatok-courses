@@ -1233,4 +1233,285 @@ export const courseSeeds: CourseSeed[] = [
     ],
     featured: true,
   }),
+
+  // Creator Economy & Social Media
+  defineCourse({
+    title: "Social Media Foundations for Creators",
+    slug: "social-media-foundations-for-creators",
+    shortDescription:
+      "Pick a niche, understand your audience, and set up a profile worth following — before you post at scale.",
+    fullDescription:
+      "The course every creator should take first. You'll choose a niche that can actually compound instead of one that sounds impressive, learn how to research the audience you're trying to reach, and build a clear point of view for what you post and why. By the end you'll have a written positioning statement, a shortlist of content pillars, and an optimized profile on the platform(s) you've chosen to start on.",
+    categorySlug: "creator-economy",
+    instructorName: "Priya Nakamura",
+    instructorBio:
+      "Priya spent six years on platform creator-partnerships teams before coaching creators full time on positioning and growth strategy.",
+    price: 0,
+    level: "BEGINNER",
+    durationMinutes: 150,
+    lessonCount: 6,
+    prerequisites: [],
+    learningOutcomes: [
+      "Choose a niche specific enough to grow in and broad enough to sustain",
+      "Describe your target audience in concrete, research-backed terms",
+      "Write a one-paragraph creator positioning statement",
+      "Define 3-5 content pillars and optimize your profile around them",
+    ],
+    featured: true,
+  }),
+  defineCourse({
+    title: "Growing Your Audience From Zero",
+    slug: "growing-your-audience-from-zero",
+    shortDescription:
+      "Organic growth, recommendation algorithms, retention, and community — for creators starting with no following.",
+    fullDescription:
+      "Most growth advice assumes you already have an audience to work with. This course starts at zero: how recommendation systems actually decide what to show new accounts, what retention and engagement really mean for growth, how to build a small but real community, and a repeatable process for diagnosing why a piece of content didn't grow instead of guessing.",
+    categorySlug: "creator-economy",
+    instructorName: "Priya Nakamura",
+    instructorBio:
+      "Priya spent six years on platform creator-partnerships teams before coaching creators full time on positioning and growth strategy.",
+    price: 79,
+    level: "BEGINNER",
+    durationMinutes: 210,
+    lessonCount: 6,
+    prerequisites: ["Social Media Foundations for Creators recommended"],
+    learningOutcomes: [
+      "Explain in plain terms how a recommendation algorithm decides what to surface",
+      "Identify the retention and engagement signals that matter most in the first few seconds",
+      "Use hashtags, social SEO, collaborations, and trends without chasing every trend",
+      "Diagnose why a specific piece of content underperformed using real metrics",
+    ],
+  }),
+  defineCourse({
+    title: "Content Creation for Creators",
+    slug: "content-creation-for-creators",
+    shortDescription:
+      "Ideas, hooks, storytelling, filming on a phone, editing, and a workflow that doesn't burn you out.",
+    fullDescription:
+      "A practical, format-agnostic production course: how to generate content ideas that don't run dry, write hooks that earn the first three seconds, tell a story in under a minute, and film with good lighting and audio using just a phone. The back half covers editing, thumbnails, captions, repurposing one piece of content across formats, and building a content workflow you can actually sustain every week.",
+    categorySlug: "creator-economy",
+    instructorName: "Jordan Reyes",
+    instructorBio:
+      "Jordan is a full-time short-form creator and former video editor who has produced content across every major platform.",
+    price: 89,
+    level: "BEGINNER",
+    durationMinutes: 240,
+    lessonCount: 6,
+    prerequisites: [],
+    learningOutcomes: [
+      "Generate a running list of content ideas using a repeatable method",
+      "Write hooks that earn attention in the first three seconds",
+      "Film clear, well-lit, well-audioed video with just a phone",
+      "Edit, caption, and repurpose one piece of content across formats efficiently",
+    ],
+    featured: true,
+  }),
+  defineCourse({
+    title: "Platform Growth Playbooks: TikTok, Instagram, YouTube, and Beyond",
+    slug: "platform-growth-playbooks",
+    shortDescription:
+      "Platform-specific tactics for TikTok, Instagram, Facebook, YouTube, LinkedIn, X, Threads, and Pinterest — plus how they fit together.",
+    fullDescription:
+      "Every platform rewards slightly different things, but treating each one as a totally separate job burns creators out. This course covers what actually differs on TikTok, Instagram, Facebook, YouTube and YouTube Shorts, LinkedIn, X/Twitter, Threads, and Pinterest — SEO, retention mechanics, formats, and monetization features specific to each — and then how to build one cross-platform content strategy instead of nine disconnected ones.",
+    categorySlug: "creator-economy",
+    instructorName: "Jordan Reyes",
+    instructorBio:
+      "Jordan is a full-time short-form creator and former video editor who has produced content across every major platform.",
+    price: 149,
+    level: "ADVANCED",
+    durationMinutes: 270,
+    lessonCount: 6,
+    prerequisites: ["Growing Your Audience From Zero", "Content Creation for Creators"],
+    learningOutcomes: [
+      "Apply platform-specific growth tactics for all 8 major social platforms",
+      "Choose which platforms deserve primary vs. repurposed effort for your niche",
+      "Use platform-native commerce and monetization features (TikTok Shop, Instagram Shopping, YouTube monetization)",
+      "Build one cross-platform content strategy instead of treating each platform in isolation",
+    ],
+  }),
+  defineCourse({
+    title: "Creator Sales and Conversion",
+    slug: "creator-sales-and-conversion",
+    shortDescription:
+      "Sell without every post feeling like an ad: storytelling, calls to action, social proof, and funnels.",
+    fullDescription:
+      "Selling as a creator is different from running paid ads. This course covers product storytelling and demonstration that doesn't feel like an advertisement, calls to action that actually get clicked, using social proof credibly, and the conversion fundamentals — landing pages, simple funnels, lead magnets, and email capture — that turn a follower into a customer without a marketing team.",
+    categorySlug: "creator-economy",
+    instructorName: "Alex Bennett",
+    instructorBio:
+      "Alex coaches creators on turning an audience into revenue after a decade managing talent and brand partnerships.",
+    price: 99,
+    level: "INTERMEDIATE",
+    durationMinutes: 180,
+    lessonCount: 4,
+    prerequisites: ["Social Media Foundations for Creators recommended"],
+    learningOutcomes: [
+      "Demonstrate and tell a story about a product without sounding like an ad",
+      "Write calls to action that get clicked without feeling pushy",
+      "Use social proof credibly in content",
+      "Build a simple funnel from content to lead capture to sale",
+    ],
+  }),
+  defineCourse({
+    title: "Social Commerce and Live Selling",
+    slug: "social-commerce-and-live-selling",
+    shortDescription:
+      "TikTok Shop, affiliate products, shoppable content, UGC, and live selling for creators and sellers.",
+    fullDescription:
+      "A hands-on guide to selling directly through social platforms: researching products worth promoting, creating shoppable content and UGC-style reviews that convert, running a live selling session with confidence, and reading conversion analytics well enough to know which products and formats to scale. Covers creator/seller collaborations and affiliate product strategy alongside direct selling.",
+    categorySlug: "creator-economy",
+    instructorName: "Alex Bennett",
+    instructorBio:
+      "Alex coaches creators on turning an audience into revenue after a decade managing talent and brand partnerships.",
+    price: 119,
+    level: "INTERMEDIATE",
+    durationMinutes: 180,
+    lessonCount: 4,
+    prerequisites: ["Creator Sales and Conversion recommended"],
+    learningOutcomes: [
+      "Research and select products worth promoting through shoppable content",
+      "Create UGC-style product content and reviews that convert",
+      "Run a live selling session with a clear structure",
+      "Read conversion analytics to decide which products and formats to scale",
+    ],
+  }),
+  defineCourse({
+    title: "Creator Business and Monetization",
+    slug: "creator-business-and-monetization",
+    shortDescription:
+      "Affiliate income, brand deals, digital products, memberships, pricing, media kits, and diversifying income.",
+    fullDescription:
+      "Turning a following into a sustainable business means more than one income stream. This course walks through affiliate marketing, sponsorships and brand deals, UGC services, digital products, courses, memberships, and coaching/consulting as creator income streams, then covers the business fundamentals underneath all of them: pricing your work, building a media kit, negotiating a deal, and deliberately diversifying income so no single platform or partner controls your livelihood.",
+    categorySlug: "creator-economy",
+    instructorName: "Alex Bennett",
+    instructorBio:
+      "Alex coaches creators on turning an audience into revenue after a decade managing talent and brand partnerships.",
+    price: 179,
+    level: "ADVANCED",
+    durationMinutes: 270,
+    lessonCount: 6,
+    prerequisites: ["Creator Sales and Conversion", "Personal Brand for Creators recommended"],
+    learningOutcomes: [
+      "Evaluate and pursue affiliate marketing, sponsorships, and brand deals as income streams",
+      "Package expertise into digital products, memberships, or coaching offers",
+      "Build a media kit and set defensible rates for your audience size",
+      "Negotiate a brand deal and plan toward diversified, less-fragile income",
+    ],
+  }),
+  defineCourse({
+    title: "Personal Brand for Creators",
+    slug: "personal-brand-for-creators",
+    shortDescription:
+      "Positioning, credibility, visual identity, and reputation that make you recognizable in your niche.",
+    fullDescription:
+      "Your personal brand is what people remember about you after they scroll past everything else. This course covers positioning and credibility-building, developing a consistent visual identity and creator voice, and protecting the trust and reputation that make brand deals, sales, and referrals easier over time — the difference between being one of many accounts in a niche and being the recognizable name in it.",
+    categorySlug: "creator-economy",
+    instructorName: "Priya Nakamura",
+    instructorBio:
+      "Priya spent six years on platform creator-partnerships teams before coaching creators full time on positioning and growth strategy.",
+    price: 89,
+    level: "BEGINNER",
+    durationMinutes: 150,
+    lessonCount: 4,
+    prerequisites: ["Social Media Foundations for Creators recommended"],
+    learningOutcomes: [
+      "Articulate a credible, specific positioning within your niche",
+      "Develop a consistent visual identity and creator voice",
+      "Make decisions that protect long-term trust and reputation, not just short-term reach",
+      "Identify what would make you the recognizable name in your niche",
+    ],
+  }),
+  defineCourse({
+    title: "Creator Mindset and Sustainable Habits",
+    slug: "creator-mindset-and-sustainable-habits",
+    shortDescription:
+      "Confidence on camera, consistency, creativity, and avoiding burnout for the long haul.",
+    fullDescription:
+      "The skills that keep creators creating. This course covers building confidence speaking on camera, developing the discipline and consistency that compound over months, protecting creativity and productivity without forcing them, handling public criticism without spiraling, and recognizing and avoiding burnout before it forces a break. Built for creators who already know what to post and need to sustain the habit of actually posting it.",
+    categorySlug: "creator-economy",
+    instructorName: "Jordan Reyes",
+    instructorBio:
+      "Jordan is a full-time short-form creator and former video editor who has produced content across every major platform.",
+    price: 0,
+    level: "BEGINNER",
+    durationMinutes: 150,
+    lessonCount: 4,
+    prerequisites: [],
+    learningOutcomes: [
+      "Use practical techniques to build confidence speaking on camera",
+      "Build a consistent posting habit that survives a busy week",
+      "Handle public criticism without it derailing your output",
+      "Recognize early burnout signs and adjust before they force a break",
+    ],
+  }),
+  defineCourse({
+    title: "AI Tools for Creators",
+    slug: "ai-tools-for-creators",
+    shortDescription:
+      "Use AI for ideation, scripts, captions, images, video, audio, translation, and a real content workflow.",
+    fullDescription:
+      "A practical tour of where AI tools genuinely save creators time: idea generation and research, drafting scripts and captions, generating images and assisting with video and music, translation and dubbing for cross-language reach, and repurposing one piece of content into many. The course ends by building a real AI-assisted content workflow and calendar rather than treating each tool as a one-off trick.",
+    categorySlug: "creator-economy",
+    instructorName: "Priya Nakamura",
+    instructorBio:
+      "Priya spent six years on platform creator-partnerships teams before coaching creators full time on positioning and growth strategy.",
+    price: 99,
+    level: "INTERMEDIATE",
+    durationMinutes: 210,
+    lessonCount: 6,
+    prerequisites: ["Content Creation for Creators recommended"],
+    learningOutcomes: [
+      "Use AI tools for idea generation, research, and first-draft scripts and captions",
+      "Use AI image, video, and audio tools appropriately in a content pipeline",
+      "Use AI translation and dubbing to reach audiences in other languages",
+      "Build a repeatable AI-assisted content workflow and calendar",
+    ],
+  }),
+  defineCourse({
+    title: "Creator Analytics and Data-Driven Growth",
+    slug: "creator-analytics-and-data-driven-growth",
+    shortDescription:
+      "Read impressions, retention, CTR, and conversion well enough to know what to do next.",
+    fullDescription:
+      "Analytics only help if you know what to do with them. This course explains what impressions, reach, views, retention, and watch time actually measure, how engagement and click-through rate connect to real outcomes, how to estimate revenue per piece of content, and how to run simple experiments so you can tell a genuine winner from noise — instead of reacting to every number that moves.",
+    categorySlug: "creator-economy",
+    instructorName: "Alex Bennett",
+    instructorBio:
+      "Alex coaches creators on turning an audience into revenue after a decade managing talent and brand partnerships.",
+    price: 99,
+    level: "INTERMEDIATE",
+    durationMinutes: 150,
+    lessonCount: 4,
+    prerequisites: ["Growing Your Audience From Zero recommended"],
+    learningOutcomes: [
+      "Explain what impressions, reach, retention, and watch time each actually measure",
+      "Connect engagement and CTR to real downstream outcomes like conversion",
+      "Estimate revenue per piece of content for a creator business",
+      "Run a simple experiment to tell a real winner from normal variation",
+    ],
+  }),
+  defineCourse({
+    title: "Small Business Social Media Playbook",
+    slug: "small-business-social-media-playbook",
+    shortDescription:
+      "Turn social attention into leads and customers for local, ecommerce, and service businesses.",
+    fullDescription:
+      "Written for the owner, not a marketing department. This course adapts creator-economy tactics for local businesses, ecommerce, service businesses, restaurants, real estate, beauty, and fitness — and for creators selling their own products or services. You'll leave with a plan for consistently turning social media attention into actual leads and customers, sized to a business that can't hire a full content team.",
+    categorySlug: "creator-economy",
+    instructorName: "Alex Bennett",
+    instructorBio:
+      "Alex coaches creators on turning an audience into revenue after a decade managing talent and brand partnerships.",
+    price: 89,
+    level: "BEGINNER",
+    durationMinutes: 150,
+    lessonCount: 4,
+    prerequisites: [],
+    learningOutcomes: [
+      "Adapt creator-economy content tactics to a local, ecommerce, or service business",
+      "Choose the right platform mix for your specific business type",
+      "Build content that generates real leads, not just views",
+      "Run social media consistently without a dedicated marketing team",
+    ],
+    featured: true,
+  }),
 ];
