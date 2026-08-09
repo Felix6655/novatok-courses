@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { ProgressBar } from "@/components/learning/ProgressBar";
-import { getStudentIdentity } from "@/server/identity/dev-identity";
+import { requireBrowserStudentIdentity } from "@/server/identity/browser-identity";
 import { getRecentActivity, getStudentDashboard } from "@/server/learning/dashboard";
 import { getRequestLocale } from "@/i18n/request";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -19,7 +19,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
 export default async function LearnDashboardPage() {
   const locale = await getRequestLocale();
   const dictionary = getDictionary(locale);
-  const identity = await getStudentIdentity();
+  const identity = await requireBrowserStudentIdentity("/learn");
   const [enrollments, recentActivity] = await Promise.all([
     getStudentDashboard(identity.studentId),
     getRecentActivity(identity.studentId),

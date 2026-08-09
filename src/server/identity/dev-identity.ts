@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { assertIdentityModeIsSafe } from "@/lib/env";
-import { DEV_STUDENT_COOKIE } from "@/server/identity/constants";
+import { COURSES_SESSION_COOKIE, DEV_STUDENT_COOKIE } from "@/server/identity/constants";
 import { getNovaTokSocialIdentity } from "@/server/identity/novatok-social-identity";
 import type { StudentIdentity } from "@/server/identity/types";
 
@@ -19,7 +19,7 @@ export async function getStudentIdentity(): Promise<StudentIdentity> {
   const mode = process.env.STUDENT_IDENTITY_MODE ?? "development";
 
   if (mode === "novatok-social") {
-    return getNovaTokSocialIdentity(cookieStore.toString());
+    return getNovaTokSocialIdentity(cookieStore.get(COURSES_SESSION_COOKIE)?.value);
   }
 
   const studentId = cookieStore.get(DEV_STUDENT_COOKIE)?.value;

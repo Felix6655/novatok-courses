@@ -29,4 +29,12 @@ describe("Next.js proxy", () => {
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toEqual({ error: "Untrusted request origin" });
   });
+
+  it("protects Courses logout from cross-origin POST requests", () => {
+    const response = proxy(new NextRequest("https://courses.example/api/auth/logout", {
+      method: "POST",
+      headers: { origin: "https://evil.example" },
+    }));
+    expect(response.status).toBe(403);
+  });
 });

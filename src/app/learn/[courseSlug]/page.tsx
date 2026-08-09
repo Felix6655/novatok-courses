@@ -9,6 +9,7 @@ import { PracticePanel } from "@/components/learning/PracticePanel";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { slugParamSchema } from "@/lib/validation/course-query";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
+import { requireBrowserStudentIdentity } from "@/server/identity/browser-identity";
 import { EnrollmentCourseNotFoundError, LearningLessonNotFoundError } from "@/server/learning/errors";
 import { getLearningState } from "@/server/learning/learning-state";
 import { getRequestLocale } from "@/i18n/request";
@@ -44,7 +45,10 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
   }
   const parsedLessonSlug = lessonSlug ? slugParamSchema.safeParse(lessonSlug) : undefined;
 
-  const identity = await getStudentIdentity();
+  const returnParams = new URLSearchParams();
+  if (lessonSlug) returnParams.set("lessonSlug", lessonSlug);
+  const returnTo = `/learn/${parsedSlug.data}${returnParams.size ? `?${returnParams.toString()}` : ""}`;
+  const identity = await requireBrowserStudentIdentity(returnTo);
 
   let state;
   try {

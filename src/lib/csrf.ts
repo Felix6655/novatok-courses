@@ -2,6 +2,7 @@ const PROTECTED_MUTATION_PATHS = [
   "/api/learning/",
   "/api/ai/tutor",
   "/api/ai/learning-coach",
+  "/api/auth/logout",
 ];
 
 export function requiresTrustedOrigin(pathname: string, method: string): boolean {
