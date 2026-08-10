@@ -16,6 +16,10 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (requiresTrustedOrigin(pathname, request.method) && !isTrustedOrigin(request.url, request.headers.get("origin"))) return NextResponse.json({ error: "Untrusted request origin" }, { status: 403 });
   const api = pathname.startsWith("/api/");
+  const rewrittenLocale = request.headers.get("x-novatok-locale");
+  if (!api && rewrittenLocale && isLocale(rewrittenLocale)) {
+    return withPreferences(NextResponse.next(), request, rewrittenLocale);
+  }
   const parts = pathname.split("/").filter(Boolean);
   const prefix = parts[0];
   const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;

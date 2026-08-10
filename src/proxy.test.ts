@@ -37,4 +37,11 @@ describe("Next.js proxy", () => {
     }));
     expect(response.status).toBe(403);
   });
+  it("does not re-localize an internal locale rewrite", () => {
+    const response = proxy(new NextRequest("http://localhost/learn", {
+      headers: { "x-novatok-locale": "en" },
+    }));
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.headers.get("location")).toBeNull();
+  });
 });
