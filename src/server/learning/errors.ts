@@ -33,3 +33,20 @@ export class PracticeNotFoundError extends Error {
     this.name = "PracticeNotFoundError";
   }
 }
+
+
+/** The course is real but does not offer a completion certificate. Maps to 409. */
+export class CertificateUnavailableError extends Error {
+  constructor(courseSlug: string) {
+    super(`Course "${courseSlug}" does not offer a completion certificate.`);
+    this.name = "CertificateUnavailableError";
+  }
+}
+
+/** The student is enrolled, but the server-calculated course progress is not yet 100%. Maps to 409. */
+export class CourseNotCompleteError extends Error {
+  constructor(courseSlug: string) {
+    super(`Course "${courseSlug}" must be completed before a certificate can be issued.`);
+    this.name = "CourseNotCompleteError";
+  }
+}

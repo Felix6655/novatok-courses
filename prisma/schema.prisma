@@ -72,6 +72,7 @@ model Course {
   progress         LessonProgress[]
   activities       LearningActivity[]
   practiceSessions PracticeSession[]
+  certificates     CourseCertificate[]
   translations     CourseTranslation[]
 
   @@index([status, categoryId])
@@ -307,4 +308,25 @@ model LessonTranslation {
   @@unique([lessonId, locale])
   @@index([locale, title])
   @@index([locale, status])
+}
+
+/**
+ * A durable, publicly verifiable credential issued only after the server
+ * confirms the student is enrolled, the course supports certificates, and
+ * every real lesson in the course is complete. One credential per student
+ * and course; repeated issue requests return the same row.
+ */
+model CourseCertificate {
+  id           String   @id @default(uuid())
+  credentialId String   @unique
+  studentId    String
+  courseId     String
+  issuedAt     DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
 }

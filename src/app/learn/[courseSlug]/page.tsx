@@ -6,6 +6,7 @@ import { LearningCoachPanel } from "@/components/learning/LearningCoachPanel";
 import { LearningSyllabus } from "@/components/learning/LearningSyllabus";
 import { MarkCompleteButton } from "@/components/learning/MarkCompleteButton";
 import { PracticePanel } from "@/components/learning/PracticePanel";
+import { CertificatePanel } from "@/components/learning/CertificatePanel";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { slugParamSchema } from "@/lib/validation/course-query";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
@@ -201,6 +202,12 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
           <div className="mt-6">
             <LearningCoachPanel courseSlug={course.slug} />
           </div>
+
+          {progress.isComplete && course.certificateAvailable && (
+            <div className="mt-6">
+              <CertificatePanel courseSlug={course.slug} />
+            </div>
+          )}
         </div>
       </div>
     </main>
