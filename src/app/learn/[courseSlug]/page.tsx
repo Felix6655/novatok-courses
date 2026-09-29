@@ -76,9 +76,15 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
         <p className="mt-2 text-neutral-600 dark:text-neutral-300">
           {dictionary.start}
         </p>
-        <div className="mt-6">
-          <EnrollButton courseSlug={state.course.slug} />
-        </div>
+        {Number(state.course.price) === 0 ? (
+          <div className="mt-6">
+            <EnrollButton courseSlug={state.course.slug} />
+          </div>
+        ) : (
+          <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            This is a paid course. Enrollment is unlocked only after a verified purchase.
+          </div>
+        )}
         <Link href={`/courses/${state.course.slug}`} className="mt-4 text-sm text-neutral-500 hover:underline">
           {dictionary.backToCourses}
         </Link>

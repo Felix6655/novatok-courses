@@ -13,7 +13,7 @@ vi.mock("@/server/learning/enrollment", () => ({
 }));
 
 const { POST } = await import("@/app/api/learning/enroll/route");
-const { EnrollmentCourseNotFoundError } = await import("@/server/learning/errors");
+const { CourseContentUnavailableError, CoursePurchaseRequiredError, EnrollmentCourseNotFoundError } = await import("@/server/learning/errors");
 const { MissingStudentIdentityError } = await import("@/server/identity/dev-identity");
 
 function request(body: unknown) {

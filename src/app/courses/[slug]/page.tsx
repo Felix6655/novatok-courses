@@ -105,8 +105,8 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <CourseActions title={course.title} enrollmentUrl={course.enrollmentUrl} />
-        {hasTutorContent && (
+        <CourseActions title={course.title} />
+        {hasTutorContent && Number(course.price) === 0 && (
           <Link
             href={`/learn/${course.slug}`}
             className="rounded-md border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-300"
@@ -115,6 +115,17 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
           </Link>
         )}
       </div>
+
+      {hasTutorContent && Number(course.price) > 0 && (
+        <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
+          Paid enrollment requires a verified purchase. Direct enrollment is disabled until checkout is connected.
+        </p>
+      )}
+      {!hasTutorContent && (
+        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          This course is listed in the catalog but its learning content is still being prepared.
+        </p>
+      )}
 
       {hasTutorContent && (
         <section className="mt-8 rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">

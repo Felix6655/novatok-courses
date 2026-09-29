@@ -67,3 +67,20 @@ export class FinalExamAttemptNotFoundError extends Error {
     this.name = "FinalExamAttemptNotFoundError";
   }
 }
+
+
+/** A paid course cannot be enrolled through the free learning mutation. */
+export class CoursePurchaseRequiredError extends Error {
+  constructor(courseSlug: string) {
+    super(`Course "${courseSlug}" requires purchase before enrollment.`);
+    this.name = "CoursePurchaseRequiredError";
+  }
+}
+
+/** A published catalog entry exists, but it has no real lesson content yet. */
+export class CourseContentUnavailableError extends Error {
+  constructor(courseSlug: string) {
+    super(`Course "${courseSlug}" is not ready for enrollment yet.`);
+    this.name = "CourseContentUnavailableError";
+  }
+}
