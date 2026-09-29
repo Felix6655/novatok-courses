@@ -5,15 +5,21 @@ const findEnrollment = vi.fn();
 const calculateCourseProgress = vi.fn();
 const upsert = vi.fn();
 const findUnique = vi.fn();
+const findPassedExam = vi.fn();
 
 vi.mock("@/server/courses", () => ({ getCourseBySlug: (...args: unknown[]) => getCourseBySlug(...args) }));
 vi.mock("@/server/learning/enrollment", () => ({ findEnrollment: (...args: unknown[]) => findEnrollment(...args) }));
 vi.mock("@/server/learning/progress", () => ({ calculateCourseProgress: (...args: unknown[]) => calculateCourseProgress(...args) }));
 vi.mock("@/lib/prisma", () => ({
-  prisma: { courseCertificate: {
-    upsert: (...args: unknown[]) => upsert(...args),
-    findUnique: (...args: unknown[]) => findUnique(...args),
-  } },
+  prisma: {
+    courseCertificate: {
+      upsert: (...args: unknown[]) => upsert(...args),
+      findUnique: (...args: unknown[]) => findUnique(...args),
+    },
+    courseExamAttempt: {
+      findFirst: (...args: unknown[]) => findPassedExam(...args),
+    },
+  },
 }));
 
 const { issueCourseCertificate, getCertificateByCredentialId } = await import("@/server/learning/certificate");
@@ -38,6 +44,8 @@ beforeEach(() => {
   calculateCourseProgress.mockReset();
   upsert.mockReset();
   findUnique.mockReset();
+  findPassedExam.mockReset();
+  findPassedExam.mockResolvedValue({ id: "exam-1" });
   getCourseBySlug.mockResolvedValue(course);
   findEnrollment.mockResolvedValue({ id: "enrollment-1" });
   calculateCourseProgress.mockResolvedValue({ isComplete: true });
@@ -56,6 +64,9 @@ describe("issueCourseCertificate", () => {
 
     calculateCourseProgress.mockResolvedValueOnce({ isComplete: false });
     await expect(issueCourseCertificate("student-1", course.slug)).rejects.toBeInstanceOf(CourseNotCompleteError);
+
+    findPassedExam.mockResolvedValueOnce(null);
+    await expect(issueCourseCertificate("student-1", course.slug)).rejects.toThrow("Pass the final assessment");
   });
 
   it("upserts one permanent certificate per student and course", async () => {

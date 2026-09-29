@@ -7,12 +7,14 @@ import { LearningSyllabus } from "@/components/learning/LearningSyllabus";
 import { MarkCompleteButton } from "@/components/learning/MarkCompleteButton";
 import { PracticePanel } from "@/components/learning/PracticePanel";
 import { CertificatePanel } from "@/components/learning/CertificatePanel";
+import { FinalExamPanel } from "@/components/learning/FinalExamPanel";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { slugParamSchema } from "@/lib/validation/course-query";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
 import { requireBrowserStudentIdentity } from "@/server/identity/browser-identity";
 import { EnrollmentCourseNotFoundError, LearningLessonNotFoundError } from "@/server/learning/errors";
 import { getLearningState } from "@/server/learning/learning-state";
+import { hasPassedFinalExam } from "@/server/learning/final-exam";
 import { getRequestLocale } from "@/i18n/request";
 import { getDictionary } from "@/i18n/dictionaries";
 
@@ -103,6 +105,9 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
   const previousLesson = currentIndex > 0 ? flatLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex >= 0 && currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : null;
   const isCurrentLessonComplete = progress.completedLessonSlugs.includes(currentLesson.slug);
+  const finalExamPassed = progress.isComplete && course.certificateAvailable
+    ? await hasPassedFinalExam(identity.studentId, course.id)
+    : false;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -205,7 +210,11 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
 
           {progress.isComplete && course.certificateAvailable && (
             <div className="mt-6">
-              <CertificatePanel courseSlug={course.slug} />
+              {finalExamPassed ? (
+                <CertificatePanel courseSlug={course.slug} />
+              ) : (
+                <FinalExamPanel courseSlug={course.slug} />
+              )}
             </div>
           )}
         </div>

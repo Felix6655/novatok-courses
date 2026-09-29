@@ -50,3 +50,20 @@ export class CourseNotCompleteError extends Error {
     this.name = "CourseNotCompleteError";
   }
 }
+
+
+/** A certificate course requires a passing final assessment before issuance. Maps to 409. */
+export class FinalExamRequiredError extends Error {
+  constructor(courseSlug: string) {
+    super(`Pass the final assessment for "${courseSlug}" before issuing a certificate.`);
+    this.name = "FinalExamRequiredError";
+  }
+}
+
+/** The final exam attempt is missing, expired, submitted, or belongs to another student. Maps to 404. */
+export class FinalExamAttemptNotFoundError extends Error {
+  constructor() {
+    super("This final assessment is no longer available. Start a new attempt.");
+    this.name = "FinalExamAttemptNotFoundError";
+  }
+}

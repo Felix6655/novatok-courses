@@ -73,6 +73,7 @@ model Course {
   activities       LearningActivity[]
   practiceSessions PracticeSession[]
   certificates     CourseCertificate[]
+  examAttempts     CourseExamAttempt[]
   translations     CourseTranslation[]
 
   @@index([status, categoryId])
@@ -123,6 +124,7 @@ model Lesson {
   currentForEnrollments StudentEnrollment[]
   activities            LearningActivity[]
   practiceSessions      PracticeSession[]
+  examQuestions         CourseExamQuestion[]
   translations          LessonTranslation[]
 
   @@unique([courseId, slug])
@@ -329,4 +331,40 @@ model CourseCertificate {
   @@unique([studentId, courseId])
   @@index([studentId])
   @@index([courseId])
+}
+
+
+model CourseExamAttempt {
+  id          String   @id @default(uuid())
+  studentId   String
+  courseId    String
+  score       Int?
+  passed      Boolean?
+  submittedAt DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  course    Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions CourseExamQuestion[]
+
+  @@index([studentId, courseId])
+  @@index([expiresAt])
+}
+
+model CourseExamQuestion {
+  id                 String @id @default(uuid())
+  attemptId          String
+  lessonId           String
+  displayOrder       Int
+  question           String
+  choices            String[]
+  correctChoiceIndex Int
+  explanation        String
+
+  attempt CourseExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  lesson  Lesson            @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, displayOrder])
+  @@index([attemptId])
+  @@index([lessonId])
 }

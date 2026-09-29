@@ -6,6 +6,7 @@ import {
   CertificateUnavailableError,
   CourseNotCompleteError,
   EnrollmentCourseNotFoundError,
+  FinalExamRequiredError,
   NotEnrolledError,
 } from "@/server/learning/errors";
 import { calculateCourseProgress } from "@/server/learning/progress";
@@ -47,6 +48,12 @@ export async function issueCourseCertificate(
 
   const progress = await calculateCourseProgress(studentId, course.id);
   if (!progress.isComplete) throw new CourseNotCompleteError(courseSlug);
+
+  const passedExam = await prisma.courseExamAttempt.findFirst({
+    where: { studentId, courseId: course.id, passed: true, submittedAt: { not: null } },
+    select: { id: true },
+  });
+  if (!passedExam) throw new FinalExamRequiredError(courseSlug);
 
   const certificate = await prisma.courseCertificate.upsert({
     where: { studentId_courseId: { studentId, courseId: course.id } },
