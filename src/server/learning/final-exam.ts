@@ -144,7 +144,7 @@ export async function startFinalExam(
 
   const lessons = selectRepresentativeLessons(await getCourseLessonsFlat(course.id), QUESTION_COUNT);
   if (lessons.length === 0) throw new CourseNotCompleteError(courseSlug);
-  const provider = deps.provider ?? getAIProvider(process.env, { task: "final-exam" });
+  const provider = deps.provider ?? getAIProvider(process.env, { task: "final-exam", locale: "en" });
 
   const generated = [];
   for (const lesson of lessons) {
