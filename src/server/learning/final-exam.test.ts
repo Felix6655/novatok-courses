@@ -30,9 +30,19 @@ describe("final exam",()=>{
     const provider:AIProvider={name:"test",async generateCompletion(){return JSON.stringify({
       question:"Which statement matches the lesson?",choices:["A","B","C","D"],correctChoiceIndex:2,explanation:"C matches the lesson."
     });}};
-    create.mockImplementation(async({data}:any)=>({
-      id:"a1",expiresAt:data.expiresAt,course:{slug:"course-one"},
-      questions:data.questions.create.map((q:any)=>({id:"q1",question:q.question,choices:q.choices,lesson:{title:"Lesson"}})),
+    create.mockImplementation(async ({ data }: { data: {
+      expiresAt: Date;
+      questions: { create: Array<{ question: string; choices: string[] }> };
+    } }) => ({
+      id: "a1",
+      expiresAt: data.expiresAt,
+      course: { slug: "course-one" },
+      questions: data.questions.create.map((question) => ({
+        id: "q1",
+        question: question.question,
+        choices: question.choices,
+        lesson: { title: "Lesson" },
+      })),
     }));
     const result=await startFinalExam("s1","course-one",{provider});
     expect(result.questions).toHaveLength(1);
