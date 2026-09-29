@@ -24,7 +24,7 @@ interface BenchmarkResult {
   error?: string;
 }
 
-const ALL_TASKS: AITask[] = ["advisor", "tutor", "coach", "practice", "creator-coach"];
+const ALL_TASKS: AITask[] = ["advisor", "tutor", "coach", "practice", "creator-coach", "final-exam"];
 const instructions: Record<Locale, string> = {
   en: "Write all user-facing prose in English.",
   es: "Escribe todo el texto para el usuario en espanol.",
@@ -43,6 +43,8 @@ const taskPrompts: Record<AITask, string> = {
     'Create one multiple-choice variables question. Return {"lessonSlug":"variables-and-data-types","question":string,"choices":string[],"correctChoiceIndex":number}.',
   "creator-coach":
     'Recommend only the course slug "social-media-foundations-for-creators" for week 1. Return {"courseSlug":string,"focus":string}.',
+  "final-exam":
+    'Create one grounded final-exam multiple-choice question about JavaScript variables. Return {"question":string,"choices":[string,string,string,string],"correctChoiceIndex":number,"explanation":string}.',
 };
 
 /**
