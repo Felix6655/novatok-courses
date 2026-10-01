@@ -95,24 +95,83 @@ function normalize(value: string): string {
   return value.toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 }
 
+const GENERIC_MATCH_TOKENS = new Set([
+  "learn",
+  "learning",
+  "course",
+  "courses",
+  "beginner",
+  "intermediate",
+  "advanced",
+  "free",
+  "practice",
+  "study",
+  "training",
+  "basics",
+  "basic",
+  "from",
+  "with",
+  "want",
+]);
+
+function topicRelevance(resource: VerifiedLearningResource, goal: string): number {
+  const normalizedGoal = normalize(goal);
+  let relevance = 0;
+
+  for (const topic of resource.topics) {
+    const normalizedTopic = normalize(topic);
+    if (!normalizedTopic) continue;
+
+    if (normalizedGoal.includes(normalizedTopic)) {
+      relevance += normalizedTopic.length <= 3 ? 4 : 8;
+      continue;
+    }
+
+    const topicTokens = normalizedTopic
+      .split(/\s+/)
+      .filter((token) => token.length >= 3 && !GENERIC_MATCH_TOKENS.has(token));
+
+    for (const token of topicTokens) {
+      if (normalizedGoal.includes(token)) relevance += 2;
+    }
+  }
+
+  return relevance;
+}
+
 function scoreResource(
   resource: VerifiedLearningResource,
-  terms: string[],
+  goal: string,
+  resourceQueries: string[],
   currentLevel: string,
   locale: string,
 ): number {
+  // Eligibility must come from the learner's own goal. Model-generated
+  // search queries may improve ranking, but can never make an unrelated
+  // provider resource eligible on their own.
+  const relevance = topicRelevance(resource, goal);
+  if (relevance <= 0) return -1;
+
   const haystack = normalize(
     [resource.title, resource.description, ...resource.topics].join(" "),
   );
-  let score = 0;
-  for (const term of terms) {
-    const normalized = normalize(term);
+  let score = relevance;
+
+  for (const query of resourceQueries) {
+    const normalized = normalize(query);
     if (!normalized) continue;
-    if (haystack.includes(normalized)) score += 3;
-    for (const token of normalized.split(/\s+/).filter((token) => token.length >= 3)) {
+
+    for (const token of normalized
+      .split(/\s+/)
+      .filter(
+        (token) =>
+          token.length >= 3 &&
+          !GENERIC_MATCH_TOKENS.has(token),
+      )) {
       if (haystack.includes(token)) score += 1;
     }
   }
+
   if (resource.levels.includes(currentLevel as never)) score += 2;
   if (resource.locales.includes(locale)) score += 1;
   return score;
@@ -125,12 +184,18 @@ export function findGoogleVerifiedResources(input: {
   locale?: string;
   limit?: number;
 }): VerifiedLearningResource[] {
-  const terms = [input.goal, ...(input.resourceQueries ?? [])];
+  const resourceQueries = input.resourceQueries ?? [];
   const locale = input.locale ?? "en";
   return GOOGLE_VERIFIED_RESOURCES
     .map((resource) => ({
       resource,
-      score: scoreResource(resource, terms, input.currentLevel, locale),
+      score: scoreResource(
+        resource,
+        input.goal,
+        resourceQueries,
+        input.currentLevel,
+        locale,
+      ),
     }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score || a.resource.title.localeCompare(b.resource.title))
