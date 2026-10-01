@@ -53,31 +53,35 @@ export function GuidedLearningForm() {
     if (!result) return;
     setSaveStatus("saving");
 
-    const response = await fetch("/api/guided-learning/plans", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        goal,
-        currentLevel,
-        weeklyHours,
-        locale,
-        source: result.source,
-        plan: {
-          goalSummary: result.goalSummary,
-          estimatedWeeks: result.estimatedWeeks,
-          steps: result.steps,
-          studyTips: result.studyTips,
-          resourceQueries: result.resourceQueries,
-        },
-      }),
-    });
+    try {
+      const response = await fetch("/api/guided-learning/plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goal,
+          currentLevel,
+          weeklyHours,
+          locale,
+          source: result.source,
+          plan: {
+            goalSummary: result.goalSummary,
+            estimatedWeeks: result.estimatedWeeks,
+            steps: result.steps,
+            studyTips: result.studyTips,
+            resourceQueries: result.resourceQueries,
+          },
+        }),
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setSaveStatus("error");
+        return;
+      }
+
+      setSaveStatus("saved");
+    } catch {
       setSaveStatus("error");
-      return;
     }
-
-    setSaveStatus("saved");
   }
 
   return (
