@@ -80,6 +80,9 @@ describe("saved Guided Learning plan service", () => {
       }),
     );
     expect(result.verifiedResources).toEqual(verified);
+    const sqlTemplate = queryRaw.mock.calls[0][0] as TemplateStringsArray;
+    expect(sqlTemplate.join("?")).toContain('"updatedAt"');
+    expect(sqlTemplate.join("?")).toContain("CURRENT_TIMESTAMP");
   });
 
   it("lists serialized plans for only the supplied student query", async () => {
