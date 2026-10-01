@@ -4,10 +4,9 @@ import { useState } from "react";
 
 interface CourseActionsProps {
   title: string;
-  enrollmentUrl: string;
 }
 
-export function CourseActions({ title, enrollmentUrl }: CourseActionsProps) {
+export function CourseActions({ title }: CourseActionsProps) {
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
 
   async function handleShare() {
@@ -31,12 +30,6 @@ export function CourseActions({ title, enrollmentUrl }: CourseActionsProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <a
-        href={enrollmentUrl}
-        className="rounded-md bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
-      >
-        Enroll
-      </a>
       <button
         type="button"
         disabled

@@ -6,12 +6,15 @@ import { LearningCoachPanel } from "@/components/learning/LearningCoachPanel";
 import { LearningSyllabus } from "@/components/learning/LearningSyllabus";
 import { MarkCompleteButton } from "@/components/learning/MarkCompleteButton";
 import { PracticePanel } from "@/components/learning/PracticePanel";
+import { CertificatePanel } from "@/components/learning/CertificatePanel";
+import { FinalExamPanel } from "@/components/learning/FinalExamPanel";
 import { ProgressBar } from "@/components/learning/ProgressBar";
 import { slugParamSchema } from "@/lib/validation/course-query";
 import { getStudentIdentity } from "@/server/identity/dev-identity";
 import { requireBrowserStudentIdentity } from "@/server/identity/browser-identity";
 import { EnrollmentCourseNotFoundError, LearningLessonNotFoundError } from "@/server/learning/errors";
 import { getLearningState } from "@/server/learning/learning-state";
+import { hasPassedFinalExam } from "@/server/learning/final-exam";
 import { getRequestLocale } from "@/i18n/request";
 import { getDictionary } from "@/i18n/dictionaries";
 
@@ -73,9 +76,15 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
         <p className="mt-2 text-neutral-600 dark:text-neutral-300">
           {dictionary.start}
         </p>
-        <div className="mt-6">
-          <EnrollButton courseSlug={state.course.slug} />
-        </div>
+        {Number(state.course.price) === 0 ? (
+          <div className="mt-6">
+            <EnrollButton courseSlug={state.course.slug} />
+          </div>
+        ) : (
+          <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            This is a paid course. Enrollment is unlocked only after a verified purchase.
+          </div>
+        )}
         <Link href={`/courses/${state.course.slug}`} className="mt-4 text-sm text-neutral-500 hover:underline">
           {dictionary.backToCourses}
         </Link>
@@ -102,6 +111,9 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
   const previousLesson = currentIndex > 0 ? flatLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex >= 0 && currentIndex < flatLessons.length - 1 ? flatLessons[currentIndex + 1] : null;
   const isCurrentLessonComplete = progress.completedLessonSlugs.includes(currentLesson.slug);
+  const finalExamPassed = progress.isComplete && course.certificateAvailable
+    ? await hasPassedFinalExam(identity.studentId, course.id)
+    : false;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -201,6 +213,16 @@ export default async function LearnCoursePage({ params, searchParams }: LearnCou
           <div className="mt-6">
             <LearningCoachPanel courseSlug={course.slug} />
           </div>
+
+          {progress.isComplete && course.certificateAvailable && (
+            <div className="mt-6">
+              {finalExamPassed ? (
+                <CertificatePanel courseSlug={course.slug} />
+              ) : (
+                <FinalExamPanel courseSlug={course.slug} />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>

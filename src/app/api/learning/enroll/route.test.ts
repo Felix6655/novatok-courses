@@ -13,7 +13,7 @@ vi.mock("@/server/learning/enrollment", () => ({
 }));
 
 const { POST } = await import("@/app/api/learning/enroll/route");
-const { EnrollmentCourseNotFoundError } = await import("@/server/learning/errors");
+const { CourseContentUnavailableError, CoursePurchaseRequiredError, EnrollmentCourseNotFoundError } = await import("@/server/learning/errors");
 const { MissingStudentIdentityError } = await import("@/server/identity/dev-identity");
 
 function request(body: unknown) {
@@ -52,6 +52,18 @@ describe("POST /api/learning/enroll", () => {
   it("returns 400 for a missing courseSlug", async () => {
     const response = await POST(request({}));
     expect(response.status).toBe(400);
+  });
+
+  it("returns 402 when a paid course requires purchase", async () => {
+    enrollInCourse.mockRejectedValue(new CoursePurchaseRequiredError("paid-course"));
+    const response = await POST(request({ courseSlug: "paid-course" }));
+    expect(response.status).toBe(402);
+  });
+
+  it("returns 409 when a published course has no learning content yet", async () => {
+    enrollInCourse.mockRejectedValue(new CourseContentUnavailableError("empty-course"));
+    const response = await POST(request({ courseSlug: "empty-course" }));
+    expect(response.status).toBe(409);
   });
 
   it("returns 404 when the course doesn't exist or isn't published", async () => {

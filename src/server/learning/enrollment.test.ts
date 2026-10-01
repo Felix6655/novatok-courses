@@ -6,10 +6,12 @@ const findUniqueOrThrow = vi.fn();
 const create = vi.fn();
 const update = vi.fn();
 const findMany = vi.fn();
+const lessonCount = vi.fn();
 const getCourseBySlug = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    lesson: { count: (...args: unknown[]) => lessonCount(...args) },
     studentEnrollment: {
       findUnique: (...args: unknown[]) => findUnique(...args),
       findUniqueOrThrow: (...args: unknown[]) => findUniqueOrThrow(...args),
@@ -29,7 +31,7 @@ const { enrollInCourse, listEnrollments, touchEnrollmentAccess, findEnrollment }
 );
 const { EnrollmentCourseNotFoundError } = await import("@/server/learning/errors");
 
-const course = { id: "course-1", slug: "javascript-fundamentals", title: "JavaScript Fundamentals" };
+const course = { id: "course-1", slug: "javascript-fundamentals", title: "JavaScript Fundamentals", price: "0.00" };
 
 beforeEach(() => {
   findUnique.mockReset();
@@ -37,6 +39,8 @@ beforeEach(() => {
   create.mockReset();
   update.mockReset();
   findMany.mockReset();
+  lessonCount.mockReset();
+  lessonCount.mockResolvedValue(1);
   getCourseBySlug.mockReset();
 });
 
@@ -57,6 +61,21 @@ describe("enrollInCourse", () => {
     const result = await enrollInCourse("student-1", "javascript-fundamentals");
 
     expect(result).toEqual(existing);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("rejects paid courses before creating a free enrollment", async () => {
+    getCourseBySlug.mockResolvedValue({ ...course, price: "49.00" });
+    findUnique.mockResolvedValue(null);
+    await expect(enrollInCourse("student-1", course.slug)).rejects.toThrow("requires purchase");
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("rejects catalog entries with no lesson content", async () => {
+    getCourseBySlug.mockResolvedValue(course);
+    findUnique.mockResolvedValue(null);
+    lessonCount.mockResolvedValue(0);
+    await expect(enrollInCourse("student-1", course.slug)).rejects.toThrow("not ready for enrollment");
     expect(create).not.toHaveBeenCalled();
   });
 

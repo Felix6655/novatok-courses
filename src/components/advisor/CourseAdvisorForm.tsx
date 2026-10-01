@@ -83,7 +83,7 @@ export function CourseAdvisorForm() {
               onClick={() => setMessage(example)}
               className="rounded-full border border-neutral-300 px-3 py-1 text-xs text-neutral-600 hover:border-neutral-400 dark:border-neutral-700 dark:text-neutral-300"
             >
-              {example.length > 40 ? `${example.slice(0, 40)}â€¦` : example}
+              {example.length > 40 ? `${example.slice(0, 40)}…` : example}
             </button>
           ))}
         </div>

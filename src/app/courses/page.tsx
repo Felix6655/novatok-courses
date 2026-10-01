@@ -65,7 +65,7 @@ async function CoursesContent({ rawParams, locale }: { rawParams: Record<string,
         </h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-300">
           Practical courses across business, technology, finance, and skilled
-          trades â€” built by NovaTok Social to help creators and professionals
+          trades — built by NovaTok Social to help creators and professionals
           grow.
         </p>
       </div>

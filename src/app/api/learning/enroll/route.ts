@@ -5,7 +5,7 @@ import { enrollRequestSchema } from "@/lib/validation/learning";
 import { getStudentIdentity, MissingStudentIdentityError } from "@/server/identity/dev-identity";
 import { InvalidSocialSessionError } from "@/server/identity/novatok-social-identity";
 import { enrollInCourse } from "@/server/learning/enrollment";
-import { EnrollmentCourseNotFoundError } from "@/server/learning/errors";
+import { CourseContentUnavailableError, CoursePurchaseRequiredError, EnrollmentCourseNotFoundError } from "@/server/learning/errors";
 
 export async function POST(request: Request) {
   const guard = await guardLearningMutation(request, "enroll");
@@ -26,6 +26,12 @@ export async function POST(request: Request) {
     }
     if (error instanceof EnrollmentCourseNotFoundError) {
       return notFound(error.message);
+    }
+    if (error instanceof CoursePurchaseRequiredError) {
+      return NextResponse.json({ error: error.message }, { status: 402 });
+    }
+    if (error instanceof CourseContentUnavailableError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
     console.error(error);
     return internalError();

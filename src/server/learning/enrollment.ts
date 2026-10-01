@@ -1,7 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { toJSONSafe } from "@/lib/serialize";
-import { EnrollmentCourseNotFoundError } from "@/server/learning/errors";
+import { CourseContentUnavailableError, CoursePurchaseRequiredError, EnrollmentCourseNotFoundError } from "@/server/learning/errors";
 import { getCourseBySlug } from "@/server/courses";
 import type { SerializedEnrollment } from "@/types/learning";
 
@@ -40,6 +40,15 @@ export async function enrollInCourse(
   const existing = await findEnrollment(studentId, course.id);
   if (existing) {
     return toJSONSafe(existing);
+  }
+
+  if (Number(course.price) > 0) {
+    throw new CoursePurchaseRequiredError(courseSlug);
+  }
+
+  const lessonCount = await prisma.lesson.count({ where: { courseId: course.id } });
+  if (lessonCount === 0) {
+    throw new CourseContentUnavailableError(courseSlug);
   }
 
   try {
