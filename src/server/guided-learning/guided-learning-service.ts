@@ -1,6 +1,7 @@
 import { getAIProvider } from "@/ai/get-ai-provider";
 import { parseJsonLoosely } from "@/ai/parse-json-loosely";
 import type { AIProvider, ChatMessage } from "@/ai/provider";
+import { findGoogleVerifiedResources, type VerifiedLearningResource } from "@/server/guided-learning/providers/google";
 import { LANGUAGE_INSTRUCTIONS } from "@/i18n/config";
 import {
   guidedLearningModelResponseSchema,
@@ -10,7 +11,7 @@ import {
 
 export interface GuidedLearningResult extends GuidedLearningModelResponse {
   source: "ai" | "fallback";
-  verifiedResources: [];
+  verifiedResources: VerifiedLearningResource[];
 }
 
 export interface GuidedLearningDeps {
@@ -118,9 +119,16 @@ export async function buildGuidedLearningPlan(
 
   const plan = validated && validated.success ? validated.data : fallbackPlan(request);
 
+  const verifiedResources = findGoogleVerifiedResources({
+    goal: request.goal,
+    resourceQueries: plan.resourceQueries,
+    currentLevel: request.currentLevel,
+    locale,
+  });
+
   return {
     ...plan,
     source: validated && validated.success ? "ai" : "fallback",
-    verifiedResources: [],
+    verifiedResources,
   };
 }
