@@ -138,6 +138,41 @@ export function GuidedLearningForm() {
             ))}
           </ol>
 
+          {result.verifiedResources.length > 0 && (
+            <section className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
+              <h3 className="font-semibold">Verified learning resources</h3>
+              <p className="mt-1 text-sm text-neutral-500">
+                These links come from NovaTok's verified provider registry, not from model-generated URLs.
+              </p>
+              <div className="mt-4 space-y-3">
+                {result.verifiedResources.map((resource) => (
+                  <a
+                    key={resource.id}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-lg border border-neutral-200 p-4 transition hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{resource.title}</span>
+                      <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-xs dark:border-neutral-700">
+                        Verified {resource.provider}
+                      </span>
+                      {resource.freeAccess && (
+                        <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-xs dark:border-neutral-700">
+                          Free access
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+                      {resource.description}
+                    </p>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
           {result.resourceQueries.length > 0 && (
             <aside className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
               <h3 className="font-semibold">Resource searches</h3>
