@@ -17,6 +17,7 @@ export function GuidedLearningForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<GuidedLearningResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,11 +41,43 @@ export function GuidedLearningForm() {
       }
 
       setResult(body as GuidedLearningResult);
+      setSaveStatus("idle");
       setStatus("success");
     } catch {
       setErrorMessage(dictionary.error);
       setStatus("error");
     }
+  }
+
+  async function saveCurrentPlan() {
+    if (!result) return;
+    setSaveStatus("saving");
+
+    const response = await fetch("/api/guided-learning/plans", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        goal,
+        currentLevel,
+        weeklyHours,
+        locale,
+        source: result.source,
+        plan: {
+          goalSummary: result.goalSummary,
+          estimatedWeeks: result.estimatedWeeks,
+          steps: result.steps,
+          studyTips: result.studyTips,
+          resourceQueries: result.resourceQueries,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      setSaveStatus("error");
+      return;
+    }
+
+    setSaveStatus("saved");
   }
 
   return (
@@ -111,9 +144,35 @@ export function GuidedLearningForm() {
 
       {status === "success" && result && (
         <section className="space-y-6">
-          <div>
-            <p className="text-sm text-neutral-500">Estimated plan: {result.estimatedWeeks} weeks</p>
-            <h2 className="mt-1 text-2xl font-semibold">{result.goalSummary}</h2>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-neutral-500">Estimated plan: {result.estimatedWeeks} weeks</p>
+              <h2 className="mt-1 text-2xl font-semibold">{result.goalSummary}</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={saveCurrentPlan}
+                disabled={saveStatus === "saving" || saveStatus === "saved"}
+                className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
+              >
+                {saveStatus === "saving"
+                  ? "Saving..."
+                  : saveStatus === "saved"
+                    ? "Saved"
+                    : "Save learning path"}
+              </button>
+              {saveStatus === "saved" && (
+                <a href="/guided-learning/saved" className="text-sm underline">
+                  View saved paths
+                </a>
+              )}
+            </div>
+            {saveStatus === "error" && (
+              <p className="basis-full text-sm text-red-700 dark:text-red-300">
+                Could not save this learning path.
+              </p>
+            )}
           </div>
 
           <ol className="space-y-4">
@@ -177,7 +236,7 @@ export function GuidedLearningForm() {
             <aside className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
               <h3 className="font-semibold">Resource searches</h3>
               <p className="mt-1 text-sm text-neutral-500">
-                These are search ideas only. NovaTok has not marked any external course as verified yet.
+                Additional search ideas only. Verified links, when available, are shown separately above.
               </p>
               <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
                 {result.resourceQueries.map((query) => <li key={query}>{query}</li>)}
