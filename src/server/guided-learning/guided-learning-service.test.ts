@@ -53,7 +53,7 @@ describe("buildGuidedLearningPlan", () => {
     expect(result.source).toBe("fallback");
     expect(result.steps.length).toBeGreaterThanOrEqual(2);
     expect(result.resourceQueries[0]).toContain("Learn electrical basics");
-    expect(result.verifiedResources.some((item) => item.provider === "google")).toBe(true);
+    expect(result.verifiedResources).toEqual([]);
   });
 
   it("does not treat external resources as verified model output", async () => {
