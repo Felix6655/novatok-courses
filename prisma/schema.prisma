@@ -384,11 +384,7 @@ model GuidedLearningPlan {
   weeklyHours          Int
   locale               String      @default("en")
   source               String
-  goalSummary          String
-  estimatedWeeks       Int
-  steps                Json
-  studyTips            String[]    @default([])
-  resourceQueries      String[]    @default([])
+  plan                 Json
   verifiedResources    Json
   completedStepIndexes Int[]       @default([])
   createdAt            DateTime    @default(now())
