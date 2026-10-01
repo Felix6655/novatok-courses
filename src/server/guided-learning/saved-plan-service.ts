@@ -73,7 +73,7 @@ export async function saveGuidedLearningPlan(
   const rows = await prisma.$queryRaw<GuidedLearningPlanRow[]>`
     INSERT INTO "GuidedLearningPlan" (
       "id", "studentId", "goal", "currentLevel", "weeklyHours",
-      "locale", "source", "plan", "verifiedResources", "completedStepIndexes"
+      "locale", "source", "plan", "verifiedResources", "completedStepIndexes", "updatedAt"
     )
     VALUES (
       ${id},
@@ -85,7 +85,8 @@ export async function saveGuidedLearningPlan(
       ${input.source},
       CAST(${JSON.stringify(input.plan)} AS JSONB),
       CAST(${JSON.stringify(verifiedResources)} AS JSONB),
-      ARRAY[]::INTEGER[]
+      ARRAY[]::INTEGER[],
+      CURRENT_TIMESTAMP
     )
     RETURNING *
   `;
