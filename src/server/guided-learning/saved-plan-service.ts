@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   guidedLearningModelResponseSchema,
   type GuidedLearningLevel,
+  type GuidedLearningModelResponse,
   type SaveGuidedLearningPlanRequest,
 } from "@/lib/validation/guided-learning";
 import { findVerifiedLearningResources } from "@/server/guided-learning/providers/registry";
@@ -31,7 +32,7 @@ export interface SavedGuidedLearningPlan {
   weeklyHours: number;
   locale: string;
   source: "ai" | "fallback";
-  plan: ReturnType<typeof guidedLearningModelResponseSchema.parse>;
+  plan: GuidedLearningModelResponse;
   verifiedResources: VerifiedLearningResource[];
   completedStepIndexes: number[];
   createdAt: string;
