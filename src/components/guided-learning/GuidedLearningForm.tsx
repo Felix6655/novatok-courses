@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useI18n } from "@/i18n/client";
 import type { GuidedLearningResult } from "@/server/guided-learning/guided-learning-service";
 import type { GuidedLearningLevel } from "@/lib/validation/guided-learning";
@@ -8,6 +8,11 @@ import type { GuidedLearningLevel } from "@/lib/validation/guided-learning";
 type Status = "idle" | "loading" | "success" | "error";
 
 const LEVELS: GuidedLearningLevel[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
+const LOADING_STAGES = [
+  "Understanding your goal",
+  "Building your learning path",
+  "Finding verified resources",
+] as const;
 
 export function GuidedLearningForm() {
   const { locale, dictionary } = useI18n();
@@ -18,6 +23,22 @@ export function GuidedLearningForm() {
   const [result, setResult] = useState<GuidedLearningResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [loadingStage, setLoadingStage] = useState(0);
+
+  useEffect(() => {
+    if (status !== "loading") {
+      setLoadingStage(0);
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setLoadingStage((current) =>
+        Math.min(current + 1, LOADING_STAGES.length - 1),
+      );
+    }, 1800);
+
+    return () => window.clearInterval(interval);
+  }, [status]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -136,9 +157,38 @@ export function GuidedLearningForm() {
           disabled={status === "loading" || goal.trim().length < 3}
           className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
         >
-          {status === "loading" ? "Building your learning path..." : "Build my learning path"}
+          {status === "loading" ? "Working..." : "Build my learning path"}
         </button>
       </form>
+
+      {status === "loading" && (
+        <section
+          aria-live="polite"
+          className="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800"
+        >
+          <div className="flex items-center gap-3">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+            <div>
+              <p className="font-medium">{LOADING_STAGES[loadingStage]}...</p>
+              <p className="mt-1 text-sm text-neutral-500">
+                NovaTok will show a fast fallback plan automatically if the AI is taking too long.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {LOADING_STAGES.map((stage, index) => (
+              <div
+                key={stage}
+                className={`h-1 rounded-full ${
+                  index <= loadingStage
+                    ? "bg-neutral-700 dark:bg-neutral-300"
+                    : "bg-neutral-200 dark:bg-neutral-800"
+                }`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {status === "error" && errorMessage && (
         <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
@@ -148,6 +198,12 @@ export function GuidedLearningForm() {
 
       {status === "success" && result && (
         <section className="space-y-6">
+          {result.source === "fallback" && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+              Fast plan shown because the AI response was unavailable or too slow. Verified resources are still matched from NovaTok&apos;s provider registry.
+            </div>
+          )}
+
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm text-neutral-500">Estimated plan: {result.estimatedWeeks} weeks</p>
