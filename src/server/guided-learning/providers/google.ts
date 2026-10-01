@@ -95,6 +95,20 @@ function normalize(value: string): string {
   return value.toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 }
 
+const GOAL_ALIASES: Record<string, string[]> = {
+  ai: ["artificial intelligence"],
+  ml: ["machine learning"],
+  llm: ["large language models"],
+  "llms": ["large language models"],
+};
+
+function expandGoalAliases(goal: string): string {
+  const normalized = normalize(goal);
+  const tokens = normalized.split(/\s+/);
+  const expansions = tokens.flatMap((token) => GOAL_ALIASES[token] ?? []);
+  return [normalized, ...expansions].join(" ");
+}
+
 const GENERIC_MATCH_TOKENS = new Set([
   "learn",
   "learning",
@@ -115,7 +129,7 @@ const GENERIC_MATCH_TOKENS = new Set([
 ]);
 
 function topicRelevance(resource: VerifiedLearningResource, goal: string): number {
-  const normalizedGoal = normalize(goal);
+  const normalizedGoal = expandGoalAliases(goal);
   let relevance = 0;
 
   for (const topic of resource.topics) {
