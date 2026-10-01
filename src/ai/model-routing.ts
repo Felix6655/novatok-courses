@@ -8,7 +8,7 @@ import type {
 import { AIProviderConfigError, AIProviderUnavailableError } from "@/ai/errors";
 import { OllamaProvider } from "@/ai/providers/ollama";
 import { OpenAICompatibleProvider } from "@/ai/providers/openai-compatible";
-export const AI_TASKS = ["advisor", "tutor", "coach", "practice", "creator-coach", "final-exam"] as const;
+export const AI_TASKS = ["advisor", "tutor", "coach", "practice", "creator-coach", "final-exam", "guided-learning"] as const;
 export type AITask = (typeof AI_TASKS)[number];
 const specSchema = z
   .string()
@@ -109,11 +109,16 @@ export function createProviderForSpec(
 ): AIProvider {
   const { provider, model } = splitSpec(spec);
   if (provider === "ollama") {
-    const timeoutMs = Number(env.OLLAMA_TIMEOUT_MS);
+    const configuredTimeoutMs =
+      context.task === "guided-learning"
+        ? Number(env.GUIDED_LEARNING_TIMEOUT_MS ?? 6_000)
+        : Number(env.OLLAMA_TIMEOUT_MS);
     return new OllamaProvider({
       baseUrl: env.OLLAMA_BASE_URL?.trim() || "http://localhost:11434",
       model,
-      ...(Number.isFinite(timeoutMs) && timeoutMs > 0 ? { timeoutMs } : {}),
+      ...(Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0
+        ? { timeoutMs: configuredTimeoutMs }
+        : {}),
     });
   }
   if (provider === "omniroute")
@@ -124,6 +129,11 @@ export function createProviderForSpec(
       providerName: "omniroute",
       task: context.task,
       locale: context.locale,
+      ...(context.task === "guided-learning"
+        ? {
+            timeoutMs: Number(env.GUIDED_LEARNING_TIMEOUT_MS ?? 6_000),
+          }
+        : {}),
     });
   throw new AIProviderConfigError(`Unsupported routed provider "${provider}"`);
 }

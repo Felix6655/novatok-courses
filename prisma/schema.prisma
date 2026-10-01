@@ -368,3 +368,27 @@ model CourseExamQuestion {
   @@index([attemptId])
   @@index([lessonId])
 }
+
+
+/**
+ * A saved Guided Learning path. This is intentionally separate from Course,
+ * StudentEnrollment, and LessonProgress: Guided Learning can cover an open
+ * learning goal that is not a NovaTok-authored course. The plan snapshot is
+ * validated before write, and verifiedResources are recomputed server-side.
+ */
+model GuidedLearningPlan {
+  id                   String      @id @default(uuid())
+  studentId            String
+  goal                 String
+  currentLevel         CourseLevel
+  weeklyHours          Int
+  locale               String      @default("en")
+  source               String
+  plan                 Json
+  verifiedResources    Json
+  completedStepIndexes Int[]       @default([])
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@index([studentId, updatedAt])
+}
