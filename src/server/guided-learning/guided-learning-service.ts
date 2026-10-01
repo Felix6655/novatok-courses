@@ -12,12 +12,16 @@ import {
 
 export interface GuidedLearningResult extends GuidedLearningModelResponse {
   source: "ai" | "fallback";
+  fallbackReason?: "timeout" | "provider-unavailable" | "invalid-output";
   verifiedResources: VerifiedLearningResource[];
 }
 
 export interface GuidedLearningDeps {
   provider?: AIProvider;
+  timeoutMs?: number;
 }
+
+const DEFAULT_GUIDED_LEARNING_TIMEOUT_MS = 8_000;
 
 const SYSTEM_PROMPT = `You are NovaTok Guided Learning, an educational planning assistant.
 
@@ -86,12 +90,19 @@ export async function buildGuidedLearningPlan(
   deps: GuidedLearningDeps = {},
 ): Promise<GuidedLearningResult> {
   const locale = request.locale ?? "en";
-  const provider =
-    deps.provider ??
-    getAIProvider(process.env, {
-      task: "guided-learning",
-      locale,
-    });
+  let provider: AIProvider | null = null;
+  let fallbackReason: GuidedLearningResult["fallbackReason"];
+
+  try {
+    provider =
+      deps.provider ??
+      getAIProvider(process.env, {
+        task: "guided-learning",
+        locale,
+      });
+  } catch {
+    fallbackReason = "provider-unavailable";
+  }
 
   const messages: ChatMessage[] = [
     {
@@ -108,17 +119,49 @@ export async function buildGuidedLearningPlan(
     },
   ];
 
-  const completion = await provider.generateCompletion({
-    messages,
-    temperature: 0.25,
-    maxTokens: 1800,
-  });
+  let validated:
+    | ReturnType<typeof guidedLearningModelResponseSchema.safeParse>
+    | undefined;
 
-  const parsed = parseJsonLoosely(completion);
-  const validated =
-    parsed === undefined ? undefined : guidedLearningModelResponseSchema.safeParse(parsed);
+  if (provider) {
+    const timeoutMs = deps.timeoutMs ?? DEFAULT_GUIDED_LEARNING_TIMEOUT_MS;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
-  const plan = validated && validated.success ? validated.data : fallbackPlan(request);
+    try {
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(
+          () => reject(new Error("guided-learning-timeout")),
+          timeoutMs,
+        );
+      });
+
+      const completion = await Promise.race([
+        provider.generateCompletion({
+          messages,
+          temperature: 0.2,
+          maxTokens: 900,
+        }),
+        timeout,
+      ]);
+
+      const parsed = parseJsonLoosely(completion);
+      validated =
+        parsed === undefined
+          ? undefined
+          : guidedLearningModelResponseSchema.safeParse(parsed);
+
+      if (!validated?.success) fallbackReason = "invalid-output";
+    } catch (error) {
+      fallbackReason =
+        error instanceof Error && error.message === "guided-learning-timeout"
+          ? "timeout"
+          : "provider-unavailable";
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    }
+  }
+
+  const plan = validated?.success ? validated.data : fallbackPlan(request);
 
   const verifiedResources = findVerifiedLearningResources({
     goal: request.goal,
@@ -129,7 +172,8 @@ export async function buildGuidedLearningPlan(
 
   return {
     ...plan,
-    source: validated && validated.success ? "ai" : "fallback",
+    source: validated?.success ? "ai" : "fallback",
+    ...(validated?.success ? {} : { fallbackReason: fallbackReason ?? "invalid-output" }),
     verifiedResources,
   };
 }
