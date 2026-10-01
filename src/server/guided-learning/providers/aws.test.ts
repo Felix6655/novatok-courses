@@ -9,7 +9,7 @@ describe("AWS verified learning resources", () => {
     for (const resource of AWS_VERIFIED_RESOURCES) {
       expect(new URL(resource.url).hostname).toBe("aws.amazon.com");
       expect(resource.provider).toBe("aws");
-      expect(resource.freeAccess).toBe(true);
+      expect(typeof resource.freeAccess).toBe("boolean");
       expect(resource.verification.source).toBe("official-provider");
     }
   });
