@@ -31,3 +31,20 @@ export const guidedLearningModelResponseSchema = z.object({
 });
 
 export type GuidedLearningModelResponse = z.infer<typeof guidedLearningModelResponseSchema>;
+
+
+export const saveGuidedLearningPlanSchema = guidedLearningRequestSchema.extend({
+  source: z.enum(["ai", "fallback"]),
+  plan: guidedLearningModelResponseSchema,
+});
+
+export type SaveGuidedLearningPlanRequest = z.infer<typeof saveGuidedLearningPlanSchema>;
+
+export const updateGuidedLearningProgressSchema = z.object({
+  stepIndex: z.number().int().min(0).max(11),
+  completed: z.boolean(),
+});
+
+export type UpdateGuidedLearningProgressRequest = z.infer<
+  typeof updateGuidedLearningProgressSchema
+>;
