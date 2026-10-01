@@ -51,9 +51,51 @@ describe("buildGuidedLearningPlan", () => {
     );
 
     expect(result.source).toBe("fallback");
+    expect(result.fallbackReason).toBe("invalid-output");
     expect(result.steps.length).toBeGreaterThanOrEqual(2);
     expect(result.resourceQueries[0]).toContain("Learn electrical basics");
     expect(result.verifiedResources).toEqual([]);
+  });
+
+  it("falls back quickly when the provider is too slow", async () => {
+    const slowProvider: AIProvider = {
+      name: "slow",
+      model: "slow-model",
+      generateCompletion: async () =>
+        await new Promise<string>(() => {
+          // Intentionally never resolves; the service timeout must win.
+        }),
+    };
+
+    const started = Date.now();
+    const result = await buildGuidedLearningPlan(
+      { goal: "Learn AI", currentLevel: "BEGINNER", weeklyHours: 5 },
+      { provider: slowProvider, timeoutMs: 5 },
+    );
+
+    expect(Date.now() - started).toBeLessThan(250);
+    expect(result.source).toBe("fallback");
+    expect(result.fallbackReason).toBe("timeout");
+    expect(result.verifiedResources.length).toBeGreaterThan(0);
+  });
+
+  it("falls back when the provider is unavailable", async () => {
+    const unavailableProvider: AIProvider = {
+      name: "offline",
+      model: "offline-model",
+      generateCompletion: async () => {
+        throw new Error("offline");
+      },
+    };
+
+    const result = await buildGuidedLearningPlan(
+      { goal: "Learn machine learning", currentLevel: "BEGINNER", weeklyHours: 5 },
+      { provider: unavailableProvider },
+    );
+
+    expect(result.source).toBe("fallback");
+    expect(result.fallbackReason).toBe("provider-unavailable");
+    expect(result.verifiedResources.length).toBeGreaterThan(0);
   });
 
   it("does not treat external resources as verified model output", async () => {
