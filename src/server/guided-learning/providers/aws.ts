@@ -15,7 +15,7 @@ export const AWS_VERIFIED_RESOURCES: VerifiedLearningResource[] = [
     topics: ["aws", "cloud", "artificial intelligence", "machine learning", "generative ai", "amazon bedrock", "sagemaker"],
     levels: ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
     locales: ["en"],
-    freeAccess: true,
+    freeAccess: false,
     verification: { source: "official-provider", verifiedAt: VERIFIED_AT },
   },
   {
@@ -29,7 +29,7 @@ export const AWS_VERIFIED_RESOURCES: VerifiedLearningResource[] = [
     topics: ["artificial intelligence", "machine learning", "generative ai", "agentic ai", "amazon bedrock", "sagemaker"],
     levels: ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
     locales: ["en"],
-    freeAccess: true,
+    freeAccess: false,
     verification: { source: "official-provider", verifiedAt: VERIFIED_AT },
   },
   {
@@ -43,7 +43,7 @@ export const AWS_VERIFIED_RESOURCES: VerifiedLearningResource[] = [
     topics: ["artificial intelligence", "machine learning", "generative ai", "prompt engineering"],
     levels: ["BEGINNER"],
     locales: ["en"],
-    freeAccess: true,
+    freeAccess: false,
     verification: { source: "official-provider", verifiedAt: VERIFIED_AT },
   },
 ];
