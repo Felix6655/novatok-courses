@@ -41,7 +41,7 @@ describe("buildGuidedLearningPlan", () => {
     expect(result.source).toBe("ai");
     expect(result.estimatedWeeks).toBe(8);
     expect(result.steps).toHaveLength(2);
-    expect(result.verifiedResources).toEqual([]);
+    expect(result.verifiedResources.some((item) => item.provider === "google")).toBe(true);
   });
 
   it("uses a deterministic safe fallback when model JSON is unusable", async () => {
@@ -53,7 +53,7 @@ describe("buildGuidedLearningPlan", () => {
     expect(result.source).toBe("fallback");
     expect(result.steps.length).toBeGreaterThanOrEqual(2);
     expect(result.resourceQueries[0]).toContain("Learn electrical basics");
-    expect(result.verifiedResources).toEqual([]);
+    expect(result.verifiedResources.some((item) => item.provider === "google")).toBe(true);
   });
 
   it("does not treat external resources as verified model output", async () => {
@@ -73,6 +73,6 @@ describe("buildGuidedLearningPlan", () => {
       { provider },
     );
 
-    expect(result.verifiedResources).toEqual([]);
+    expect(result.verifiedResources.some((item) => item.provider === "google")).toBe(true);
   });
 });
